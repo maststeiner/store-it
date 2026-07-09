@@ -1,0 +1,113 @@
+# KAIFe DoD gates as CI stages — technology-independent template.
+# Replace every "TODO" step with your stack's commands (see docs/SETUP.md).
+# Trivy (Security) and SonarQube (Quality) are language-neutral and need only configuration.
+
+trigger:
+  branches:
+    exclude:
+      - main  # PRs only (Build Validation Policy)
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  coverageThreshold: 70  # Calibrate during pilot
+
+stages:
+
+# ──────────────────────────────────────────────
+# Stage 1: Build + Tests + Coverage
+# ──────────────────────────────────────────────
+- stage: BuildAndTest
+  displayName: '1 · Build & Test'
+  jobs:
+  - job: Build
+    steps:
+    - script: echo "TODO: install toolchain (language runtime, SDK)" && exit 1
+      displayName: 'TODO: Install toolchain'
+
+    - script: echo "TODO: build command" && exit 1
+      displayName: 'TODO: Build'
+
+    - script: echo "TODO: test command with coverage collection" && exit 1
+      displayName: 'TODO: Test + Coverage'
+
+    # Coverage gate: prefer your coverage tool's built-in threshold option
+    # (fail the run when coverage < $(coverageThreshold)). Alternatively enforce
+    # coverage via the SonarQube quality gate in stage 3.
+    - script: echo "TODO: enforce coverage >= $(coverageThreshold)%" && exit 1
+      displayName: 'TODO: Coverage gate ≥ $(coverageThreshold)%'
+
+# ──────────────────────────────────────────────
+# Stage 2: Security Scan + SBOM (Trivy — language-neutral)
+# ──────────────────────────────────────────────
+- stage: Security
+  displayName: '2 · Security & SBOM'
+  dependsOn: BuildAndTest
+  jobs:
+  - job: Trivy
+    steps:
+    - script: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      displayName: 'Install Trivy'
+
+    - script: |
+        trivy fs . \
+          --exit-code 1 \
+          --severity HIGH,CRITICAL \
+          --format table
+      displayName: 'Trivy: Dependency + Secret scan'
+
+    - script: |
+        trivy fs . \
+          --format cyclonedx \
+          --output sbom.cdx.json
+      displayName: 'Trivy: SBOM export (CycloneDX)'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'sbom.cdx.json'
+        artifactName: 'SBOM'
+      displayName: 'Publish SBOM as pipeline artifact'
+
+# ──────────────────────────────────────────────
+# Stage 3: Code Quality (SonarQube — language-neutral)
+# ──────────────────────────────────────────────
+- stage: Quality
+  displayName: '3 · Code Quality'
+  dependsOn: BuildAndTest
+  jobs:
+  - job: Sonar
+    steps:
+    # TODO: configure SonarQube service connection, project key/name,
+    # scanner mode and coverage report paths for your stack (see docs/SETUP.md).
+    - script: echo "TODO: SonarQube analysis + quality gate" && exit 1
+      displayName: 'TODO: SonarQube quality gate'
+    # SonarQube quality gate breaks the pipeline on violation
+    # (duplication threshold, new blockers — counters the documented AI tech-debt risk).
+
+# ──────────────────────────────────────────────
+# Stage 4: Architecture Conformance
+# ──────────────────────────────────────────────
+- stage: Architecture
+  displayName: '4 · Architecture Gate'
+  dependsOn: BuildAndTest
+  jobs:
+  - job: ArchConformity
+    steps:
+    # Layering/dependency rules from docs/architecture/ enforced as code.
+    # Target: 0 violations (structural debt = 0).
+    - script: echo "TODO: run architecture conformance tests" && exit 1
+      displayName: 'TODO: Architecture conformance (layering rules)'
+
+# ──────────────────────────────────────────────
+# Stage 5: Format / Lint
+# ──────────────────────────────────────────────
+- stage: Format
+  displayName: '5 · Format & Lint'
+  dependsOn: BuildAndTest
+  jobs:
+  - job: FormatCheck
+    steps:
+    - script: echo "TODO: formatter/linter check (verify, no changes)" && exit 1
+      displayName: 'TODO: Format & lint check'
