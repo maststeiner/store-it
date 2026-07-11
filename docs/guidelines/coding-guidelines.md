@@ -1,8 +1,9 @@
 # Coding Guidelines
 
-> **Owner:** Architecture Stewardship
-> **Stack:** TODO — defined per project (see `docs/SETUP.md`)
-> **Last updated:** YYYY-MM-DD
+> **Owner:** Marcel Steiner (Architecture Stewardship)
+> **Stack:** .NET (C#) backend · Angular (TypeScript) frontend
+> **Formatter:** `dotnet format` (backend) · Prettier + ESLint (frontend)
+> **Last updated:** 2026-07-09
 
 These guidelines are the primary reference for the Developer Agent and the Reviewer Agent.
 
@@ -25,11 +26,35 @@ These guidelines are the primary reference for the Developer Agent and the Revie
 
 The Reviewer Agent checks for SOLID violations as part of every adversarial review.
 
+## Clean Architecture (Robert C. Martin)
+
+The backend layering (ADR-001) follows the Clean Architecture dependency rule:
+
+- **Source dependencies point inward only:** Api / Infrastructure → Application → Domain. Nothing in Domain knows about outer layers.
+- **Domain is framework-free:** no EF Core, ASP.NET, or other framework dependencies in Domain — plain C# entities and domain rules.
+- **Use cases live in Application:** one use case per operation (add item, rename storage, …); Application defines the interfaces (ports) that Infrastructure implements (adapters).
+- **Frameworks are details at the edges:** EF Core mapping via separate configuration classes (no persistence attributes on domain entities); ASP.NET concerns stay in Api.
+- **Boundaries cross via DTOs:** domain entities do not leak through the API; request/response models live in Api.
+
+These rules are enforced by the architecture conformance gate (CI) — violations block the merge.
+
 ## Structure & Layering
 
 - Layering rules are defined in `docs/architecture/` as ADRs and enforced via the architecture conformance gate in CI.
 - Circular dependencies are forbidden.
 - Every new external dependency requires justification (ADR or PR comment).
+
+## Twelve-Factor App
+
+The backend targets Kubernetes and follows [the twelve factors](https://12factor.net/); the ones most relevant for day-to-day coding:
+
+- **Config from the environment:** all config (connection strings, URLs, feature flags) via environment variables — never hard-coded, never in committed config files. Secrets never in the repo.
+- **Backing services as attached resources:** PostgreSQL & co. addressed via config only — swappable without code change.
+- **Stateless processes:** no in-process session state, no local file persistence; any instance can serve any request.
+- **Logs as event stream:** structured logs to stdout — no log files, no in-app log routing (the platform handles it).
+- **Port binding & disposability:** self-contained service, fast startup, graceful shutdown (k8s lifecycle).
+- **Dev/prod parity:** local development runs against real PostgreSQL (container), not an in-memory substitute.
+- **Admin processes:** DB migrations run as separate one-off processes (not implicitly at app startup).
 
 ## Error Handling
 

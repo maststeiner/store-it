@@ -1,71 +1,61 @@
-# Project Setup Checklist
+# Project Setup Checklist — store-it
 
-> Work through this checklist when starting a new project from this template.
-> Items marked **[platform]** live outside the repository and are easy to forget — do not skip them.
+> Template checklist, adapted for store-it (GitHub + GitHub Actions).
+> Items marked **[platform]** live outside the repository — do not skip them.
 
 ---
 
 ## 1. Repository basics
 
-- [ ] Set project name and description (README, repository settings).
-- [ ] Fill in the metadata block in `CLAUDE.md`: `last_updated`, `owner` (AI Steward), `scope`, `stack`.
-- [ ] Set owners in `docs/guidelines/coding-guidelines.md` and `docs/guidelines/test-guidelines.md`.
-- [ ] Extend `.gitignore` with your stack's build artifacts.
+- [x] Set project name and description (README).
+- [x] Fill in the metadata block in `CLAUDE.md`.
+- [x] Set owners in the guidelines.
+- [x] Extend `.gitignore` (.NET + Node/Angular).
 
-## 2. Choose your stack
+## 2. Stack (decided)
 
-The template is technology-independent. Decide and document (as ADRs where non-trivial):
+- [x] **Language / runtime:** .NET (C#) backend · Angular (TypeScript) frontend → arc42 section 2.
+- [x] **Formatter / linter:** `dotnet format` (backend) · Prettier + ESLint (frontend).
+- [x] **Test framework + coverage:** xUnit + coverlet (backend) · Angular default (frontend).
+- [x] **Coverage threshold:** 70% (CI variable, calibrate during pilot).
+- [x] **Architecture conformance:** .NET architecture tests (`Category=ArchitectureTests`), rules from ADR-001.
+- [x] Stack commands added to the **Auto** permission tier in `.claude/settings.json`.
 
-- [ ] **Language / runtime** → record in `docs/architecture/ARCHITECTURE.md` section 2 (constraints).
-- [ ] **Formatter / linter** → wire into the pipeline `Format` stage and the developer persona workflow.
-- [ ] **Unit test framework + coverage tool** → wire into the pipeline `BuildAndTest` stage.
-- [ ] **Coverage threshold** → set the pipeline variable (default 70%, calibrate during pilot).
-- [ ] **Architecture conformance tooling** (dependency/layering rules as code) → wire into the pipeline `Architecture` stage.
-- [ ] Add stack-specific commands to the **Auto** permission tier in `.claude/settings.json` (e.g. format command, single test runs).
+## 3. Pipeline (`.github/workflows/ci.yml`)
 
-## 3. Pipeline (`azure-pipelines.yml`)
+- [x] Jobs wired for .NET + Angular (go green once `backend/`/`frontend/` scaffolds land).
+- [ ] **[platform]** Mark CI jobs as required status checks on `main` (build validation).
+- [ ] **[platform]** SonarCloud: create project, add `SONAR_TOKEN` secret, uncomment the `quality` job.
+- [x] Trivy (security scan + SBOM) works as-is.
 
-- [ ] Replace all `TODO` placeholder steps with your stack's build, test, coverage, format, and architecture-test commands.
-- [ ] **[platform]** Bind the pipeline to PRs as a build validation policy.
-- [ ] **[platform]** Configure the SonarQube (or equivalent) service connection; set project key/name.
-- [ ] Trivy (security scan + SBOM) is language-neutral and works as-is.
-
-## 4. Branch policies **[platform]**
+## 4. Branch protection **[platform]**
 
 - [ ] Protect `main`: changes only via PR.
-- [ ] Require **≥ 1 human reviewer** (Gate G2/G3 — this is non-negotiable).
-- [ ] Require build validation (pipeline green = Gate G3 machine part).
-- [ ] Enforce the **WIP limit**: max. 3 open agent branches/PRs at a time (start value — calibrate with the team, then enforce technically via policy or hook).
+- [ ] Require **≥ 1 human review** (Gate G2/G3 — non-negotiable).
+- [ ] Require CI status checks (Gate G3 machine part).
+- [ ] Enforce the **WIP limit** (max. 3 open agent PRs — start value, calibrate, then enforce technically).
 
 ## 5. AI review & tooling **[platform]**
 
-- [ ] Activate an automated AI review tool (e.g. CodeRabbit) as the first filter before human review (Gate G2).
-- [ ] Copy `.github/pull_request_template.md` to your platform's location if not on GitHub (Azure DevOps: `.azuredevops/pull_request_template.md`).
+- [ ] Activate CodeRabbit (or equivalent) on the GitHub repo as first filter before human review (Gate G2).
+- [x] PR template is GitHub-native (`.github/pull_request_template.md`).
 
 ## 6. Claude Code hooks (optional, recommended)
 
-Hooks automate harness rules so they don't depend on agent discipline. Example — run the formatter after every file edit (add to `.claude/settings.json`):
-
-```json
-{
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [{ "type": "command", "command": "<your-format-command>" }]
-      }
-    ]
-  }
-}
-```
-
-- [ ] Add a format-on-edit hook once the formatter is chosen.
-- [ ] Consider a pre-commit hook that blocks commits when tests fail.
+- [ ] Format-on-edit hook (weigh cost: `dotnet format` on every edit is slow — consider pre-commit instead).
+- [ ] Pre-commit hook that blocks commits when tests fail.
 
 ## 7. First sprint readiness
 
-- [ ] Architecture documented in `docs/architecture/ARCHITECTURE.md` (at least sections 1–5).
-- [ ] Layering rules formulated as ADR and enforced in the `Architecture` pipeline stage.
-- [ ] First spec written from `docs/specs/SPEC-TEMPLATE.md` and frozen by a human (Gate 1).
-- [ ] Team agreement on WIP limit documented.
-- [ ] Agent run log convention understood: one log per agent task in `docs/agent-logs/` (see template).
+- [x] Architecture documented (arc42 sections 1–5 drafted; 5.2/6 refine with first features).
+- [x] Layering rules as ADR-001, wired into the CI `architecture` job.
+- [ ] First spec frozen by a human (Gate 1) — `SPEC-001` is in Draft.
+- [x] WIP limit documented (`CLAUDE.md`: max. 3).
+- [x] Agent run log convention: one log per agent task in `docs/agent-logs/`.
+
+## Next steps (in order)
+
+1. Freeze SPEC-001 (Gate 1) — human decision.
+2. Scaffold `backend/` (.NET solution with Api/Application/Domain/Infrastructure + architecture tests) and `frontend/` (Angular workspace) so CI goes green.
+3. Configure branch protection + CodeRabbit + SonarCloud (platform items above).
+4. Implement SPEC-001 through the full KAIFe flow (worktree → branch → PR → gates).

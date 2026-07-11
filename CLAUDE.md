@@ -38,6 +38,13 @@ Every subagent works in its own **git worktree + branch + PR**. No direct work o
 
 WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict prevention). Calibrate during the pilot.
 
+## Project Structure
+
+| Path | Content |
+|------|---------|
+| `backend/` | .NET solution — API-first REST backend (consumed by Angular and later the iPhone app) |
+| `frontend/` | Angular app |
+
 ## Source of Truth
 
 | Path | Content |
@@ -57,8 +64,8 @@ Configured in `.claude/settings.json` (add stack-specific commands during setup,
 
 ## Metadata
 ```
-last_updated: YYYY-MM-DD
-owner: AI Steward (TODO: enter name)
-scope: KAIFe L4 Pilot
-stack: TODO — defined per project (see docs/SETUP.md)
+last_updated: 2026-07-09
+owner: Marcel Steiner (AI Steward)
+scope: store-it — digital pantry management
+stack: .NET (C#) backend · Angular frontend · Kubernetes · GitHub Actions
 ```

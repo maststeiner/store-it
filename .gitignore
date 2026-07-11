@@ -4,4 +4,21 @@
 # Claude Code
 .claude/settings.local.json
 
-# TODO: add your stack's build artifacts and IDE files (see docs/SETUP.md)
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+artifacts/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+# IDE
+.idea/
+*.suo
+

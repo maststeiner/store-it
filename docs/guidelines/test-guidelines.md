@@ -1,8 +1,8 @@
 # Test Guidelines
 
-> **Owner:** Architecture Stewardship / QA Stewardship
-> **Stack:** TODO — test framework + coverage tool, defined per project (see `docs/SETUP.md`)
-> **Last updated:** YYYY-MM-DD
+> **Owner:** Marcel Steiner (Architecture / QA Stewardship)
+> **Stack:** xUnit + coverlet (backend) · Angular default test setup (frontend)
+> **Last updated:** 2026-07-09
 
 ---
 
