@@ -44,8 +44,8 @@ store-it is a digital pantry management application:
 
 | Constraint | Background |
 |------------|------------|
-| .NET (C#) backend | Chosen stack (KAIFe pilot alignment) |
-| Angular (TypeScript) frontend | Chosen stack |
+| .NET 10 LTS (C#) backend | Chosen stack (KAIFe pilot alignment); LTS support until Nov 2028 |
+| Angular (TypeScript) frontend | Chosen stack; Node 22 LTS toolchain |
 | Cloud-native / Kubernetes | Target runtime; containerized services, 12-factor principles |
 | GitHub + GitHub Actions | Repo + CI/CD platform (deviates from KAIFe pilot default Azure DevOps — private project) |
 | Claude Code | AI orchestration tool (KAIFe L4) |
