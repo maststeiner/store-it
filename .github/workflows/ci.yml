@@ -115,7 +115,9 @@ jobs:
         with:
           dotnet-version: '10.x'
       - name: Layering rules (0 violations)
-        run: dotnet test --filter "Category=ArchitectureTests" --configuration Release
+        # CollectCoverage=false: the coverage gate belongs to job 1; with this filter
+        # other test projects run 0 tests and would fail the threshold spuriously.
+        run: dotnet test --filter "Category=ArchitectureTests" --configuration Release /p:CollectCoverage=false
 
   # ────────────────────────────────────────────
   # 5 · Format & Lint
@@ -145,5 +147,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        run: npm ci
       - name: Prettier check
+        # npm ci first so the pinned prettier version is used (npx without
+        # node_modules would fetch the latest version → formatting drift)
         run: npx prettier --check .
