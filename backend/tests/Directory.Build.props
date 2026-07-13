@@ -1,0 +1,9 @@
+<Project>
+  <!-- Coverage gate for all test projects (SPEC/DoD: threshold 70%, calibrate during pilot).
+       Architecture tests opt out (they verify structure, not behavior). -->
+  <PropertyGroup>
+    <CollectCoverage>true</CollectCoverage>
+    <Threshold>70</Threshold>
+    <ThresholdType>line</ThresholdType>
+  </PropertyGroup>
+</Project>

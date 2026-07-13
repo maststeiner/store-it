@@ -22,3 +22,7 @@ npm-debug.log*
 .idea/
 *.suo
 
+
+# Test artifacts
+coverage.json
+coverage.*.json

@@ -29,12 +29,10 @@ jobs:
           dotnet-version: '8.x'
       - name: Build
         run: dotnet build --configuration Release
+      # Coverage gate configured in backend/tests/Directory.Build.props
+      # (threshold 70%, architecture tests excluded)
       - name: Test + coverage gate
-        run: |
-          dotnet test --configuration Release \
-            /p:CollectCoverage=true \
-            /p:Threshold=${{ env.COVERAGE_THRESHOLD }} \
-            /p:ThresholdType=line
+        run: dotnet test --configuration Release
 
   frontend-build-test:
     name: 1 · Frontend build & test
