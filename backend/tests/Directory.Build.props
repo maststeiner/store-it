@@ -1,9 +1,15 @@
 <Project>
-  <!-- Coverage gate for all test projects (SPEC/DoD: threshold 70%, calibrate during pilot).
+    <!-- Inherit the backend-wide props (analyzers) — MSBuild only auto-imports the nearest file -->
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))" />
+
+    <!-- Coverage gate for all test projects (SPEC/DoD: threshold 70%, calibrate during pilot).
        Architecture tests opt out (they verify structure, not behavior). -->
-  <PropertyGroup>
-    <CollectCoverage>true</CollectCoverage>
-    <Threshold>70</Threshold>
-    <ThresholdType>line</ThresholdType>
-  </PropertyGroup>
+    <PropertyGroup>
+        <CollectCoverage>true</CollectCoverage>
+        <Threshold>70</Threshold>
+        <ThresholdType>line</ThresholdType>
+        <!-- CA1707: underscores are mandated by our test naming convention
+             (Method_Scenario_ExpectedResult, see docs/guidelines/test-guidelines.md) -->
+        <NoWarn>$(NoWarn);CA1707</NoWarn>
+    </PropertyGroup>
 </Project>

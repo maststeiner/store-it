@@ -1,0 +1,9 @@
+<Project>
+    <!-- Roslyn analyzers: enforced at build time (Gate 1) — coding-guidelines.md.
+       Formatting is owned by CSharpier (Gate 5); analyzers own code quality/style. -->
+    <PropertyGroup>
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    </PropertyGroup>
+</Project>

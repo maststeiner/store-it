@@ -1,9 +1,10 @@
 # Coding Guidelines
 
 > **Owner:** Marcel Steiner (Architecture Stewardship)
-> **Stack:** .NET (C#) backend · Angular (TypeScript) frontend
-> **Formatter:** `dotnet format` (backend) · Prettier + ESLint (frontend)
-> **Last updated:** 2026-07-09
+> **Stack:** .NET 10 LTS (C#) backend · Angular (TypeScript) frontend
+> **Formatter:** CSharpier (backend, `dotnet csharpier format .`) · Prettier + ESLint (frontend)
+> **Static analysis:** Roslyn analyzers, `latest-recommended`, enforced at build time (warnings = errors)
+> **Last updated:** 2026-07-13
 
 These guidelines are the primary reference for the Developer Agent and the Reviewer Agent.
 
@@ -14,7 +15,8 @@ These guidelines are the primary reference for the Developer Agent and the Revie
 - **Simplicity over cleverness:** The simplest code that satisfies the spec. No speculative abstractions.
 - **Naming:** Descriptive names; no abbreviations except established ones (e.g. `id`, `url`).
 - **No magic numbers:** Name constants explicitly.
-- **Run the project formatter** before every commit. `.editorconfig` is binding.
+- **Run the project formatter** before every commit (backend: `dotnet csharpier format .` · frontend: `npx prettier --write .`). `.editorconfig` is binding.
+- **Roslyn analyzer findings are build errors** — fix them, don't suppress. Suppressions require a justifying comment and reviewer approval (exception: CA1707 in test projects, mandated by the test naming convention).
 
 ## SOLID Principles
 

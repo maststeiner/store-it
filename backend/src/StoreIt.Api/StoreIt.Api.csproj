@@ -1,14 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\StoreIt.Application\StoreIt.Application.csproj" />
-    <ProjectReference Include="..\StoreIt.Domain\StoreIt.Domain.csproj" />
-  </ItemGroup>
-
+    <ItemGroup>
+        <ProjectReference Include="..\StoreIt.Application\StoreIt.Application.csproj" />
+        <ProjectReference Include="..\StoreIt.Domain\StoreIt.Domain.csproj" />
+    </ItemGroup>
 </Project>
