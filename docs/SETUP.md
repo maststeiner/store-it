@@ -30,7 +30,9 @@
 
 ## 4. Branch protection **[platform]**
 
-- [ ] Protect `main`: changes only via PR.
+Branching model: `main` (releases) ← `develop` (integration) ← `feature/<name>` — see `CLAUDE.md`.
+
+- [ ] Protect `main` **and** `develop`: changes only via PR.
 - [ ] Require **≥ 1 human review** (Gate G2/G3 — non-negotiable).
 - [ ] Require CI status checks (Gate G3 machine part).
 - [ ] Enforce the **WIP limit** (max. 3 open agent PRs — start value, calibrate, then enforce technically).

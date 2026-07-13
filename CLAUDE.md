@@ -32,9 +32,17 @@ For every task: **Run → Inspect → Challenge → Refine → Re-run**
 
 When output systematically deviates from the goal: don't only fix the code — sharpen the harness (guidelines in `docs/guidelines/` or the persona definition in `.claude/agents/`). The fix then applies to all future runs.
 
+## Branching Model
+
+| Branch | Purpose | Rules |
+|--------|---------|-------|
+| `main` | Releases only | Only receives merges from `develop` (release PRs); never worked on directly |
+| `develop` | Integration | Target branch for all feature PRs |
+| `feature/<feature-name>` | One feature / work item | Branched from `develop`, merged back via PR (Gates G2/G3) |
+
 ## Isolation
 
-Every subagent works in its own **git worktree + branch + PR**. No direct work on `main`.
+Every subagent works in its own **git worktree + feature branch + PR** (targeting `develop`). No direct work on `main` or `develop`.
 
 WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict prevention). Calibrate during the pilot.
 
