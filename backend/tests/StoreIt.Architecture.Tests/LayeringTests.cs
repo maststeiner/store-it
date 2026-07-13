@@ -17,7 +17,8 @@ public class LayeringTests
     [Trait("Category", "ArchitectureTests")]
     public void Domain_MustNotDependOn_AnyOtherLayer()
     {
-        var result = Types.InAssembly(typeof(Domain.ExpiryRules).Assembly)
+        var result = Types
+            .InAssembly(typeof(Domain.ExpiryRules).Assembly)
             .ShouldNot()
             .HaveDependencyOnAny(ApiNamespace, ApplicationNamespace, InfrastructureNamespace)
             .GetResult();
@@ -29,7 +30,8 @@ public class LayeringTests
     [Trait("Category", "ArchitectureTests")]
     public void Application_MustNotDependOn_ApiOrInfrastructure()
     {
-        var result = Types.InAssembly(typeof(Application.AssemblyMarker).Assembly)
+        var result = Types
+            .InAssembly(typeof(Application.AssemblyMarker).Assembly)
             .ShouldNot()
             .HaveDependencyOnAny(ApiNamespace, InfrastructureNamespace)
             .GetResult();
@@ -41,7 +43,8 @@ public class LayeringTests
     [Trait("Category", "ArchitectureTests")]
     public void Api_MustNotDependOn_Infrastructure()
     {
-        var result = Types.InAssembly(typeof(Program).Assembly)
+        var result = Types
+            .InAssembly(typeof(Program).Assembly)
             .ShouldNot()
             .HaveDependencyOn(InfrastructureNamespace)
             .GetResult();

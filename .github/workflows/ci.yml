@@ -133,8 +133,11 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.x'
-      - name: dotnet format
-        run: dotnet format --verify-no-changes
+      # CSharpier owns formatting; Roslyn analyzers are enforced at build time (job 1)
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: CSharpier check
+        run: dotnet csharpier check .
 
   format-frontend:
     name: 5 · Frontend format check

@@ -43,7 +43,10 @@ public class ExpiryRulesTests
     [Fact]
     public void GetStatus_ExpiryDateBeyondThreshold_ReturnsOk()
     {
-        var status = ExpiryRules.GetStatus(Today.AddDays(ExpiryRules.ExpiringSoonThresholdDays + 1), Today);
+        var status = ExpiryRules.GetStatus(
+            Today.AddDays(ExpiryRules.ExpiringSoonThresholdDays + 1),
+            Today
+        );
 
         Assert.Equal(ExpiryStatus.Ok, status);
     }
