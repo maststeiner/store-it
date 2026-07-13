@@ -26,7 +26,9 @@
 - [x] Jobs wired for .NET + Angular (go green once `backend/`/`frontend/` scaffolds land).
 - [ ] **[platform]** Mark CI jobs as required status checks on `main` (build validation).
 - [ ] **[platform]** SonarCloud: create project, add `SONAR_TOKEN` secret, uncomment the `quality` job.
-- [x] Trivy (security scan + SBOM) works as-is.
+- [x] Trivy (security scan + SBOM) works as-is; SBOM per run as Actions artifact.
+- [x] **[platform]** Dependabot alerts enabled (continuous CVE monitoring + email notification — closes the gap between PR scans; enabled 2026-07-13 via API).
+- [ ] **[platform]** Optional: Dependabot security updates (automatic fix PRs) and/or a scheduled Trivy scan on develop/main.
 
 ## 4. Branch protection **[platform]**
 
