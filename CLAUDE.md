@@ -40,6 +40,8 @@ When output systematically deviates from the goal: don't only fix the code — s
 | `develop` | Integration | Target branch for all feature PRs |
 | `feature/<feature-name>` | One feature / work item | Branched from `develop`, merged back via PR (Gates G2/G3) |
 
+**Keeping branches up to date:** always `git rebase develop` + `git push --force-with-lease` — never merge commits into a branch.
+
 ## Isolation
 
 Every subagent works in its own **git worktree + feature branch + PR** (targeting `develop`). No direct work on `main` or `develop`.
