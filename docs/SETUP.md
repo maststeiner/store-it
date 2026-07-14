@@ -24,7 +24,7 @@
 ## 3. Pipeline (`.github/workflows/ci.yml`)
 
 - [x] Jobs wired for .NET + Angular (go green once `backend/`/`frontend/` scaffolds land).
-- [ ] **[platform]** Mark CI jobs as required status checks on `main` (build validation).
+- [x] **[platform]** CI jobs are required status checks on `main` **and** `develop` (see §4, done 2026-07-14).
 - [ ] **[platform]** SonarCloud: create project, add `SONAR_TOKEN` secret, uncomment the `quality` job.
 - [x] Trivy (security scan + SBOM) works as-is; SBOM per run as Actions artifact.
 - [x] **[platform]** Dependabot alerts enabled (continuous CVE monitoring + email notification — closes the gap between PR scans; enabled 2026-07-13 via API).
