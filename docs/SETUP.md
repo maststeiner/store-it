@@ -50,7 +50,7 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 
 ## 5. AI review & tooling **[platform]**
 
-- [ ] Activate CodeRabbit (or equivalent) on the GitHub repo as first filter before human review (Gate G2).
+- [x] **[platform]** CodeRabbit installed (2026-07-14, free for public repos) — `.coderabbit.yaml`: assertive profile, auto-review on PRs to develop/main, layering/test/i18n path instructions.
 - [x] PR template is GitHub-native (`.github/pull_request_template.md`).
 
 ## 6. Claude Code hooks (optional, recommended)
