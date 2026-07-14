@@ -52,6 +52,43 @@ public class LayeringTests
         Assert.True(result.IsSuccessful, FailureMessage(result));
     }
 
+    [Fact]
+    [Trait("Category", "ArchitectureTests")]
+    public void Infrastructure_MustNotDependOn_Api()
+    {
+        var result = Types
+            .InAssembly(typeof(Infrastructure.AssemblyMarker).Assembly)
+            .ShouldNot()
+            .HaveDependencyOn(ApiNamespace)
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, FailureMessage(result));
+    }
+
+    [Fact]
+    [Trait("Category", "ArchitectureTests")]
+    public void Domain_MustBe_FrameworkFree()
+    {
+        // Coding guidelines: Domain is framework-free — plain C#, no EF Core/ASP.NET/etc.
+        // Allowed references: the base class library only.
+        string[] allowedPrefixes = ["System", "netstandard", "mscorlib"];
+
+        var forbidden = typeof(Domain.ExpiryRules)
+            .Assembly.GetReferencedAssemblies()
+            .Where(reference =>
+                !allowedPrefixes.Any(prefix =>
+                    reference.Name?.StartsWith(prefix, StringComparison.Ordinal) == true
+                )
+            )
+            .Select(reference => reference.Name)
+            .ToList();
+
+        Assert.True(
+            forbidden.Count == 0,
+            $"Domain must be framework-free but references: {string.Join(", ", forbidden)}"
+        );
+    }
+
     private static string FailureMessage(TestResult result)
     {
         var offenders = result.FailingTypes is null

@@ -4,6 +4,11 @@ language: en-US
 reviews:
   profile: assertive # adversarial-review ethos (see .claude/agents/reviewer.md)
   high_level_summary: true
+  pre_merge_checks:
+    # 80% docstring coverage contradicts our guidelines (comments only where needed,
+    # simplicity over ceremony) — quality is enforced via analyzers + review instead.
+    docstrings:
+      mode: "off"
   auto_review:
     enabled: true
     base_branches:

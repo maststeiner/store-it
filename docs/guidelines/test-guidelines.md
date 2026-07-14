@@ -38,3 +38,4 @@ Failing tests block the Developer Agent. No feature is done before tests are gre
 <!-- Customize per project -->
 - [ ] Fix coverage threshold after pilot experience
 - [ ] Define test data strategy (fixtures, builder pattern, etc.)
+- [ ] Introduce E2E tests (recommendation: Playwright) with the SPEC-001 frontend implementation — extends the pyramid to unit → service → integration → E2E (decision 2026-07-14)
