@@ -34,12 +34,11 @@
 
 Branching model: `main` (releases) ← `develop` (integration) ← `feature/<name>` — see `CLAUDE.md`.
 
-> **Blocked 2026-07-13:** GitHub Free does not support branch protection (and platform auto-merge)
-> on private repos — requires GitHub Pro or a public repo. Decision pending.
-> Until then: PR-only discipline is process-enforced (KAIFe gates), not platform-enforced.
+> **Resolved 2026-07-14:** repo made public (decision Marcel) — branch protection and
+> platform auto-merge available on GitHub Free.
 
-- [ ] Protect `main` **and** `develop`: changes only via PR + required CI status checks (all 6 gates).
-- [ ] Required approvals: 0 (solo developer — GitHub forbids self-approval; Gate G2 review stays process discipline).
+- [x] Protect `main` **and** `develop`: changes only via PR + required CI status checks (all 6 gates), enforced incl. admins, no force pushes/deletions.
+- [x] Required approvals: 0 (solo developer — GitHub forbids self-approval; Gate G2 review stays process discipline).
 - [ ] Enforce the **WIP limit** (max. 3 open agent PRs — start value, calibrate, then enforce technically).
 
 ## 4a. Renovate (dependency updates)
@@ -47,7 +46,7 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 - [x] `renovate.json` on `main`: weekly, PRs target `develop` only, prConcurrentLimit 3 (aligned with WIP limit).
 - [x] Automerge policy: minor/patch auto-merge after green gates (documented G3 exception); major → human review (label `major-update`).
 - [ ] **[platform]** Install the Renovate GitHub App: https://github.com/apps/renovate → select `store-it`.
-- [ ] Note: Renovate merges via API itself (platform auto-merge unavailable on private Free repos).
+- [x] Platform auto-merge enabled (repo setting) — Renovate can use GitHub auto-merge.
 
 ## 5. AI review & tooling **[platform]**
 
