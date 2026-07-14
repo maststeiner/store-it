@@ -3,6 +3,10 @@
 
 name: CI
 
+# Least privilege: these jobs only read code (build, test, scan, format-check)
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches: [develop, main]

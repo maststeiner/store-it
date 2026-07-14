@@ -8,13 +8,8 @@
       "request": "launch",
       "preLaunchTask": "npm: start",
       "url": "http://localhost:4200/"
-    },
-    {
-      "name": "ng test",
-      "type": "chrome",
-      "request": "launch",
-      "preLaunchTask": "npm: test",
-      "url": "http://localhost:9876/debug.html"
     }
+    // "ng test" debug config removed: the Karma-style config (localhost:9876) does not
+    // work with the Vitest builder. Use `ng test --debug` + a Node attach config instead.
   ]
 }

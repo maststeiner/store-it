@@ -43,10 +43,9 @@ public class ExpiryRulesTests
     [Fact]
     public void GetStatus_ExpiryDateBeyondThreshold_ReturnsOk()
     {
-        var status = ExpiryRules.GetStatus(
-            Today.AddDays(ExpiryRules.ExpiringSoonThresholdDays + 1),
-            Today
-        );
+        // 4 days is deliberately hard-coded: SPEC-001 fixes the threshold at 3 days.
+        // If the production constant changes, this test must fail (spec first, then code).
+        var status = ExpiryRules.GetStatus(Today.AddDays(4), Today);
 
         Assert.Equal(ExpiryStatus.Ok, status);
     }

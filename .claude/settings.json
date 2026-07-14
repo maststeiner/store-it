@@ -12,7 +12,6 @@
       "Bash(dotnet test*)",
       "Bash(dotnet format*)",
       "Bash(dotnet csharpier*)",
-      "Bash(dotnet tool restore*)",
       "Bash(dotnet run*)",
       "Bash(npm run lint*)",
       "Bash(npm test*)",

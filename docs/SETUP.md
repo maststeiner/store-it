@@ -39,6 +39,7 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 
 - [x] Protect `main` **and** `develop`: changes only via PR + required CI status checks (all 6 gates), enforced incl. admins, no force pushes/deletions.
 - [x] Required approvals: 0 (solo developer — GitHub forbids self-approval; Gate G2 review stays process discipline).
+- [ ] **Later (decision 2026-07-14):** technically enforce Gate G2 — agent PRs via separate machine account/GitHub App, then `required_approving_review_count: 1` (Marcel approves as non-author). Raised by CodeRabbit review on PR #1.
 - [ ] Enforce the **WIP limit** (max. 3 open agent PRs — start value, calibrate, then enforce technically).
 
 ## 4a. Renovate (dependency updates)
