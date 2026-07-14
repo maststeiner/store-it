@@ -45,7 +45,7 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 
 - [x] `renovate.json` on `main`: weekly, PRs target `develop` only, prConcurrentLimit 3 (aligned with WIP limit).
 - [x] Automerge policy: minor/patch auto-merge after green gates (documented G3 exception); major → human review (label `major-update`).
-- [ ] **[platform]** Install the Renovate GitHub App: https://github.com/apps/renovate → select `store-it`.
+- [x] **[platform]** Renovate GitHub App installed (2026-07-14) — dependency dashboard + update PRs against develop.
 - [x] Platform auto-merge enabled (repo setting) — Renovate can use GitHub auto-merge.
 
 ## 5. AI review & tooling **[platform]**
