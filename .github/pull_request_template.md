@@ -15,7 +15,7 @@
 - [ ] Human review done — code understood, not just skimmed (no vibe coding)
 - [ ] Implementation verified **against the spec's acceptance criteria** (not against the code)
 - [ ] Tests derived from acceptance criteria, not from the implementation
-- [ ] No architecture/layering violations, no constraint bypasses
+- [ ] Layering is machine-checked (CI architecture gate) — manually verified only what machines can't see: no business rules in clients, no domain entities leaking through the API, no spec constraints bypassed
 - [ ] No new external dependencies without justification (ADR or comment below)
 
 ## Gate G3 · DoD checklist (manual part — pipeline covers the rest)
