@@ -1,3 +1,4 @@
+using System.Reflection;
 using NetArchTest.Rules;
 
 namespace StoreIt.Architecture.Tests;
@@ -31,7 +32,7 @@ public class LayeringTests
     public void Application_MustNotDependOn_ApiOrInfrastructure()
     {
         var result = Types
-            .InAssembly(typeof(Application.AssemblyMarker).Assembly)
+            .InAssembly(Assembly.Load(ApplicationNamespace))
             .ShouldNot()
             .HaveDependencyOnAny(ApiNamespace, InfrastructureNamespace)
             .GetResult();
@@ -57,7 +58,7 @@ public class LayeringTests
     public void Infrastructure_MustNotDependOn_Api()
     {
         var result = Types
-            .InAssembly(typeof(Infrastructure.AssemblyMarker).Assembly)
+            .InAssembly(Assembly.Load(InfrastructureNamespace))
             .ShouldNot()
             .HaveDependencyOn(ApiNamespace)
             .GetResult();
