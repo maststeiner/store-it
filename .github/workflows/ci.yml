@@ -90,19 +90,64 @@ jobs:
           path: sbom.cdx.json
 
   # ────────────────────────────────────────────
-  # 3 · Code Quality (SonarQube/SonarCloud)
+  # 3 · Code Quality (SonarCloud — monorepo: one project per app)
+  # Requires SONAR_TOKEN secret + SonarCloud projects (see docs/SETUP.md §3).
+  # sonar.qualitygate.wait=true → job fails when the quality gate is red
+  # (duplication threshold, new blockers — counters the AI tech-debt risk).
   # ────────────────────────────────────────────
-  # TODO: activate once a SonarCloud project + SONAR_TOKEN secret exist.
-  # quality:
-  #   name: 3 · SonarCloud quality gate
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - uses: SonarSource/sonarcloud-github-action@master
-  #       env:
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  quality-backend:
+    name: 3 · Backend quality gate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for accurate new-code detection
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21' # required by the Sonar scanner for .NET
+      - name: Install scanner
+        run: dotnet tool install --global dotnet-sonarscanner
+      - name: Analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"maststeiner_store-it-backend" \
+            /o:"maststeiner" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+            /d:sonar.qualitygate.wait=true
+          dotnet build --configuration Release
+          dotnet test --configuration Release /p:CoverletOutputFormat=opencover
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+  quality-frontend:
+    name: 3 · Frontend quality gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.projectKey=maststeiner_store-it-frontend
+            -Dsonar.organization=maststeiner
+            -Dsonar.sources=src
+            -Dsonar.qualitygate.wait=true
+        # TODO: wire vitest lcov coverage into the scan
+        # (-Dsonar.javascript.lcov.reportPaths=coverage/lcov.info) once paths are verified
 
   # ────────────────────────────────────────────
   # 4 · Architecture Conformance
