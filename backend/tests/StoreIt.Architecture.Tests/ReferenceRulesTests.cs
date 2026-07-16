@@ -55,7 +55,7 @@ public class ReferenceRulesTests
 
     [Fact]
     [Trait("Category", "ArchitectureTests")]
-    public void PackageReferences_DomainStaysFrameworkFree()
+    public void PackageReferences_InDomain_AreForbidden()
     {
         var complaints = ProjectsRuler.GetPackageReferencesComplaints(
             GetBackendRootPath(),
@@ -70,10 +70,55 @@ public class ReferenceRulesTests
         Assert.True(string.IsNullOrEmpty(complaints), complaints);
     }
 
+    [Fact]
+    [Trait("Category", "ArchitectureTests")]
+    public void ProjectReferenceRules_OnViolatingFixture_ProduceComplaints()
+    {
+        // Negative fixture: proves the rule engine fires — guards against
+        // silently ineffective rules (wrong path, wrong pattern).
+        var complaints = ProjectsRuler.GetProjectReferencesComplaints(
+            GetFixturesPath(),
+            new ReferenceRule(
+                patternFrom: "Violating.Api",
+                patternTo: "Violating.Infrastructure",
+                RuleKind.Forbidden,
+                description: "Fixture rule: must produce a complaint"
+            )
+        );
+
+        Assert.False(
+            string.IsNullOrEmpty(complaints),
+            "Rule engine did not fire on a known project-reference violation."
+        );
+    }
+
+    [Fact]
+    [Trait("Category", "ArchitectureTests")]
+    public void PackageReferenceRules_OnViolatingFixture_ProduceComplaints()
+    {
+        var complaints = ProjectsRuler.GetPackageReferencesComplaints(
+            GetFixturesPath(),
+            new ReferenceRule(
+                patternFrom: "Violating.Domain",
+                patternTo: "*",
+                RuleKind.Forbidden,
+                description: "Fixture rule: must produce a complaint"
+            )
+        );
+
+        Assert.False(
+            string.IsNullOrEmpty(complaints),
+            "Rule engine did not fire on a known package-reference violation."
+        );
+    }
+
     private static string GetBackendRootPath()
     {
         // bin/<config>/<tfm> → project dir → tests/ → backend/
         var assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
         return Path.GetFullPath(Path.Combine(assemblyDir, "..", "..", "..", "..", ".."));
     }
+
+    private static string GetFixturesPath() =>
+        Path.Combine(GetBackendRootPath(), "tests", "StoreIt.Architecture.Tests", "Fixtures");
 }
