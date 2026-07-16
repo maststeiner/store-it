@@ -10,6 +10,8 @@ permissions:
 on:
   pull_request:
     branches: [develop, main]
+  push:
+    branches: [develop, main] # post-merge runs keep the SonarCloud baseline current
   workflow_dispatch:
 
 env:
