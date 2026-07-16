@@ -25,11 +25,8 @@
 
 - [x] Jobs wired for .NET + Angular (go green once `backend/`/`frontend/` scaffolds land).
 - [x] **[platform]** CI jobs are required status checks on `main` **and** `develop` (see §4, done 2026-07-14).
-- [ ] **[platform]** SonarCloud onboarding (CI jobs are wired, they fail until this is done):
-  1. https://sonarcloud.io → Log in with GitHub → import organization `maststeiner` (free plan, public repos).
-  2. Create **two projects** (monorepo): keys `maststeiner_store-it-backend` and `maststeiner_store-it-frontend`; disable Automatic Analysis (we use CI-based analysis).
-  3. Generate a token (My Account → Security) and add it as GitHub Actions secret `SONAR_TOKEN`.
-- [ ] **[platform]** After the first green run: add `3 · Backend quality gate` and `3 · Frontend quality gate` to the required status checks on `main`/`develop`. **Not before** — otherwise open PRs are blocked by "expected" checks that never ran on them.
+- [x] **[platform]** SonarCloud onboarding done 2026-07-16: organization `maststeiner`, monorepo projects `maststeiner_store-it-backend` + `maststeiner_store-it-frontend` (CI-based analysis), `SONAR_TOKEN` secret set. First fully green run same day (initial findings fixed).
+- [ ] **[platform]** After PR #2 is merged: add `3 · Backend quality gate` and `3 · Frontend quality gate` to the required status checks on `main`/`develop`. **Not before** — otherwise open PRs are blocked by "expected" checks that never ran on them.
 - [ ] Wire vitest lcov coverage into the frontend scan (TODO in ci.yml).
 - [x] Trivy (security scan + SBOM) works as-is; SBOM per run as Actions artifact.
 - [x] **[platform]** Dependabot alerts enabled (continuous CVE monitoring + email notification — closes the gap between PR scans; enabled 2026-07-13 via API).
