@@ -1,0 +1,6 @@
+<!-- Test fixture: reference target for Violating.Api. Not part of the solution. -->
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+</Project>

@@ -1,0 +1,10 @@
+<!-- Test fixture: deliberately violates the Api -> Infrastructure rule.
+     Not part of the solution — only scanned by ReferenceRulesTests negative tests. -->
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Violating.Infrastructure\Violating.Infrastructure.csproj" />
+    </ItemGroup>
+</Project>
