@@ -26,9 +26,11 @@
 - [x] Jobs wired for .NET + Angular (go green once `backend/`/`frontend/` scaffolds land).
 - [x] **[platform]** CI jobs are required status checks on `main` **and** `develop` (see §4, done 2026-07-14).
 - [x] **[platform]** SonarCloud onboarding done 2026-07-16: organization `maststeiner`, monorepo projects `maststeiner_store-it-backend` + `maststeiner_store-it-frontend` (CI-based analysis), `SONAR_TOKEN` secret set. First fully green run same day (initial findings fixed).
-- [ ] **[platform]** After PR #2 is merged: add `3 · Backend quality gate` and `3 · Frontend quality gate` to the required status checks on `main`/`develop`. **Not before** — otherwise open PRs are blocked by "expected" checks that never ran on them.
+- [x] **[platform]** Sonar quality gates added to required status checks on `main`/`develop` (done 2026-07-16 after PR #2 merge — 8 required checks total).
 - [ ] Wire vitest lcov coverage into the frontend scan (TODO in ci.yml).
 - [x] Trivy (security scan + SBOM) works as-is; SBOM per run as Actions artifact.
+- [x] **License policy** (2026-07-16): project licensed under **MIT**. Dependencies: permissive licenses only (MIT, Apache-2.0, BSD, ISC); copyleft/special clauses (GPL, AGPL, LGPL, SSPL) are blocked — enforced twice: Trivy license scan (repo-wide) + dependency-review-action (PR diff).
+- [ ] **[platform]** After first green run: consider adding `2 · Dependency & license review (PR diff)` to required status checks.
 - [x] **[platform]** Dependabot alerts enabled (continuous CVE monitoring + email notification — closes the gap between PR scans; enabled 2026-07-13 via API).
 - [ ] **[platform]** Optional: Dependabot security updates (automatic fix PRs) and/or a scheduled Trivy scan on develop/main.
 

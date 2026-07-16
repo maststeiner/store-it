@@ -87,6 +87,16 @@ jobs:
             --exit-code 1 \
             --severity HIGH,CRITICAL \
             --format table
+      - name: License scan
+        # Blocks forbidden/restricted licenses (GPL/AGPL/etc. map to HIGH/CRITICAL
+        # in Trivy's default categorization) — see docs/SETUP.md license policy.
+        run: |
+          trivy fs . \
+            --scanners license \
+            --exit-code 1 \
+            --severity HIGH,CRITICAL \
+            --format table
+
       - name: SBOM export (CycloneDX)
         run: |
           trivy fs . \
@@ -96,6 +106,20 @@ jobs:
         with:
           name: SBOM
           path: sbom.cdx.json
+
+  dependency-review:
+    name: 2 · Dependency & license review (PR diff)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
+        with:
+          fail-on-severity: high
+          # License policy (docs/SETUP.md): permissive licenses only
+          deny-licenses: GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, LGPL-2.1-only, LGPL-3.0-only, SSPL-1.0
 
   # ────────────────────────────────────────────
   # 3 · Code Quality (SonarCloud — monorepo: one project per app)
