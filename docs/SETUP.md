@@ -65,6 +65,7 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 ## 6. Claude Code hooks (optional, recommended)
 
 - [x] Format-on-edit hook (retro 2026-07-18): `.claude/hooks/format-changed-file.sh` — file-scoped CSharpier/Prettier on every Edit/Write, silent, CI format gate stays the authority.
+- [x] Commit conventions (2026-07-18): Conventional Commits enforced via `.githooks/commit-msg` (activated locally: `git config core.hooksPath .githooks`) — deliberate decision against a CI gate (low friction; hook is bypassable with --no-verify).
 - [ ] Pre-commit hook that blocks commits when tests fail (deferred — evaluate friction first).
 
 ## 7. First sprint readiness
