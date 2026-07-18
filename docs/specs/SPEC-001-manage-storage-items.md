@@ -80,6 +80,7 @@ An item has: name · amount (decimal, max. **one decimal place**, > 0) · unit (
 - [ ] Layering per ADR-001 (Api → Application → Domain; Infrastructure implements interfaces).
 - [ ] API-first per ADR-002: all ACs exposed via REST endpoints; the Angular UI consumes them without own business rules.
 - [ ] Persistence per ADR-003 (PostgreSQL + EF Core).
+- [ ] API versioning & contract gate per ADR-006 (added post-freeze as technical constraint, retro decision 2026-07-18): endpoints under `/api/v1/…`; OpenAPI contract committed as `backend/openapi/v1.yaml`; drift + breaking-change gate (oasdiff) wired into CI with this implementation.
 - [ ] "Expiring soon" threshold (3 days) and the unit list are named domain constants — not hard-coded in the UI.
 - [ ] i18n: translation files per language (de, en, fr, it) in the frontend; no user-facing strings hard-coded in components.
 - [ ] ADR required: no — covered by ADR-001/002/003.

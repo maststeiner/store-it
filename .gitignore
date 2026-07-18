@@ -26,3 +26,6 @@ npm-debug.log*
 # Test artifacts
 coverage.json
 coverage.*.json
+
+# Stryker mutation testing
+StrykerOutput/

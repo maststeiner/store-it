@@ -42,6 +42,26 @@ jobs:
       - name: Test + coverage gate
         run: dotnet test --configuration Release
 
+  backend-mutation-test:
+    name: 1a · Backend mutation testing
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.x'
+      - name: Restore tools
+        run: dotnet tool restore
+      # Verifies the tests actually test something (kills mutants) — AI-generated
+      # tests can look plausible while asserting nothing. Break threshold: 60%.
+      - name: Stryker mutation testing
+        run: dotnet stryker
+
   frontend-build-test:
     name: 1 · Frontend build & test
     runs-on: ubuntu-latest
@@ -219,6 +239,18 @@ jobs:
         run: dotnet tool restore
       - name: CSharpier check
         run: dotnet csharpier check .
+
+  workflow-lint:
+    name: 5 · Workflow lint (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: actionlint
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.12
+          ./actionlint -color
 
   format-frontend:
     name: 5 · Frontend format check
