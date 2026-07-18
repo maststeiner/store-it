@@ -26,7 +26,8 @@
 - [x] Jobs wired for .NET + Angular (go green once `backend/`/`frontend/` scaffolds land).
 - [x] **[platform]** CI jobs are required status checks on `main` **and** `develop` (see §4, done 2026-07-14).
 - [x] **[platform]** SonarCloud onboarding done 2026-07-16: organization `maststeiner`, monorepo projects `maststeiner_store-it-backend` + `maststeiner_store-it-frontend` (CI-based analysis), `SONAR_TOKEN` secret set. First fully green run same day (initial findings fixed).
-- [x] **[platform]** Sonar quality gates added to required status checks on `main`/`develop` (done 2026-07-16 after PR #2 merge — 8 required checks total).
+- [x] **[platform]** Sonar quality gates added to required status checks on `main`/`develop` (done 2026-07-16 after PR #2 merge — 8 required checks total; license review added as 9th on 2026-07-18).
+- [x] **[platform]** Conversation resolution required before merging (2026-07-18) — unresolved review threads technically block the merge.
 - [ ] Wire vitest lcov coverage into the frontend scan (TODO in ci.yml).
 - [x] **Mutation testing** (retro 2026-07-18): Stryker.NET as CI job `1a` (break < 60%) — verifies tests kill mutants; AI-generated tests can look plausible while asserting nothing. Frontend (StrykerJS/vitest) deferred until real components exist (SPEC-001).
 - [x] **Workflow lint** (retro 2026-07-18): actionlint 1.7.12 as CI job `5` — the pipeline itself is enforced infrastructure.
