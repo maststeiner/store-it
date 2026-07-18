@@ -10,7 +10,9 @@ case "$subject" in
     Merge\ * | Revert\ * | fixup!\ * | squash\ *) exit 0 ;;
 esac
 
-pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?(!)?: [a-z].{0,99}$'
+# Subject: imperative, lowercase start, ≤ 100 chars, no trailing period.
+# Note: subject is a single line (head -n1); "." in ERE never matches newline.
+pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9-]+\))?(!)?: [a-z](.{0,98}[^.])?$'
 
 if ! echo "$subject" | grep -qE "$pattern"; then
     echo "✗ Commit message does not follow Conventional Commits (CLAUDE.md):" >&2

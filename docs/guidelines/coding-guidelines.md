@@ -75,7 +75,7 @@ The backend targets Kubernetes and follows [the twelve factors](https://12factor
 
 **Conventional Commits** (Angular style), enforced locally by the `commit-msg` git hook (`.githooks/commit-msg`; activate once per clone: `git config core.hooksPath .githooks` — deliberate decision against a CI gate, 2026-07-18):
 
-```
+```text
 type(scope): subject
 ```
 

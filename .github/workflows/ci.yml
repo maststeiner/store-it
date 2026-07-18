@@ -61,6 +61,12 @@ jobs:
       # tests can look plausible while asserting nothing. Break threshold: 60%.
       - name: Stryker mutation testing
         run: dotnet stryker
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: mutation-report
+          path: backend/StrykerOutput/**/reports/
+          if-no-files-found: ignore
 
   frontend-build-test:
     name: 1 · Frontend build & test
@@ -248,8 +254,9 @@ jobs:
         with:
           persist-credentials: false
       - name: actionlint
+        # Installer pinned to the immutable v1.7.12 tag commit (not mutable main)
         run: |
-          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash) 1.7.12
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/914e7df21a07ef503a81201c76d2b11c789d3fca/scripts/download-actionlint.bash) 1.7.12
           ./actionlint -color
 
   format-frontend:

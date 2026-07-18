@@ -59,7 +59,7 @@ WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict preventi
 
 **Conventional Commits** (Angular style), enforced locally by the `commit-msg` hook (`.githooks/`, activate once per clone: `git config core.hooksPath .githooks`):
 
-```
+```text
 type(scope): subject          # imperative, lowercase, no trailing period
 ```
 
@@ -85,9 +85,9 @@ Configured in `.claude/settings.json` (add stack-specific commands during setup,
 - **Approval:** package installs, `git push`, schema/migration changes, infrastructure changes
 
 ## Metadata
-```
-last_updated: 2026-07-09
+```text
+last_updated: 2026-07-18
 owner: Marcel Steiner (AI Steward)
 scope: store-it — digital pantry management
-stack: .NET (C#) backend · Angular frontend · Kubernetes · GitHub Actions
+stack: .NET 10 (C#) backend · Angular frontend · Kubernetes · GitHub Actions
 ```
