@@ -28,6 +28,10 @@
 - [x] **[platform]** SonarCloud onboarding done 2026-07-16: organization `maststeiner`, monorepo projects `maststeiner_store-it-backend` + `maststeiner_store-it-frontend` (CI-based analysis), `SONAR_TOKEN` secret set. First fully green run same day (initial findings fixed).
 - [x] **[platform]** Sonar quality gates added to required status checks on `main`/`develop` (done 2026-07-16 after PR #2 merge — 8 required checks total).
 - [ ] Wire vitest lcov coverage into the frontend scan (TODO in ci.yml).
+- [x] **Mutation testing** (retro 2026-07-18): Stryker.NET as CI job `1a` (break < 60%) — verifies tests kill mutants; AI-generated tests can look plausible while asserting nothing. Frontend (StrykerJS/vitest) deferred until real components exist (SPEC-001).
+- [x] **Workflow lint** (retro 2026-07-18): actionlint 1.7.12 as CI job `5` — the pipeline itself is enforced infrastructure.
+- [ ] **API contract gate** (ADR-006, retro 2026-07-18): lands with SPEC-001 — OpenAPI artifact `backend/openapi/v1.yaml`, drift check + oasdiff breaking check in CI.
+- [ ] **[platform]** After first green runs: consider `1a · Backend mutation testing` and `5 · Workflow lint (actionlint)` as required checks (expected-check pattern: never before they ran on open PRs).
 - [x] Trivy (security scan + SBOM) works as-is; SBOM per run as Actions artifact.
 - [x] **License policy** (2026-07-16): project licensed under **MIT**. Dependencies: permissive licenses only (MIT, Apache-2.0, BSD, ISC); copyleft/special clauses (GPL, AGPL, LGPL, SSPL) are blocked — enforced twice: Trivy license scan (repo-wide) + dependency-review-action (PR diff).
 - [ ] **[platform]** After first green run: consider adding `2 · Dependency & license review (PR diff)` to required status checks.
@@ -60,8 +64,8 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 
 ## 6. Claude Code hooks (optional, recommended)
 
-- [ ] Format-on-edit hook (weigh cost: `dotnet format` on every edit is slow — consider pre-commit instead).
-- [ ] Pre-commit hook that blocks commits when tests fail.
+- [x] Format-on-edit hook (retro 2026-07-18): `.claude/hooks/format-changed-file.sh` — file-scoped CSharpier/Prettier on every Edit/Write, silent, CI format gate stays the authority.
+- [ ] Pre-commit hook that blocks commits when tests fail (deferred — evaluate friction first).
 
 ## 7. First sprint readiness
 
