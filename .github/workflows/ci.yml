@@ -81,18 +81,12 @@ jobs:
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-      - name: Dependency + secret scan
+      - name: Dependency + secret + license scan
+        # Licenses: forbidden/restricted (GPL/AGPL/etc.) map to HIGH/CRITICAL in
+        # Trivy's default categorization — see docs/SETUP.md license policy.
         run: |
           trivy fs . \
-            --exit-code 1 \
-            --severity HIGH,CRITICAL \
-            --format table
-      - name: License scan
-        # Blocks forbidden/restricted licenses (GPL/AGPL/etc. map to HIGH/CRITICAL
-        # in Trivy's default categorization) — see docs/SETUP.md license policy.
-        run: |
-          trivy fs . \
-            --scanners license \
+            --scanners vuln,secret,license \
             --exit-code 1 \
             --severity HIGH,CRITICAL \
             --format table
@@ -119,7 +113,7 @@ jobs:
         with:
           fail-on-severity: high
           # License policy (docs/SETUP.md): permissive licenses only
-          deny-licenses: GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, LGPL-2.1-only, LGPL-3.0-only, SSPL-1.0
+          deny-licenses: GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, LGPL-2.1-only, LGPL-2.1-or-later, LGPL-3.0-only, LGPL-3.0-or-later, SSPL-1.0
 
   # ────────────────────────────────────────────
   # 3 · Code Quality (SonarCloud — monorepo: one project per app)
