@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1)
 > **Sprint:** 2026-S15
 > **Author:** Analyst Agent (orchestrated by Marcel Steiner)
-> **Last updated:** 2026-07-13
+> **Last updated:** 2026-07-18 (ADR-006 constraint added post-freeze; ACs unchanged since freeze 2026-07-13)
 
 ---
 
