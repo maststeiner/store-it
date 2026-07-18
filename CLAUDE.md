@@ -85,6 +85,7 @@ Configured in `.claude/settings.json` (add stack-specific commands during setup,
 - **Approval:** package installs, `git push`, schema/migration changes, infrastructure changes
 
 ## Metadata
+
 ```text
 last_updated: 2026-07-18
 owner: Marcel Steiner (AI Steward)
