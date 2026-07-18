@@ -55,6 +55,18 @@ WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict preventi
 | `backend/` | .NET solution — API-first REST backend (consumed by Angular and later the iPhone app) |
 | `frontend/` | Angular app |
 
+## Commit Conventions
+
+**Conventional Commits** (Angular style), enforced locally by the `commit-msg` hook (`.githooks/`, activate once per clone: `git config core.hooksPath .githooks`):
+
+```
+type(scope): subject          # imperative, lowercase, no trailing period
+```
+
+- **Types:** `feat` · `fix` · `docs` · `style` · `refactor` · `perf` · `test` · `build` · `ci` · `chore` · `revert`
+- **Scopes (suggested):** `backend`, `frontend`, `docs`, `ci`, `harness`, `deps` — omit when the change is repo-wide
+- **Body:** explains the *why*; wrap at ~72 chars
+
 ## Source of Truth
 
 | Path | Content |

@@ -71,6 +71,20 @@ The backend targets Kubernetes and follows [the twelve factors](https://12factor
 - SQL only via parameterized queries / ORM.
 - No insecure deserialization.
 
+## Commit Conventions
+
+**Conventional Commits** (Angular style), enforced locally by the `commit-msg` git hook (`.githooks/commit-msg`; activate once per clone: `git config core.hooksPath .githooks` — deliberate decision against a CI gate, 2026-07-18):
+
+```
+type(scope): subject
+```
+
+- **Types:** `feat` (new behavior) · `fix` (bug fix) · `docs` · `style` (formatting only) · `refactor` (no behavior change) · `perf` · `test` · `build` (dependencies/tooling) · `ci` · `chore` · `revert`
+- **Scopes (suggested):** `backend`, `frontend`, `docs`, `ci`, `harness`, `deps` — omit for repo-wide changes
+- **Subject:** imperative mood, lowercase, no trailing period, ≤ 100 chars
+- **Body:** explains the *why*, wrapped at ~72 chars; reference specs/ADRs where relevant
+- **Breaking changes:** `type(scope)!: subject` plus a `BREAKING CHANGE:` footer — for the API also subject to ADR-006 (new version required)
+
 ## TODO
 
 <!-- Customize per project -->
