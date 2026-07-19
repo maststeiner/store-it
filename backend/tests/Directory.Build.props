@@ -8,6 +8,10 @@
         <CollectCoverage>true</CollectCoverage>
         <Threshold>70</Threshold>
         <ThresholdType>line</ThresholdType>
+        <!-- Source-generated framework code (e.g. OpenAPI XML-comment support) is
+             emitted into our assemblies under Microsoft/System namespaces — it is
+             not ours to cover -->
+        <Exclude>[*]Microsoft.*,[*]System.*</Exclude>
         <!-- CA1707: underscores are mandated by our test naming convention
              (Method_Scenario_ExpectedResult, see docs/guidelines/test-guidelines.md) -->
         <NoWarn>$(NoWarn);CA1707</NoWarn>

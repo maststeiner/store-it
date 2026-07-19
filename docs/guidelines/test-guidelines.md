@@ -29,6 +29,20 @@ Tests verify **required behavior** (from acceptance criteria), not the implement
 - Target: **≥ 70%** (calibrate during pilot, then fix as pipeline gate).
 - Coverage is a means, not a goal: 100% meaningless tests do not beat 70% good ones.
 
+## Containers for Tests (Podman)
+
+Service/integration tests run against real PostgreSQL via Testcontainers. Locally the
+house standard is **Podman** (not Docker) — point Testcontainers at the Podman socket:
+
+```bash
+podman machine start   # once
+export DOCKER_HOST=unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
+export TESTCONTAINERS_RYUK_DISABLED=true   # ryuk needs a privileged docker daemon
+dotnet test
+```
+
+CI (GitHub Actions ubuntu runner) provides a Docker daemon — no configuration needed there.
+
 ## Stop Condition
 
 Failing tests block the Developer Agent. No feature is done before tests are green.

@@ -127,6 +127,42 @@ jobs:
           name: SBOM
           path: sbom.cdx.json
 
+  api-contract:
+    name: 2 · API contract gate (drift + breaking)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.x'
+      # ADR-006 stage 1 — drift: the committed contract must match the code
+      - name: Regenerate OpenAPI spec
+        run: dotnet build src/StoreIt.Api --configuration Release
+      - name: Drift check (contract committed and current)
+        run: git diff --exit-code -- openapi/
+      # ADR-006 stage 2 — breaking changes vs. target branch (PRs only)
+      - name: Install oasdiff
+        if: github.event_name == 'pull_request'
+        run: |
+          curl -sSfL "https://github.com/oasdiff/oasdiff/releases/download/v1.23.0/oasdiff_1.23.0_linux_amd64.tar.gz" -o /tmp/oasdiff.tgz
+          tar -xzf /tmp/oasdiff.tgz -C /tmp oasdiff
+      - name: Breaking-change check
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if git show "origin/${BASE_REF}:backend/openapi/StoreIt.Api.json" > /tmp/base-spec.json 2>/dev/null; then
+            /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json --fail-on ERR
+          else
+            echo "No contract on ${BASE_REF} yet — first introduction, skipping breaking check."
+          fi
+
   dependency-review:
     name: 2 · Dependency & license review (PR diff)
     runs-on: ubuntu-latest

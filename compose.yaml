@@ -1,0 +1,16 @@
+# Local development database (podman compose up -d / docker compose up -d).
+# Dev/prod parity: real PostgreSQL, no in-memory substitute (coding guidelines, ADR-003).
+services:
+  postgres:
+    image: docker.io/library/postgres:17-alpine
+    environment:
+      POSTGRES_DB: storeit
+      POSTGRES_USER: storeit
+      POSTGRES_PASSWORD: storeit # local development only — never reuse
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

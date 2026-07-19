@@ -44,8 +44,12 @@ public class LayeringTests
     [Trait("Category", "ArchitectureTests")]
     public void Api_MustNotDependOn_Infrastructure()
     {
+        // ADR-001 amendment 2026-07-19: the composition root (Program) is the only
+        // Api type allowed to reference Infrastructure (DI registration).
         var result = Types
             .InAssembly(typeof(Program).Assembly)
+            .That()
+            .DoNotHaveName("Program")
             .ShouldNot()
             .HaveDependencyOn(InfrastructureNamespace)
             .GetResult();
