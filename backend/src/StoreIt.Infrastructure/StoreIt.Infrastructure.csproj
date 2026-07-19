@@ -3,6 +3,9 @@
         <ProjectReference Include="..\StoreIt.Application\StoreIt.Application.csproj" />
         <ProjectReference Include="..\StoreIt.Domain\StoreIt.Domain.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    </ItemGroup>
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>

@@ -13,7 +13,7 @@ store-it is API-first (ADR-002); the Angular web app and the planned iPhone app 
 ## Decision
 
 1. **URL path versioning:** all endpoints live under `/api/v1/…`. A breaking change is only allowed as a **new version** (`/api/v2/…` with its own contract file); the old version stays frozen while any client uses it.
-2. **The OpenAPI contract is a committed, reviewed artifact:** generated at build time, stored per version (`backend/openapi/v1.yaml`). Contract changes are visible in every PR diff (Gate G2 reviews them explicitly).
+2. **The OpenAPI contract is a committed, reviewed artifact:** generated at build time (`Microsoft.Extensions.ApiDescription.Server`), stored in `backend/openapi/` (`StoreIt.Api.json` for the v1 document; additional documents per future version). Contract changes are visible in every PR diff (Gate G2 reviews them explicitly).
 3. **Two-stage CI gate** (lands with the first endpoints, SPEC-001):
    - *Drift check:* regenerate the spec and compare with the committed file — fails when the API changes without updating the contract.
    - *Breaking check:* `oasdiff breaking <develop-baseline> <PR-spec> --fail-on ERR` — fails on breaking changes within the same version.

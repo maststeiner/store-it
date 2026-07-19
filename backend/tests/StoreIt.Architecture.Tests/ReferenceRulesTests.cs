@@ -21,8 +21,8 @@ public class ReferenceRulesTests
             new ReferenceRule(
                 patternFrom: "StoreIt.Api",
                 patternTo: "StoreIt.Infrastructure",
-                RuleKind.Forbidden,
-                description: "ADR-001: Api must not depend on Infrastructure"
+                RuleKind.Allowed,
+                description: "ADR-001 amendment 2026-07-19: composition root (Program) registers Infrastructure for DI — type-level gate still forbids all other Api types"
             ),
             new ReferenceRule(
                 patternFrom: "StoreIt.Infrastructure",
