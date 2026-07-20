@@ -3,7 +3,13 @@ using System.Text.Json;
 
 namespace StoreIt.Api.Service.Tests;
 
-public sealed record StorageResponse(Guid Id, string Name, int ItemCount);
+public sealed record StorageResponse(
+    Guid Id,
+    string Name,
+    int ItemCount,
+    int ExpiredCount,
+    int ExpiringSoonCount
+);
 
 public sealed record ItemResponse(
     Guid Id,

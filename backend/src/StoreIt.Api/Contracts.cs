@@ -6,10 +6,22 @@ namespace StoreIt.Api;
 // Boundary DTOs (ADR-001: domain entities do not leak through the API).
 // Dates are ISO-8601 (DateOnly), enums are locale-neutral codes (arc42 §8 i18n).
 
-public sealed record StorageResponse(Guid Id, string Name, int ItemCount)
+public sealed record StorageResponse(
+    Guid Id,
+    string Name,
+    int ItemCount,
+    int ExpiredCount,
+    int ExpiringSoonCount
+)
 {
-    public static StorageResponse From(Storage storage) =>
-        new(storage.Id, storage.Name, storage.Items.Count);
+    public static StorageResponse From(StorageSummary summary) =>
+        new(
+            summary.Storage.Id,
+            summary.Storage.Name,
+            summary.Storage.Items.Count,
+            summary.ExpiredCount,
+            summary.ExpiringSoonCount
+        );
 }
 
 public sealed record ItemResponse(

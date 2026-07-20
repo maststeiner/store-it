@@ -1,51 +1,66 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using StoreIt.Application;
 
 namespace StoreIt.Api;
 
 public static class StorageEndpoints
 {
-    /// <summary>SPEC-001 endpoints under /api/v1 (ADR-006 URL versioning).</summary>
+    /// <summary>
+    /// SPEC-001 endpoints under /api/v1 (ADR-006 URL versioning).
+    /// Handlers return typed results so the OpenAPI contract captures response
+    /// shapes and status codes — the basis for the drift + breaking-change gate.
+    /// </summary>
     public static IEndpointRouteBuilder MapStorageEndpointsV1(this IEndpointRouteBuilder app)
     {
         var storages = app.MapGroup("/api/v1/storages").WithTags("Storages");
 
         storages.MapGet(
             "/",
-            async (ListStoragesUseCase useCase, CancellationToken ct) =>
-                Results.Ok((await useCase.ExecuteAsync(ct)).Select(StorageResponse.From))
+            async Task<Ok<IEnumerable<StorageResponse>>> (
+                ListStoragesUseCase useCase,
+                CancellationToken ct
+            ) => TypedResults.Ok((await useCase.ExecuteAsync(ct)).Select(StorageResponse.From))
         );
 
         storages.MapPost(
             "/",
-            async (StorageRequest request, CreateStorageUseCase useCase, CancellationToken ct) =>
+            async Task<Created<StorageResponse>> (
+                StorageRequest request,
+                CreateStorageUseCase useCase,
+                CancellationToken ct
+            ) =>
             {
-                var storage = await useCase.ExecuteAsync(request.Name, ct);
-                return Results.Created(
-                    $"/api/v1/storages/{storage.Id}",
-                    StorageResponse.From(storage)
+                var summary = await useCase.ExecuteAsync(request.Name, ct);
+                return TypedResults.Created(
+                    $"/api/v1/storages/{summary.Storage.Id}",
+                    StorageResponse.From(summary)
                 );
             }
         );
 
         storages.MapPut(
             "/{storageId:guid}",
-            async (
+            async Task<Ok<StorageResponse>> (
                 Guid storageId,
                 StorageRequest request,
                 RenameStorageUseCase useCase,
                 CancellationToken ct
             ) =>
-                Results.Ok(
+                TypedResults.Ok(
                     StorageResponse.From(await useCase.ExecuteAsync(storageId, request.Name, ct))
                 )
         );
 
         storages.MapDelete(
             "/{storageId:guid}",
-            async (Guid storageId, DeleteStorageUseCase useCase, CancellationToken ct) =>
+            async Task<NoContent> (
+                Guid storageId,
+                DeleteStorageUseCase useCase,
+                CancellationToken ct
+            ) =>
             {
                 await useCase.ExecuteAsync(storageId, ct);
-                return Results.NoContent();
+                return TypedResults.NoContent();
             }
         );
 
@@ -53,13 +68,19 @@ public static class StorageEndpoints
 
         items.MapGet(
             "/",
-            async (Guid storageId, GetStorageItemsUseCase useCase, CancellationToken ct) =>
-                Results.Ok((await useCase.ExecuteAsync(storageId, ct)).Select(ItemResponse.From))
+            async Task<Ok<IEnumerable<ItemResponse>>> (
+                Guid storageId,
+                GetStorageItemsUseCase useCase,
+                CancellationToken ct
+            ) =>
+                TypedResults.Ok(
+                    (await useCase.ExecuteAsync(storageId, ct)).Select(ItemResponse.From)
+                )
         );
 
         items.MapPost(
             "/",
-            async (
+            async Task<Created<Guid>> (
                 Guid storageId,
                 ItemRequest request,
                 AddItemUseCase useCase,
@@ -75,13 +96,16 @@ public static class StorageEndpoints
                     request.ProductionDate,
                     ct
                 );
-                return Results.Created($"/api/v1/storages/{storageId}/items/{item.Id}", item.Id);
+                return TypedResults.Created(
+                    $"/api/v1/storages/{storageId}/items/{item.Id}",
+                    item.Id
+                );
             }
         );
 
         items.MapPut(
             "/{itemId:guid}",
-            async (
+            async Task<NoContent> (
                 Guid storageId,
                 Guid itemId,
                 ItemRequest request,
@@ -100,16 +124,21 @@ public static class StorageEndpoints
                     request.ProductionDate,
                     ct
                 );
-                return Results.NoContent();
+                return TypedResults.NoContent();
             }
         );
 
         items.MapDelete(
             "/{itemId:guid}",
-            async (Guid storageId, Guid itemId, DeleteItemUseCase useCase, CancellationToken ct) =>
+            async Task<NoContent> (
+                Guid storageId,
+                Guid itemId,
+                DeleteItemUseCase useCase,
+                CancellationToken ct
+            ) =>
             {
                 await useCase.ExecuteAsync(storageId, itemId, ct);
-                return Results.NoContent();
+                return TypedResults.NoContent();
             }
         );
 
