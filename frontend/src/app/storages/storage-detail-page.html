@@ -1,0 +1,239 @@
+<section>
+  <nav class="breadcrumb">
+    <a [routerLink]="['/storages']">{{ 'nav.storages' | translate }}</a>
+    / {{ storage()?.name }}
+  </nav>
+
+  <div class="detail-head">
+    @if (renaming()) {
+      <div class="inline-edit">
+        <input
+          class="inline-input"
+          type="text"
+          [(ngModel)]="renameValue"
+          [attr.aria-label]="'storages.namePlaceholder' | translate"
+          (keydown.enter)="saveRename()"
+        />
+        <button
+          type="button"
+          class="icon-btn"
+          (click)="saveRename()"
+          [title]="'actions.save' | translate"
+        >
+          ✓
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          (click)="renaming.set(false)"
+          [title]="'actions.cancel' | translate"
+        >
+          ✕
+        </button>
+      </div>
+      @if (renameError(); as error) {
+        <p class="form-error" role="alert">{{ error }}</p>
+      }
+    } @else {
+      <h1>{{ storage()?.name }}</h1>
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="startRename()"
+        [title]="'actions.rename' | translate"
+      >
+        ✎
+      </button>
+      <button
+        type="button"
+        class="icon-btn"
+        (click)="deleteOpen.set(true)"
+        [title]="'actions.delete' | translate"
+      >
+        🗑
+      </button>
+    }
+  </div>
+
+  @if (loadError(); as error) {
+    <p class="form-error" role="alert">{{ error }}</p>
+  }
+
+  <form class="add-form" (ngSubmit)="addItem()">
+    <div class="field">
+      <label for="item-name">{{ 'items.form.name' | translate }}</label>
+      <input
+        id="item-name"
+        name="name"
+        type="text"
+        [(ngModel)]="form.name"
+        [placeholder]="'items.form.namePlaceholder' | translate"
+      />
+    </div>
+    <div class="field">
+      <label for="item-amount">{{ 'items.form.amount' | translate }}</label>
+      <input
+        id="item-amount"
+        name="amount"
+        type="number"
+        step="0.1"
+        min="0.1"
+        [(ngModel)]="form.amount"
+      />
+    </div>
+    <div class="field">
+      <label for="item-unit">{{ 'items.form.unit' | translate }}</label>
+      <select id="item-unit" name="unit" [(ngModel)]="form.unit">
+        @for (unit of units; track unit) {
+          <option [value]="unit">{{ 'units.' + unit | translate }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="item-expiry">{{ 'items.form.expiry' | translate }}</label>
+      <input id="item-expiry" name="expiryDate" type="date" [(ngModel)]="form.expiryDate" />
+    </div>
+    <div class="field">
+      <label for="item-production">{{ 'items.form.production' | translate }}</label>
+      <input
+        id="item-production"
+        name="productionDate"
+        type="date"
+        [(ngModel)]="form.productionDate"
+      />
+    </div>
+    <button type="submit" class="btn-primary">{{ 'actions.add' | translate }}</button>
+    <p class="form-hint">{{ 'items.form.dateHint' | translate }}</p>
+    @if (formError(); as error) {
+      <p class="form-error" role="alert">{{ error }}</p>
+    }
+  </form>
+
+  @if (items()?.length === 0) {
+    <p class="empty-hint">{{ 'items.empty' | translate }}</p>
+  }
+
+  @for (group of groups(); track group.key) {
+    <div class="group" [class]="'group ' + group.key">
+      <div class="group-head">
+        <span class="dot"></span>
+        {{ group.labelKey | translate }}
+        <span class="n">· {{ group.items.length }}</span>
+      </div>
+      <div class="item-list">
+        @for (item of group.items; track item.id) {
+          @if (editItemId() === item.id) {
+            <form class="item-row item-edit" (ngSubmit)="saveItem(item)">
+              <input
+                class="inline-input"
+                name="editName"
+                type="text"
+                [(ngModel)]="editModel.name"
+                [attr.aria-label]="'items.form.name' | translate"
+              />
+              <input
+                class="inline-input"
+                name="editAmount"
+                type="number"
+                step="0.1"
+                min="0"
+                [(ngModel)]="editModel.amount"
+                [attr.aria-label]="'items.form.amount' | translate"
+              />
+              <select
+                class="inline-input"
+                name="editUnit"
+                [(ngModel)]="editModel.unit"
+                [attr.aria-label]="'items.form.unit' | translate"
+              >
+                @for (unit of units; track unit) {
+                  <option [value]="unit">{{ 'units.' + unit | translate }}</option>
+                }
+              </select>
+              <input
+                class="inline-input"
+                name="editExpiry"
+                type="date"
+                [(ngModel)]="editModel.expiryDate"
+                [attr.aria-label]="'items.form.expiry' | translate"
+              />
+              <input
+                class="inline-input"
+                name="editProduction"
+                type="date"
+                [(ngModel)]="editModel.productionDate"
+                [attr.aria-label]="'items.form.production' | translate"
+              />
+              <span class="item-actions">
+                <button type="submit" class="icon-btn" [title]="'actions.save' | translate">
+                  ✓
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  (click)="cancelItemEdit()"
+                  [title]="'actions.cancel' | translate"
+                >
+                  ✕
+                </button>
+              </span>
+              @if (editError(); as error) {
+                <p class="form-error" role="alert">{{ error }}</p>
+              }
+            </form>
+          } @else {
+            <div class="item-row">
+              <span class="item-name">{{ item.name }}</span>
+              <span class="item-qty mono">
+                {{ item.amount }} {{ 'units.' + item.unit | translate }}
+              </span>
+              @if (item.expiryDate) {
+                <span
+                  class="item-date mono"
+                  [class.overdue]="item.expiryStatus === 'Expired'"
+                  [class.soon]="item.expiryStatus === 'ExpiringSoon'"
+                >
+                  {{ item.expiryDate | date: 'dd.MM.yyyy' }}
+                </span>
+              } @else {
+                <span class="item-date mono prod-hint">
+                  {{
+                    'items.producedOn'
+                      | translate: { date: (item.productionDate | date: 'dd.MM.yyyy') }
+                  }}
+                </span>
+              }
+              <span class="item-actions">
+                <button
+                  type="button"
+                  class="icon-btn"
+                  (click)="startItemEdit(item)"
+                  [title]="'actions.edit' | translate"
+                >
+                  ✎
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  (click)="deleteItem(item)"
+                  [title]="'actions.delete' | translate"
+                >
+                  🗑
+                </button>
+              </span>
+            </div>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  @if (deleteOpen()) {
+    <app-confirm-dialog
+      [title]="'storages.deleteTitle' | translate"
+      [message]="'storages.deleteConfirm' | translate: { name: storage()?.name ?? '' }"
+      (confirmed)="confirmDelete()"
+      (cancelled)="deleteOpen.set(false)"
+    />
+  }
+</section>

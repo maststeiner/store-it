@@ -1,0 +1,63 @@
+{
+  "nav": { "storages": "Mes rangements" },
+  "header": { "language": "Langue" },
+  "languages": { "de": "DE", "en": "EN", "fr": "FR", "it": "IT" },
+  "actions": {
+    "add": "Ajouter",
+    "create": "Créer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "rename": "Renommer",
+    "delete": "Supprimer"
+  },
+  "storages": {
+    "title": "Mes rangements",
+    "new": "+ Nouveau rangement",
+    "createGhost": "+ Créer un rangement",
+    "namePlaceholder": "Nom du rangement",
+    "count": { "one": "1 rangement", "other": "{{count}} rangements" },
+    "deleteTitle": "Supprimer le rangement",
+    "deleteConfirm": "Vraiment supprimer « {{name}} » ? Tous les articles qu'il contient seront également supprimés."
+  },
+  "items": {
+    "count": { "one": "1 article", "other": "{{count}} articles" },
+    "empty": "Aucun article dans ce rangement pour l'instant.",
+    "producedOn": "prod. {{date}}",
+    "form": {
+      "name": "Article",
+      "namePlaceholder": "p. ex. petits pois surgelés",
+      "amount": "Quantité",
+      "unit": "Unité",
+      "expiry": "Date d'expiration",
+      "production": "Date de production",
+      "dateHint": "Indiquer au moins une date (expiration ou production)."
+    }
+  },
+  "groups": {
+    "expired": "Expiré",
+    "expiring": "Expire bientôt",
+    "others": "Autres"
+  },
+  "units": {
+    "Piece": "pc",
+    "Gram": "g",
+    "Kilogram": "kg",
+    "Milliliter": "ml",
+    "Liter": "l",
+    "Pack": "paquet"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue. Veuillez réessayer.",
+    "storage": { "name": { "empty": "Veuillez saisir un nom pour le rangement." } },
+    "item": {
+      "name": { "empty": "Veuillez saisir un nom d'article." },
+      "amount": {
+        "notPositive": "La quantité doit être supérieure à 0.",
+        "tooManyDecimals": "La quantité ne peut avoir qu'une seule décimale."
+      },
+      "dates": { "missing": "Veuillez indiquer au moins une date (expiration ou production)." }
+    },
+    "request": { "invalid": "Saisie invalide. Veuillez vérifier les champs." }
+  }
+}
