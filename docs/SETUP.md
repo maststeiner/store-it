@@ -32,7 +32,7 @@
 - [x] **Mutation testing** (retro 2026-07-18): Stryker.NET as CI job `1a` (break < 60%) — verifies tests kill mutants; AI-generated tests can look plausible while asserting nothing. Frontend (StrykerJS/vitest) deferred until real components exist (SPEC-001).
 - [x] **Workflow lint** (retro 2026-07-18): actionlint 1.7.12 as CI job `5` — the pipeline itself is enforced infrastructure.
 - [x] **API contract gate** (ADR-006, wired 2026-07-19 with SPEC-001): OpenAPI artifact `backend/openapi/StoreIt.Api.json` (build-time generated), CI job `2 · API contract gate` — drift check + oasdiff v1.23.0 breaking check against target branch. Add to required checks after first green runs.
-- [ ] **[platform]** After first green runs: consider `1a · Backend mutation testing` and `5 · Workflow lint (actionlint)` as required checks (expected-check pattern: never before they ran on open PRs).
+- [ ] **[platform]** After first green runs: consider `1a · Backend mutation testing`, `1b · End-to-end (full stack)`, `2 · API contract gate` and `5 · Workflow lint (actionlint)` as required checks (expected-check pattern: never before they ran on open PRs).
 - [x] Trivy (security scan + SBOM) works as-is; SBOM per run as Actions artifact.
 - [x] **License policy** (2026-07-16): project licensed under **MIT**. Dependencies: permissive licenses only (MIT, Apache-2.0, BSD, ISC); copyleft/special clauses (GPL, AGPL, LGPL, SSPL) are blocked — enforced twice: Trivy license scan (repo-wide) + dependency-review-action (PR diff).
 - [ ] **[platform]** After first green run: consider adding `2 · Dependency & license review (PR diff)` to required status checks.

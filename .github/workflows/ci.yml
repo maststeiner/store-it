@@ -97,6 +97,62 @@ jobs:
   # ────────────────────────────────────────────
   # 2 · Security & SBOM (Trivy — language-neutral)
   # ────────────────────────────────────────────
+  e2e:
+    name: 1b · End-to-end (full stack)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: storeit
+          POSTGRES_USER: storeit
+          POSTGRES_PASSWORD: storeit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      ConnectionStrings__storeit: Host=localhost;Port=5432;Database=storeit;Username=storeit;Password=storeit
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: '10.x'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Apply migrations (admin process, 12-factor)
+        working-directory: backend
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project src/StoreIt.Infrastructure --startup-project src/StoreIt.Api
+      - name: Start backend
+        working-directory: backend
+        run: |
+          dotnet run --project src/StoreIt.Api --configuration Release --no-launch-profile --urls http://localhost:5000 &
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:5000/health > /dev/null; then echo "backend up"; break; fi
+            sleep 2
+          done
+      - name: Install frontend deps + browser
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run E2E (Playwright starts ng serve, proxies to backend)
+        working-directory: frontend
+        run: npm run e2e
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          if-no-files-found: ignore
+
   security:
     name: 2 · Security scan & SBOM
     runs-on: ubuntu-latest

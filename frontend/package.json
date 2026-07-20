@@ -8,6 +8,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:coverage": "ng test --coverage --runner-config vitest-base.config.ts --watch=false",
+    "e2e": "playwright test",
     "lint": "ng lint"
   },
   "private": true,
@@ -27,6 +28,7 @@
     "@angular/cli": "^22.0.6",
     "@angular/compiler-cli": "^22.0.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
     "@vitest/coverage-v8": "^4.1.10",
     "angular-eslint": "22.1.0",
     "eslint": "^10.6.0",

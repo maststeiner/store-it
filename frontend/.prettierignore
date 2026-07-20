@@ -2,3 +2,6 @@ dist/
 .angular/
 node_modules/
 coverage/
+playwright-report/
+test-results/
+.playwright/
