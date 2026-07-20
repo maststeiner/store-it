@@ -90,11 +90,32 @@ An item has: name · amount (decimal, max. **one decimal place**, > 0) · unit (
 
 ## Verification
 
-<!-- Filled in by QA Agent -->
+Tests derived black-box from these ACs by the QA persona (never from the code).
+`Domain` = StoreIt.Domain.Tests · `Service` = StoreIt.Api.Service.Tests · `E2E` = frontend/e2e · `FE` = frontend vitest specs.
 
-| AC | Test | Status |
-|----|------|--------|
-| AC-01…AC-12 | TODO after implementation start | ⬜ |
+| AC / EC | Covered by | Status |
+|---------|-----------|--------|
+| AC-01 create storage | Domain `StorageTests.Create_*` · Service `CreateStorage_*` · E2E create flow | ✅ |
+| AC-01a status counts | Service `GetStorages_StorageWithMixedItems_*`, `CreateStorage_FreshStorage_HasZeroStatusCounts` · FE chip rendering | ✅ |
+| AC-02 empty name rejected | Domain `Create_WithEmptyName_*` · Service `CreateStorage_WithEmptyName_*` | ✅ |
+| AC-03 rename | Domain `Rename_*` · Service `RenameStorage_*` · FE inline-rename | ✅ |
+| AC-04 delete incl. items | Service `DeleteStorage_StorageWithItems_*`, `DeleteStorage_UnknownStorage_*` · FE/E2E delete-with-confirm | ✅ |
+| AC-05 add item | Domain `AddItem_*` · Service `AddItem_*` · E2E add flow | ✅ |
+| AC-06 item validation | Domain `AddItem_With{EmptyName,NonPositiveAmount,MoreThanOneDecimalPlace,NeitherDate}_*` · Service `AddItem_*` incl. unit-outside-list · E2E no-date | ✅ |
+| AC-07 edit item | Domain `UpdateItem_WithValidData_*` · Service `UpdateItem_*` · FE inline-edit | ✅ |
+| AC-08 amount 0 removes | Domain `UpdateItem_WithAmountZero_RemovesItemAndReturnsFalse` · Service `UpdateItem_WithAmountZero_*` | ✅ |
+| AC-09 delete item | Domain `RemoveItem_*` · Service `DeleteItem_*` · FE delete | ✅ |
+| AC-10 sorted grouping | Domain `GetItemsSortedByExpiry_*` · Service `GetItems_MixedExpiryDates_*` · FE/E2E group rendering | ✅ |
+| AC-11 expiring soon | Domain `ExpiryRulesTests`, `ItemTests.GetExpiryStatus_*` · Service `GetItems_*ExpiryStatus*` | ✅ |
+| AC-12 expired | Domain `ExpiryRulesTests`, `ItemTests.GetExpiryStatus_ExpiryDateInThePast_*` · E2E expired group | ✅ |
+| EC-01 duplicate names | Domain `AddItem_WithSameNameTwice_*` · Service `AddItem_WithSameNameTwice_*` | ✅ |
+| EC-02 expiry today = soon | Domain `ExpiryRulesTests`, `GetExpiryStatus_ExpiryDateToday_*` | ✅ |
+| EC-03 empty storage | Domain `GetItemsSortedByExpiry_EmptyStorage_*` · Service `GetItems_StorageWithoutItems_*` | ✅ |
+| EC-04 no silent rounding | Domain `AddItem_WithMoreThanOneDecimalPlace_*` (0.25/1.001/99.99) | ✅ |
+| EC-05 production-date only | Domain `GetExpiryStatus_OnlyProductionDate_*` · FE production-date rendering | ✅ |
+| EC-06 no orphaned items | Service `DeleteStorage_StorageWithItems_*` (cascade) | ✅ |
+
+**Totals:** 90 backend tests (45 domain · 9 architecture · 36 service) + 20 frontend vitest + 3 Playwright E2E — all green. Backend domain line coverage 97.8%, frontend 87%.
 
 ---
 
