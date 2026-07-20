@@ -15,7 +15,21 @@ Tests verify **required behavior** (from acceptance criteria), not the implement
 - **Unit tests:** isolated, no external dependencies, fast. Use mocks/stubs for dependencies.
 - **Service tests (Contract/API):** verify the service contract from the outside — endpoints, response shapes, status codes, error contracts. Use an in-process test host or equivalent; no mocking of internal layers. Clearly marked (e.g. `*.Service.Tests`).
 - **Integration tests:** full stack including external resources (DB, message bus). Clearly marked (e.g. `*.Integration.Tests`).
+- **E2E tests (Playwright):** drive the real UI against the live backend + PostgreSQL (`frontend/e2e/`). Cover core user flows only — expensive, so kept few and meaningful. Each test creates its own uniquely-named data so runs are independent.
 - **Arrange-Act-Assert:** always, no logic inside the test.
+
+### Running E2E locally (Podman)
+
+```bash
+podman compose up -d                                   # PostgreSQL
+cd backend && ConnectionStrings__storeit="Host=localhost;Port=5432;Database=storeit;Username=storeit;Password=storeit" \
+  dotnet ef database update --project src/StoreIt.Infrastructure --startup-project src/StoreIt.Api
+ConnectionStrings__storeit="Host=localhost;Port=5432;Database=storeit;Username=storeit;Password=storeit" \
+  dotnet run --project src/StoreIt.Api --no-launch-profile --urls http://localhost:5000 &
+cd ../frontend && npx playwright install chromium && npm run e2e   # Playwright starts ng serve itself
+```
+
+CI (`1b · End-to-end`) uses a postgres service container and the runner's browser deps — no Podman needed there.
 
 ## Naming
 
@@ -52,4 +66,5 @@ Failing tests block the Developer Agent. No feature is done before tests are gre
 <!-- Customize per project -->
 - [ ] Fix coverage threshold after pilot experience
 - [ ] Define test data strategy (fixtures, builder pattern, etc.)
-- [ ] Introduce E2E tests (recommendation: Playwright) with the SPEC-001 frontend implementation — extends the pyramid to unit → service → integration → E2E (decision 2026-07-14)
+- [x] E2E tests (Playwright) added with SPEC-001 — pyramid is now unit → service → integration → E2E; CI job `1b · End-to-end` runs the full stack (done 2026-07-20)
+- [ ] Frontend mutation testing (StrykerJS) — deferred to a follow-up (decision 2026-07-20)
