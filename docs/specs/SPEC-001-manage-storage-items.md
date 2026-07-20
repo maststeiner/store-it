@@ -20,6 +20,7 @@ As a **household member** I want to **track what is in my storages (pantry, free
 A storage is a named object holding a list of items. Multiple storages can exist.
 
 - [ ] AC-01: WHEN the user creates a storage with a name THE system SHALL persist it and return it in the storage list.
+- [ ] AC-01a *(addendum, PO decision 2026-07-19 — mockup status chips)*: WHEN the user views the storage list THE system SHALL deliver, per storage, the count of expired items and of items expiring soon (server-computed, ADR-002).
 - [ ] AC-02: WHEN the user creates a storage with an empty name THE system SHALL reject the request with a validation error.
 - [ ] AC-03: WHEN the user renames a storage THE system SHALL update the name (same validation as AC-02).
 - [ ] AC-04: WHEN the user deletes a storage THE system SHALL remove it including all of its items. (UI asks for confirmation, see UI section.)

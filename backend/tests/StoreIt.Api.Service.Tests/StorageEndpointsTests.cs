@@ -41,6 +41,61 @@ public class StorageEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
         Assert.Contains(storages, s => s.Id == created.Id && s.Name == "Freezer");
     }
 
+    // --- AC-01a: server-computed status counts per storage ---
+
+    [Fact]
+    public async Task GetStorages_StorageWithMixedItems_ReturnsCorrectStatusCounts()
+    {
+        // AC-01a: expiredCount = items with expiry date in the past;
+        // expiringSoonCount = expiry date within the next 3 days incl. today;
+        // items without expiry date count toward neither.
+        var created = await _client.CreateStorageAsync("StatusCountsPantry");
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Bread", expiryDate: Today.AddDays(-1)) // expired
+        );
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Yogurt", expiryDate: Today) // expiring today -> soon
+        );
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Ham", expiryDate: Today.AddDays(3)) // in 3 days -> soon
+        );
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Rice", expiryDate: Today.AddDays(4)) // later -> neither
+        );
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Jam", productionDate: Today.AddDays(-10)) // no expiry -> neither
+        );
+
+        var storages = await _client.GetStoragesAsync();
+
+        var storage = Assert.Single(storages, s => s.Id == created.Id);
+        Assert.Equal(5, storage.ItemCount);
+        Assert.Equal(1, storage.ExpiredCount);
+        Assert.Equal(2, storage.ExpiringSoonCount);
+    }
+
+    [Fact]
+    public async Task CreateStorage_FreshStorage_HasZeroStatusCounts()
+    {
+        // AC-01a: a storage without items reports zero for both counts
+        // in the POST response and in the storage list.
+        var created = await _client.CreateStorageAsync("EmptyStatusCounts");
+
+        Assert.Equal(0, created.ExpiredCount);
+        Assert.Equal(0, created.ExpiringSoonCount);
+
+        var storages = await _client.GetStoragesAsync();
+        var storage = Assert.Single(storages, s => s.Id == created.Id);
+        Assert.Equal(0, storage.ItemCount);
+        Assert.Equal(0, storage.ExpiredCount);
+        Assert.Equal(0, storage.ExpiringSoonCount);
+    }
+
     // --- AC-02: empty name rejected ---
 
     [Fact]
