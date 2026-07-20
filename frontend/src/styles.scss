@@ -215,9 +215,12 @@ h1 {
   align-items: center;
   justify-content: center;
   color: var(--text-soft);
+  /* inherit family/size from the button element, keep the intended weight
+     (the `font` shorthand would reset font-weight — css:S4657) */
+  font-family: inherit;
+  font-size: inherit;
   font-weight: 500;
   min-height: 150px;
-  font: inherit;
 }
 .storage-card.ghost:hover {
   border-color: var(--accent);

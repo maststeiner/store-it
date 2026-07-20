@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'v8',
+      // lcov feeds SonarCloud (new-code coverage); text for the console gate
+      reporter: ['text', 'lcov'],
+      reportsDirectory: 'coverage',
       thresholds: {
         lines: 70,
       },
