@@ -87,10 +87,10 @@ jobs:
         run: npm ci
       - name: Lint
         run: npm run lint
-      - name: Test + coverage
-        # Vitest builder runs in Node/jsdom (no browser needed); watch is off in CI.
-        # TODO: enforce coverage threshold ($COVERAGE_THRESHOLD) via vitest config once real components exist.
-        run: npm test -- --coverage
+      - name: Test + coverage gate
+        # Vitest builder in Node/jsdom (no browser needed); line-coverage threshold
+        # (70%) enforced via vitest-base.config.ts, consistent with the backend gate.
+        run: npm run test:coverage
       - name: Build
         run: npm run build
 

@@ -1,0 +1,63 @@
+{
+  "nav": { "storages": "Le mie dispense" },
+  "header": { "language": "Lingua" },
+  "languages": { "de": "DE", "en": "EN", "fr": "FR", "it": "IT" },
+  "actions": {
+    "add": "Aggiungi",
+    "create": "Crea",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "edit": "Modifica",
+    "rename": "Rinomina",
+    "delete": "Elimina"
+  },
+  "storages": {
+    "title": "Le mie dispense",
+    "new": "+ Nuova dispensa",
+    "createGhost": "+ Crea dispensa",
+    "namePlaceholder": "Nome della dispensa",
+    "count": { "one": "1 dispensa", "other": "{{count}} dispense" },
+    "deleteTitle": "Elimina dispensa",
+    "deleteConfirm": "Eliminare davvero «{{name}}»? Verranno eliminati anche tutti gli articoli contenuti."
+  },
+  "items": {
+    "count": { "one": "1 articolo", "other": "{{count}} articoli" },
+    "empty": "Nessun articolo in questa dispensa.",
+    "producedOn": "prod. {{date}}",
+    "form": {
+      "name": "Articolo",
+      "namePlaceholder": "es. piselli surgelati",
+      "amount": "Quantità",
+      "unit": "Unità",
+      "expiry": "Data di scadenza",
+      "production": "Data di produzione",
+      "dateHint": "Indicare almeno una data (scadenza o produzione)."
+    }
+  },
+  "groups": {
+    "expired": "Scaduti",
+    "expiring": "In scadenza",
+    "others": "Altri"
+  },
+  "units": {
+    "Piece": "pz",
+    "Gram": "g",
+    "Kilogram": "kg",
+    "Milliliter": "ml",
+    "Liter": "l",
+    "Pack": "conf."
+  },
+  "errors": {
+    "generic": "Qualcosa è andato storto. Riprova.",
+    "storage": { "name": { "empty": "Inserisci un nome per la dispensa." } },
+    "item": {
+      "name": { "empty": "Inserisci un nome per l'articolo." },
+      "amount": {
+        "notPositive": "La quantità deve essere maggiore di 0.",
+        "tooManyDecimals": "La quantità può avere al massimo una cifra decimale."
+      },
+      "dates": { "missing": "Indicare almeno una data (scadenza o produzione)." }
+    },
+    "request": { "invalid": "Dati non validi. Controlla i campi." }
+  }
+}

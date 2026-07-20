@@ -1,0 +1,63 @@
+{
+  "nav": { "storages": "Meine Schränke" },
+  "header": { "language": "Sprache" },
+  "languages": { "de": "DE", "en": "EN", "fr": "FR", "it": "IT" },
+  "actions": {
+    "add": "Hinzufügen",
+    "create": "Anlegen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "rename": "Umbenennen",
+    "delete": "Löschen"
+  },
+  "storages": {
+    "title": "Meine Schränke",
+    "new": "+ Neuer Schrank",
+    "createGhost": "+ Schrank anlegen",
+    "namePlaceholder": "Name des Schranks",
+    "count": { "one": "1 Schrank", "other": "{{count}} Schränke" },
+    "deleteTitle": "Schrank löschen",
+    "deleteConfirm": "„{{name}}“ wirklich löschen? Alle darin enthaltenen Artikel werden ebenfalls gelöscht."
+  },
+  "items": {
+    "count": { "one": "1 Artikel", "other": "{{count}} Artikel" },
+    "empty": "Noch keine Artikel in diesem Schrank.",
+    "producedOn": "prod. {{date}}",
+    "form": {
+      "name": "Artikel",
+      "namePlaceholder": "z. B. Erbsen tiefgekühlt",
+      "amount": "Menge",
+      "unit": "Einheit",
+      "expiry": "Ablaufdatum",
+      "production": "Produktionsdatum",
+      "dateHint": "Mindestens ein Datum angeben (Ablauf- oder Produktionsdatum)."
+    }
+  },
+  "groups": {
+    "expired": "Abgelaufen",
+    "expiring": "Läuft bald ab",
+    "others": "Weitere"
+  },
+  "units": {
+    "Piece": "Stück",
+    "Gram": "g",
+    "Kilogram": "kg",
+    "Milliliter": "ml",
+    "Liter": "l",
+    "Pack": "Packung"
+  },
+  "errors": {
+    "generic": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
+    "storage": { "name": { "empty": "Bitte einen Namen für den Schrank angeben." } },
+    "item": {
+      "name": { "empty": "Bitte einen Artikelnamen angeben." },
+      "amount": {
+        "notPositive": "Die Menge muss grösser als 0 sein.",
+        "tooManyDecimals": "Die Menge darf höchstens eine Nachkommastelle haben."
+      },
+      "dates": { "missing": "Bitte mindestens ein Datum angeben (Ablauf- oder Produktionsdatum)." }
+    },
+    "request": { "invalid": "Ungültige Eingabe. Bitte die Felder prüfen." }
+  }
+}

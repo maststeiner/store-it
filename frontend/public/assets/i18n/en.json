@@ -1,0 +1,63 @@
+{
+  "nav": { "storages": "My storages" },
+  "header": { "language": "Language" },
+  "languages": { "de": "DE", "en": "EN", "fr": "FR", "it": "IT" },
+  "actions": {
+    "add": "Add",
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "rename": "Rename",
+    "delete": "Delete"
+  },
+  "storages": {
+    "title": "My storages",
+    "new": "+ New storage",
+    "createGhost": "+ Create storage",
+    "namePlaceholder": "Storage name",
+    "count": { "one": "1 storage", "other": "{{count}} storages" },
+    "deleteTitle": "Delete storage",
+    "deleteConfirm": "Really delete “{{name}}”? All items it contains will be deleted as well."
+  },
+  "items": {
+    "count": { "one": "1 item", "other": "{{count}} items" },
+    "empty": "No items in this storage yet.",
+    "producedOn": "prod. {{date}}",
+    "form": {
+      "name": "Item",
+      "namePlaceholder": "e.g. frozen peas",
+      "amount": "Amount",
+      "unit": "Unit",
+      "expiry": "Expiry date",
+      "production": "Production date",
+      "dateHint": "Provide at least one date (expiry or production)."
+    }
+  },
+  "groups": {
+    "expired": "Expired",
+    "expiring": "Expiring soon",
+    "others": "Others"
+  },
+  "units": {
+    "Piece": "pcs",
+    "Gram": "g",
+    "Kilogram": "kg",
+    "Milliliter": "ml",
+    "Liter": "l",
+    "Pack": "pack"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "storage": { "name": { "empty": "Please enter a name for the storage." } },
+    "item": {
+      "name": { "empty": "Please enter an item name." },
+      "amount": {
+        "notPositive": "The amount must be greater than 0.",
+        "tooManyDecimals": "The amount may have at most one decimal place."
+      },
+      "dates": { "missing": "Please provide at least one date (expiry or production)." }
+    },
+    "request": { "invalid": "Invalid input. Please check the fields." }
+  }
+}
