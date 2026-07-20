@@ -67,4 +67,4 @@ Failing tests block the Developer Agent. No feature is done before tests are gre
 - [ ] Fix coverage threshold after pilot experience
 - [ ] Define test data strategy (fixtures, builder pattern, etc.)
 - [x] E2E tests (Playwright) added with SPEC-001 — pyramid is now unit → service → integration → E2E; CI job `1b · End-to-end` runs the full stack (done 2026-07-20)
-- [ ] Frontend mutation testing (StrykerJS) — deferred to a follow-up (decision 2026-07-20)
+- Frontend mutation testing (StrykerJS): **consciously dropped** (decision 2026-07-20). Weak value/effort ratio — the frontend is logic-thin (template + delegation, server-computed status per ADR-002), while the branch-heavy logic lives in the backend domain, already gated by Stryker.NET (60%). Revisit only if substantial client-side logic appears.
