@@ -21,6 +21,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.OpenApi" Version="2.11.0" />
     </ItemGroup>
     <PropertyGroup>
         <!-- ADR-006: OpenAPI contract generated at build time, committed as backend/openapi/v1.json -->
