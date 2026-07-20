@@ -33,3 +33,13 @@ This project follows the **KAIFe Framework (L4)** — AI-driven development with
 3. **G3 · DoD/Merge** — CI fully green; only a human merges
 
 See `CLAUDE.md` for orchestration rules and `docs/SETUP.md` for the setup checklist.
+
+## Run it locally
+
+```bash
+./scripts/dev.sh
+```
+
+Starts PostgreSQL (Podman), applies migrations, and launches the backend API
+(http://localhost:5000) and the Angular frontend (http://localhost:4200).
+Ctrl+C tears everything down. Prerequisites: `podman`, .NET 10 SDK, Node 22.
