@@ -75,8 +75,17 @@ type(scope): subject          # imperative, lowercase, no trailing period
 | `docs/architecture/` | arc42 architecture doc (`ARCHITECTURE.md`), ADRs (basis for the architecture conformance gate) |
 | `docs/guidelines/` | Coding and test guidelines (basis for agent work) |
 | `docs/agent-logs/` | One run log per agent task (transparency / compliance, DoD requirement) |
+| `docs/metrics.md` | Pilot metrics — Flow + Quality tracking (KAIFe §8) |
 
 Keep this file short. Detailed content belongs in `docs/guidelines/`.
+
+## Data & Compliance (KAIFe §7)
+
+- **No real or sensitive data in prompts, fixtures, test data, or logs** — use
+  synthetic data only. Storages/items in tests are made up.
+- **Agent run logs (`docs/agent-logs/`) are the audit trail** for how AI produced
+  each change (EU AI Act Article-50 transparency, effective Aug 2026).
+- Secrets come from the environment (12-factor), never committed.
 
 ## Permission Tiers
 
