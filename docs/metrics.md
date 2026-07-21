@@ -10,10 +10,10 @@
 
 | Metric | How to read it |
 |--------|----------------|
-| **Cycle time** spec-freeze → merge | spec `Frozen` date → PR `mergedAt` (`gh pr view <n> --json mergedAt`) |
-| **Throughput** | merged feature PRs per sprint (`gh pr list --state merged --base develop`) |
+| **Cycle time** spec-freeze → merge | freeze date from the spec's Gate-Status table → PR `mergedAt` (`gh pr view <n> --json mergedAt`) |
+| **Throughput** | merged feature PRs per sprint (`gh pr list --state merged --base develop --json number,mergedAt`) |
 | **WIP** | open feature PRs at a time (target ≤ 3, CLAUDE.md) |
-| **Review load** (watch!) | review rounds per PR + commits-after-first-review; how much CodeRabbit/human review triggered rework |
+| **Review load** (watch!) | per PR: review rounds and commits after the first review — count review-fix commits (`gh pr view <n> --json commits`) and resolved review threads (GraphQL `reviewThreads`) |
 
 ## Quality — already produced by the gates, just collect it
 
@@ -40,9 +40,11 @@ capture once a team works in KAIFe.
 
 ## Baseline
 
-- **SPEC-001** (first full KAIFe feature) is data point #1: cycle time spec-freeze
-  2026-07-13 → merge 2026-07-21; 94 backend + 20 frontend + 3 E2E tests green;
-  backend line coverage ~98%, frontend ~87%; mutation gate ≥ 60%; architecture
-  debt 0; 2 QA-found + 4 review-found defects fixed before merge.
-- Record each further feature the same way to build the trend vs. classically
-  developed items.
+**Data point #1 — SPEC-001** (first full KAIFe feature). Provenance for reproducibility:
+
+- **Spec:** [`docs/specs/SPEC-001-manage-storage-items.md`](specs/SPEC-001-manage-storage-items.md) — frozen 2026-07-13 (Gate-Status table)
+- **PR:** #5, merged 2026-07-21 → cycle time ≈ 8 days (freeze → merge)
+- **Test counts / coverage / mutation:** read from the green CI run on PR #5's merge commit (jobs 1, 1a, 3) — backend 94 tests / line coverage ~98%, frontend 20 tests / ~87%, mutation gate ≥ 60%, architecture debt 0
+- **Defects caught before merge:** 2 by the isolated QA persona + 4 by automated review (see the PR #5 review history and `docs/agent-logs/`)
+
+Numbers above are a human-readable snapshot; the CI run and PR are the authoritative source. Record each further feature the same way (spec link, PR link, CI-run numbers) to build the trend vs. classically developed items.
