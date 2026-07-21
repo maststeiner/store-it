@@ -26,7 +26,7 @@ public class Item
         Id = Guid.NewGuid();
         Rename(name);
         ChangeAmount(amount);
-        Unit = unit;
+        SetUnit(unit);
         SetDates(expiryDate, productionDate);
     }
 
@@ -43,8 +43,21 @@ public class Item
     {
         Rename(name);
         ChangeAmount(amount);
-        Unit = unit;
+        SetUnit(unit);
         SetDates(expiryDate, productionDate);
+    }
+
+    private void SetUnit(Unit unit)
+    {
+        // AC-06: unit must be from the fixed list. JsonStringEnumConverter accepts
+        // integer tokens by default, so an out-of-range value (e.g. 999) can reach
+        // here as an undefined enum — reject it.
+        if (!Enum.IsDefined(unit))
+        {
+            throw new DomainValidationException("item.unit.invalid", "Unit is not a valid value.");
+        }
+
+        Unit = unit;
     }
 
     private void Rename(string name)

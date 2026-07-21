@@ -39,7 +39,7 @@ Design the implementation of SPEC-001 (manage storages and items) within ADR-001
 
 ### OpenAPI contract (ADR-006)
 
-- .NET built-in OpenAPI generation (`Microsoft.AspNetCore.OpenApi` + `Microsoft.Extensions.ApiDescription.Server`) emits the spec at build time → committed as `backend/openapi/v1.json`.
+- .NET built-in OpenAPI generation (`Microsoft.AspNetCore.OpenApi` + `Microsoft.Extensions.ApiDescription.Server`) emits the spec at build time → committed as `backend/openapi/StoreIt.Api.json`.
 - CI job: drift check (regenerate + compare) and `oasdiff breaking` against the develop baseline. Not a required check until first green runs.
 
 ### ⚠️ ADR-001 amendment required (human decision)
@@ -52,7 +52,7 @@ DI composition needs `Program.cs` to register Infrastructure services — but AD
 ### Frontend (Angular)
 
 - Routes: `/storages` (list + create/rename/delete with confirm dialog), `/storages/:id` (detail: grouped item list per `expiryStatus`, item form: name, amount+unit, expiry/production date).
-- **i18n: ngx-translate** (runtime language switching de/en/fr/it per spec; Angular's built-in `@angular/localize` would need one build per locale and cannot switch at runtime).
+- **i18n:** runtime language switching de/en/fr/it per spec (Angular's built-in `@angular/localize` would need one build per locale). _Implementation note: the frontend ultimately used a minimal in-house translate service instead of ngx-translate — see the frontend run log (2026-07-20)._
 - Design: modern-but-minimal per spec §UI; status colors as the only semantic colors.
 - API client: thin typed service, no business rules (ADR-002).
 
@@ -70,7 +70,7 @@ DI composition needs `Program.cs` to register Infrastructure services — but AD
 3. `PUT` item with amount 0 removes the item (AC-08 semantics on the edit path)
 4. ngx-translate over @angular/localize (runtime switching required)
 5. Plain use-case classes, no MediatR (simplicity over ceremony)
-6. Contract as committed `v1.json` (build-time generated), oasdiff gate per ADR-006
+6. Contract as committed `StoreIt.Api.json` (build-time generated), oasdiff gate per ADR-006
 
 ## Human Interventions
 

@@ -193,13 +193,16 @@
                   [class.overdue]="item.expiryStatus === 'Expired'"
                   [class.soon]="item.expiryStatus === 'ExpiringSoon'"
                 >
-                  {{ item.expiryDate | date: 'dd.MM.yyyy' }}
+                  {{ item.expiryDate | date: 'mediumDate' : undefined : locale() }}
                 </span>
               } @else {
                 <span class="item-date mono prod-hint">
                   {{
                     'items.producedOn'
-                      | translate: { date: (item.productionDate | date: 'dd.MM.yyyy') }
+                      | translate
+                        : {
+                            date: (item.productionDate | date: 'mediumDate' : undefined : locale()),
+                          }
                   }}
                 </span>
               }

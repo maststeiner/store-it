@@ -1,7 +1,16 @@
 {
-  "nav": { "storages": "Meine Schränke" },
-  "header": { "language": "Sprache" },
-  "languages": { "de": "DE", "en": "EN", "fr": "FR", "it": "IT" },
+  "nav": {
+    "storages": "Meine Schränke"
+  },
+  "header": {
+    "language": "Sprache"
+  },
+  "languages": {
+    "de": "DE",
+    "en": "EN",
+    "fr": "FR",
+    "it": "IT"
+  },
   "actions": {
     "add": "Hinzufügen",
     "create": "Anlegen",
@@ -16,12 +25,29 @@
     "new": "+ Neuer Schrank",
     "createGhost": "+ Schrank anlegen",
     "namePlaceholder": "Name des Schranks",
-    "count": { "one": "1 Schrank", "other": "{{count}} Schränke" },
+    "count": {
+      "one": "1 Schrank",
+      "other": "{{count}} Schränke"
+    },
     "deleteTitle": "Schrank löschen",
-    "deleteConfirm": "„{{name}}“ wirklich löschen? Alle darin enthaltenen Artikel werden ebenfalls gelöscht."
+    "deleteConfirm": "„{{name}}“ wirklich löschen? Alle darin enthaltenen Artikel werden ebenfalls gelöscht.",
+    "chips": {
+      "expired": {
+        "one": "1 abgelaufen",
+        "other": "{{count}} abgelaufen"
+      },
+      "expiring": {
+        "one": "1 läuft bald ab",
+        "other": "{{count}} laufen bald ab"
+      },
+      "fresh": "Alles frisch"
+    }
   },
   "items": {
-    "count": { "one": "1 Artikel", "other": "{{count}} Artikel" },
+    "count": {
+      "one": "1 Artikel",
+      "other": "{{count}} Artikel"
+    },
     "empty": "Noch keine Artikel in diesem Schrank.",
     "producedOn": "prod. {{date}}",
     "form": {
@@ -49,15 +75,25 @@
   },
   "errors": {
     "generic": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
-    "storage": { "name": { "empty": "Bitte einen Namen für den Schrank angeben." } },
+    "storage": {
+      "name": {
+        "empty": "Bitte einen Namen für den Schrank angeben."
+      }
+    },
     "item": {
-      "name": { "empty": "Bitte einen Artikelnamen angeben." },
+      "name": {
+        "empty": "Bitte einen Artikelnamen angeben."
+      },
       "amount": {
         "notPositive": "Die Menge muss grösser als 0 sein.",
         "tooManyDecimals": "Die Menge darf höchstens eine Nachkommastelle haben."
       },
-      "dates": { "missing": "Bitte mindestens ein Datum angeben (Ablauf- oder Produktionsdatum)." }
+      "dates": {
+        "missing": "Bitte mindestens ein Datum angeben (Ablauf- oder Produktionsdatum)."
+      }
     },
-    "request": { "invalid": "Ungültige Eingabe. Bitte die Felder prüfen." }
+    "request": {
+      "invalid": "Ungültige Eingabe. Bitte die Felder prüfen."
+    }
   }
 }

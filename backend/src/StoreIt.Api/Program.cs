@@ -5,13 +5,11 @@ using StoreIt.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 12-factor: config from the environment (ConnectionStrings__storeit).
-// The fallback keeps build-time OpenAPI document generation working.
-var connectionString =
-    builder.Configuration.GetConnectionString("storeit") ?? "Host=localhost;Database=storeit";
-
+// 12-factor: config strictly from the environment — no committed fallback.
+// The connection string is resolved lazily in AddInfrastructure (required at
+// runtime, not during build-time OpenAPI generation).
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(connectionString);
+builder.Services.AddInfrastructure();
 
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter())
