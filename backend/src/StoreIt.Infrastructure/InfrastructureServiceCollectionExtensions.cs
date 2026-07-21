@@ -24,9 +24,8 @@ public static class InfrastructureServiceCollectionExtensions
                         .GetRequiredService<IConfiguration>()
                         .GetConnectionString("storeit")
                     ?? throw new InvalidOperationException(
-                        "ConnectionStrings__storeit is not configured. Provide it via the "
-                            + "environment (12-factor), e.g. "
-                            + "ConnectionStrings__storeit=Host=…;Database=…;Username=…;Password=…."
+                        "The 'storeit' connection string is not configured. Provide it via the "
+                            + "environment (12-factor); see docs/guidelines/test-guidelines.md."
                     );
                 options.UseNpgsql(connectionString);
             }
