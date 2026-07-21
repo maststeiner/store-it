@@ -64,6 +64,7 @@
           tabindex="0"
           (click)="open(storage)"
           (keydown.enter)="open(storage)"
+          (keydown.space)="open(storage); $event.preventDefault()"
         >
           <div class="storage-icon">🥫</div>
           <div>

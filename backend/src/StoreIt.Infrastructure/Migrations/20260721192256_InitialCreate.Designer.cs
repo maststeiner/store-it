@@ -12,7 +12,7 @@ using StoreIt.Infrastructure;
 namespace StoreIt.Infrastructure.Migrations
 {
     [DbContext(typeof(StoreItDbContext))]
-    [Migration("20260719192010_InitialCreate")]
+    [Migration("20260721192256_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -31,8 +31,8 @@ namespace StoreIt.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(9, 1)
-                        .HasColumnType("numeric(9,1)");
+                        .HasPrecision(18, 1)
+                        .HasColumnType("numeric(18,1)");
 
                     b.Property<DateOnly?>("ExpiryDate")
                         .HasColumnType("date");
@@ -50,7 +50,7 @@ namespace StoreIt.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid?>("storage_id")
+                    b.Property<Guid>("storage_id")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -80,7 +80,8 @@ namespace StoreIt.Infrastructure.Migrations
                     b.HasOne("StoreIt.Domain.Storage", null)
                         .WithMany("Items")
                         .HasForeignKey("storage_id")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("StoreIt.Domain.Storage", b =>

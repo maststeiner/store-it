@@ -19,11 +19,14 @@ public sealed class StorageConfiguration : IEntityTypeConfiguration<Storage>
         builder.Property(s => s.Id).ValueGeneratedNever();
         builder.Property(s => s.Name).IsRequired().HasMaxLength(200);
 
-        // Aggregate: items live and die with their storage (EC-06: no orphans)
+        // Aggregate: items live and die with their storage (EC-06: no orphans).
+        // Required FK — removing an item from the collection deletes the row
+        // instead of nulling the FK (AC-09).
         builder
             .HasMany(s => s.Items)
             .WithOne()
             .HasForeignKey("storage_id")
+            .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
 
         builder
@@ -42,8 +45,9 @@ public sealed class ItemConfiguration : IEntityTypeConfiguration<Item>
         builder.Property(i => i.Id).ValueGeneratedNever();
         builder.Property(i => i.Name).IsRequired().HasMaxLength(200);
 
-        // SPEC-001: amount with exactly one decimal place
-        builder.Property(i => i.Amount).HasPrecision(9, 1);
+        // SPEC-001: one decimal place; wide precision so any domain-valid amount
+        // (> 0) persists without SaveChanges overflow — validation and storage agree.
+        builder.Property(i => i.Amount).HasPrecision(18, 1);
 
         // Locale-neutral enum code as readable string (arc42 §8 i18n)
         builder.Property(i => i.Unit).HasConversion<string>().HasMaxLength(20);

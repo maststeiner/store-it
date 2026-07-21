@@ -53,6 +53,11 @@ for _ in $(seq 1 30); do
   sleep 1
 done
 
+if [ ! -d frontend/node_modules ]; then
+  echo "› installing frontend dependencies (first run)…"
+  (cd frontend && npm ci)
+fi
+
 echo "› starting frontend on http://localhost:4200 …"
 (cd frontend && npm start) &
 frontend_pid=$!

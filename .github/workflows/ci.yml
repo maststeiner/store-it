@@ -136,9 +136,11 @@ jobs:
         run: |
           dotnet run --project src/StoreIt.Api --configuration Release --no-launch-profile --urls http://localhost:5000 &
           for _ in $(seq 1 30); do
-            if curl -sf http://localhost:5000/health > /dev/null; then echo "backend up"; break; fi
+            if curl -sf http://localhost:5000/health > /dev/null; then echo "backend up"; exit 0; fi
             sleep 2
           done
+          echo "backend did not become healthy in time" >&2
+          exit 1
       - name: Install frontend deps + browser
         working-directory: frontend
         run: |

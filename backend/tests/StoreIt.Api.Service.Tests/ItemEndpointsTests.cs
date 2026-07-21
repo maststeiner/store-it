@@ -160,9 +160,9 @@ public class ItemEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
     }
 
     [Fact]
-    public async Task AddItem_WithUnitOutsideFixedList_ReturnsBadRequest()
+    public async Task AddItem_WithUnitOutsideFixedList_ReturnsBadRequestWithErrorCode()
     {
-        // AC-06: unit outside the fixed list
+        // AC-06: unit outside the fixed list (unknown string → enum binding fails)
         var storage = await _client.CreateStorageAsync("Pantry");
 
         var response = await _client.PostAsJsonAsync(
@@ -171,6 +171,30 @@ public class ItemEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
         );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("request.invalid", await response.ReadErrorCodeAsync());
+    }
+
+    [Fact]
+    public async Task AddItem_WithUnitAsUndefinedInteger_ReturnsBadRequestWithErrorCode()
+    {
+        // AC-06: JsonStringEnumConverter accepts integer tokens, so an out-of-range
+        // value (999) binds to an undefined enum — the domain must reject it.
+        var storage = await _client.CreateStorageAsync("Pantry");
+
+        var body = JsonContent.Create(
+            new
+            {
+                name = "Mystery",
+                amount = 1m,
+                unit = 999,
+                expiryDate = Today.AddDays(5),
+                productionDate = (DateOnly?)null,
+            }
+        );
+        var response = await _client.PostAsync($"/api/v1/storages/{storage.Id}/items", body);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("item.unit.invalid", await response.ReadErrorCodeAsync());
     }
 
     [Fact]

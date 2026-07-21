@@ -1,7 +1,16 @@
 {
-  "nav": { "storages": "Le mie dispense" },
-  "header": { "language": "Lingua" },
-  "languages": { "de": "DE", "en": "EN", "fr": "FR", "it": "IT" },
+  "nav": {
+    "storages": "Le mie dispense"
+  },
+  "header": {
+    "language": "Lingua"
+  },
+  "languages": {
+    "de": "DE",
+    "en": "EN",
+    "fr": "FR",
+    "it": "IT"
+  },
   "actions": {
     "add": "Aggiungi",
     "create": "Crea",
@@ -16,12 +25,29 @@
     "new": "+ Nuova dispensa",
     "createGhost": "+ Crea dispensa",
     "namePlaceholder": "Nome della dispensa",
-    "count": { "one": "1 dispensa", "other": "{{count}} dispense" },
+    "count": {
+      "one": "1 dispensa",
+      "other": "{{count}} dispense"
+    },
     "deleteTitle": "Elimina dispensa",
-    "deleteConfirm": "Eliminare davvero «{{name}}»? Verranno eliminati anche tutti gli articoli contenuti."
+    "deleteConfirm": "Eliminare davvero «{{name}}»? Verranno eliminati anche tutti gli articoli contenuti.",
+    "chips": {
+      "expired": {
+        "one": "1 scaduto",
+        "other": "{{count}} scaduti"
+      },
+      "expiring": {
+        "one": "1 in scadenza",
+        "other": "{{count}} in scadenza"
+      },
+      "fresh": "Tutto fresco"
+    }
   },
   "items": {
-    "count": { "one": "1 articolo", "other": "{{count}} articoli" },
+    "count": {
+      "one": "1 articolo",
+      "other": "{{count}} articoli"
+    },
     "empty": "Nessun articolo in questa dispensa.",
     "producedOn": "prod. {{date}}",
     "form": {
@@ -49,15 +75,25 @@
   },
   "errors": {
     "generic": "Qualcosa è andato storto. Riprova.",
-    "storage": { "name": { "empty": "Inserisci un nome per la dispensa." } },
+    "storage": {
+      "name": {
+        "empty": "Inserisci un nome per la dispensa."
+      }
+    },
     "item": {
-      "name": { "empty": "Inserisci un nome per l'articolo." },
+      "name": {
+        "empty": "Inserisci un nome per l'articolo."
+      },
       "amount": {
         "notPositive": "La quantità deve essere maggiore di 0.",
         "tooManyDecimals": "La quantità può avere al massimo una cifra decimale."
       },
-      "dates": { "missing": "Indicare almeno una data (scadenza o produzione)." }
+      "dates": {
+        "missing": "Indicare almeno una data (scadenza o produzione)."
+      }
     },
-    "request": { "invalid": "Dati non validi. Controlla i campi." }
+    "request": {
+      "invalid": "Dati non validi. Controlla i campi."
+    }
   }
 }

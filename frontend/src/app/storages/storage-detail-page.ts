@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ErrorMessages } from '../core/error-messages';
+import { LanguageService } from '../core/language.service';
 import { ItemRequest, StorageItem, StorageSummary, UNITS, Unit } from '../core/models';
 import { StorageApi } from '../core/storage-api';
 import { TranslatePipe } from '../core/translate';
@@ -31,8 +32,11 @@ export class StorageDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly errors = inject(ErrorMessages);
+  private readonly language = inject(LanguageService);
 
   protected readonly units = UNITS;
+  /** Active UI locale for DatePipe (dates render per language, SPEC-001 i18n). */
+  protected readonly locale = this.language.current;
   protected readonly storageId = this.route.snapshot.paramMap.get('id') ?? '';
 
   protected readonly storage = signal<StorageSummary | null>(null);

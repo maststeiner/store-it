@@ -18,7 +18,7 @@ public sealed class GetStorageItemsUseCase(IStorageRepository repository, TimePr
     )
     {
         var storage = await repository.GetRequiredAsync(storageId, cancellationToken);
-        var today = DateOnly.FromDateTime(timeProvider.GetLocalNow().Date);
+        var today = timeProvider.Today();
 
         return storage
             .GetItemsSortedByExpiry()

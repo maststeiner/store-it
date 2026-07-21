@@ -39,8 +39,8 @@ namespace StoreIt.Infrastructure.Migrations
                         nullable: false
                     ),
                     Amount = table.Column<decimal>(
-                        type: "numeric(9,1)",
-                        precision: 9,
+                        type: "numeric(18,1)",
+                        precision: 18,
                         scale: 1,
                         nullable: false
                     ),
@@ -51,7 +51,7 @@ namespace StoreIt.Infrastructure.Migrations
                     ),
                     ExpiryDate = table.Column<DateOnly>(type: "date", nullable: true),
                     ProductionDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    storage_id = table.Column<Guid>(type: "uuid", nullable: true),
+                    storage_id = table.Column<Guid>(type: "uuid", nullable: false),
                 },
                 constraints: table =>
                 {

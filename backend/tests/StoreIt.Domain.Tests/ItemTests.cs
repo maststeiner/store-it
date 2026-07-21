@@ -15,6 +15,20 @@ public class ItemTests
     private static Item CreateItem(DateOnly? expiryDate, DateOnly? productionDate) =>
         Storage.Create("Pantry").AddItem("Milk", 1m, Unit.Liter, expiryDate, productionDate);
 
+    // --- Unit validation (AC-06) ---
+
+    [Fact]
+    public void AddItem_WithUndefinedUnit_ThrowsDomainValidationException()
+    {
+        // AC-06: unit must be from the fixed list; an out-of-range enum value is rejected
+        var storage = Storage.Create("Pantry");
+
+        var exception = Assert.Throws<DomainValidationException>(() =>
+            storage.AddItem("Mystery", 1m, (Unit)999, Today.AddDays(5), null)
+        );
+        Assert.Equal("item.unit.invalid", exception.ErrorCode);
+    }
+
     // --- Expiry status via Item (AC-11, AC-12, EC-02, EC-05) ---
 
     [Fact]

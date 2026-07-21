@@ -1,9 +1,20 @@
 # Spec: Manage storages and their items (MVP core)
 
-> **Status:** Frozen (Gate 1)
+> **Status:** Frozen (Gate 1) · with formal amendments (see below)
 > **Sprint:** 2026-S15
 > **Author:** Analyst Agent (orchestrated by Marcel Steiner)
-> **Last updated:** 2026-07-18 (ADR-006 constraint added post-freeze; ACs unchanged since freeze 2026-07-13)
+> **Frozen:** 2026-07-13 · **Last amended:** 2026-07-19
+
+---
+
+## Amendments (post-freeze, PO-approved)
+
+Changes after the G1 freeze are recorded here rather than silently editing the frozen body — the original acceptance criteria remain intact and traceable.
+
+| # | Date | Change | Approved by |
+|---|------|--------|-------------|
+| A1 | 2026-07-19 | **AC-01a** added — storage list also returns per-storage `expiredCount` / `expiringSoonCount` (server-computed) for the overview status chips. | Marcel Steiner (PO) |
+| A2 | 2026-07-19 | Technical constraint added — API versioning + OpenAPI contract gate per **ADR-006** (does not change any AC). | Marcel Steiner (PO) |
 
 ---
 

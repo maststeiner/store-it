@@ -8,7 +8,8 @@ services:
       POSTGRES_USER: storeit
       POSTGRES_PASSWORD: storeit # local development only — never reuse
     ports:
-      - '5432:5432'
+      # bind to loopback only — do not expose the dev DB on all host interfaces
+      - '127.0.0.1:5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
 

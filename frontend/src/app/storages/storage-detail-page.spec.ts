@@ -112,7 +112,8 @@ describe('StorageDetailPage', () => {
     await fixture.whenStable();
 
     const dateCell = (fixture.nativeElement as HTMLElement).querySelector('.item-date');
-    expect(dateCell?.textContent).toContain('prod. 01.07.2026');
+    // Locale-aware date (test locale falls back to en → mediumDate)
+    expect(dateCell?.textContent).toContain('prod. Jul 1, 2026');
   });
 
   it('shows the translated validation message when adding an item without dates', async () => {
