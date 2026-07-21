@@ -83,8 +83,11 @@ Keep this file short. Detailed content belongs in `docs/guidelines/`.
 
 - **No real or sensitive data in prompts, fixtures, test data, or logs** — use
   synthetic data only. Storages/items in tests are made up.
-- **Agent run logs (`docs/agent-logs/`) are the audit trail** for how AI produced
-  each change (EU AI Act Article-50 transparency, effective Aug 2026).
+- **Agent run logs (`docs/agent-logs/`) are our accountability record** — how AI
+  produced each change (repository policy, KAIFe Principle 3); supports EU-AI-Act
+  audit readiness. (Article 50, effective 2026-08-02, governs user-facing
+  disclosure of AI-generated content and does not itself mandate internal logs;
+  mandatory logging applies to high-risk systems under Article 12.)
 - Secrets come from the environment (12-factor), never committed.
 
 ## Permission Tiers
