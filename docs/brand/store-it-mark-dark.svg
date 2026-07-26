@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="store-it">
+  <!-- Mark for dark backgrounds: light drawer fills, no tile -->
+  <g fill="#bfe0dc">
+    <rect x="10" y="9" width="28" height="9" rx="3.5" />
+    <rect x="10" y="19.5" width="28" height="9" rx="3.5" opacity="0.82" />
+    <rect x="10" y="30" width="28" height="9" rx="3.5" opacity="0.64" />
+  </g>
+  <g fill="#16343a">
+    <rect x="21.5" y="12.3" width="5" height="2.6" rx="1.3" opacity="0.55" />
+    <rect x="21.5" y="22.8" width="5" height="2.6" rx="1.3" opacity="0.5" />
+    <rect x="21.5" y="33.3" width="5" height="2.6" rx="1.3" opacity="0.45" />
+  </g>
+</svg>
