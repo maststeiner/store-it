@@ -64,14 +64,9 @@ header {
   text-decoration: none;
 }
 .logo-mark {
+  display: block;
   width: 30px;
   height: 30px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  display: grid;
-  place-items: center;
-  color: #fff;
-  font-size: 15px;
 }
 
 nav {
