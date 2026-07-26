@@ -8,7 +8,12 @@ Reusable logo assets. This folder is the **source of truth**; deployed copies
 | File | Use |
 |------|-----|
 | `store-it-icon.svg` | **App icon / favicon** — the mark on a rounded gradient tile (self-contained). Master for generating iOS/Android PNG icons. |
-| `store-it-mark.svg` | **Mark only** — the drawer stack in gradient, no tile. Use on light surfaces where a tile isn't wanted. |
+| `store-it-mark.svg` | **Mark only, light bg** — the drawer stack in gradient, no tile. |
+| `store-it-mark-dark.svg` | **Mark only, dark bg** — light drawer fills, no tile. |
+| `store-it-lockup.svg` | **Logo + wordmark, light bg** — horizontal lockup (mark + “store-it”). |
+| `store-it-lockup-dark.svg` | **Logo + wordmark, dark bg** — light wordmark. |
+
+> **Wordmark font:** the lockups render the text with an Avenir Next / Segoe UI / system-ui sans stack (weight 600), matching the app. For pixel-fixed output (print, third-party tools without that font) outline the text to paths first.
 
 The concept: three stacked drawers/shelves with handle notches — a storage unit
 that also reads as a stack ("store-it"). Chosen concept H2.
