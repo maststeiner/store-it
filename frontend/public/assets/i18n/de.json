@@ -1,6 +1,6 @@
 {
   "nav": {
-    "storages": "Meine Schränke"
+    "storages": "Meine Lagerorte"
   },
   "header": {
     "language": "Sprache"
@@ -21,15 +21,15 @@
     "delete": "Löschen"
   },
   "storages": {
-    "title": "Meine Schränke",
-    "new": "+ Neuer Schrank",
-    "createGhost": "+ Schrank anlegen",
-    "namePlaceholder": "Name des Schranks",
+    "title": "Meine Lagerorte",
+    "new": "+ Neuer Lagerort",
+    "createGhost": "+ Lagerort anlegen",
+    "namePlaceholder": "Name des Lagerorts",
     "count": {
-      "one": "1 Schrank",
-      "other": "{{count}} Schränke"
+      "one": "1 Lagerort",
+      "other": "{{count}} Lagerorte"
     },
-    "deleteTitle": "Schrank löschen",
+    "deleteTitle": "Lagerort löschen",
     "deleteConfirm": "„{{name}}“ wirklich löschen? Alle darin enthaltenen Artikel werden ebenfalls gelöscht.",
     "chips": {
       "expired": {
@@ -48,7 +48,7 @@
       "one": "1 Artikel",
       "other": "{{count}} Artikel"
     },
-    "empty": "Noch keine Artikel in diesem Schrank.",
+    "empty": "Noch keine Artikel in diesem Lagerort.",
     "producedOn": "prod. {{date}}",
     "form": {
       "name": "Artikel",
@@ -77,7 +77,7 @@
     "generic": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
     "storage": {
       "name": {
-        "empty": "Bitte einen Namen für den Schrank angeben."
+        "empty": "Bitte einen Namen für den Lagerort angeben."
       }
     },
     "item": {
