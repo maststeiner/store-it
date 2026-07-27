@@ -25,6 +25,7 @@ describe('App', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.logo')?.textContent).toContain('store-it');
+    expect(compiled.querySelector('.logo img')?.getAttribute('src')).toContain('logo.svg');
     expect(compiled.querySelector('nav')?.textContent).toContain('My storages');
   });
 
