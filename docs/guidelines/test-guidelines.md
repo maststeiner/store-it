@@ -40,7 +40,7 @@ CI (`1b · End-to-end`) uses a postgres service container and the runner's brows
 
 ## Coverage
 
-- Target: **≥ 70%** (calibrate during pilot, then fix as pipeline gate).
+- Target: **≥ 70%**, fixed as the pipeline gate after the SPEC-001 pilot (see [Decisions & Calibration](#decisions--calibration)) — enforced by CI (backend coverlet · frontend `vitest-base.config.ts`).
 - Coverage is a means, not a goal: 100% meaningless tests do not beat 70% good ones.
 
 ## Containers for Tests (Podman)
@@ -71,6 +71,6 @@ Failing tests block the Developer Agent. No feature is done before tests are gre
 
 ## Decisions & Calibration
 
-- **Coverage threshold confirmed at 70%** after the SPEC-001 pilot (2026-07-27). Actuals sit comfortably above (backend ~98%, frontend ~84%), so the gate catches regressions without being noise. Enforced as a pipeline gate (backend coverlet · frontend `vitest-base.config.ts`). Revisit only if a later spec shows it miscalibrated.
+- **Coverage threshold confirmed at 70%** after the SPEC-001 pilot (2026-07-27). Actuals sit comfortably above (snapshot 2026-07-27: backend domain ~98%, frontend ~87% vitest line coverage; SonarCloud reports frontend ~84% as it counts template lines differently), so the gate catches regressions without being noise. Enforced as a pipeline gate (backend coverlet · frontend `vitest-base.config.ts`). Revisit only if a later spec shows it miscalibrated.
 - **E2E tests (Playwright)** added with SPEC-001 (2026-07-20) — the pyramid is now unit → service → integration → E2E; CI job `1b · End-to-end` runs the full stack.
 - **Frontend mutation testing (StrykerJS): consciously dropped** (2026-07-20). Weak value/effort ratio — the frontend is logic-thin (template + delegation, server-computed status per ADR-002), while the branch-heavy logic lives in the backend domain, already gated by Stryker.NET (60%). Revisit only if substantial client-side logic appears.
