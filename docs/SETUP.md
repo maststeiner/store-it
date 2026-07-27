@@ -17,7 +17,7 @@
 - [x] **Language / runtime:** .NET (C#) backend · Angular (TypeScript) frontend → arc42 section 2.
 - [x] **Formatter / linter:** `dotnet format` (backend) · Prettier + ESLint (frontend).
 - [x] **Test framework + coverage:** xUnit + coverlet (backend) · Angular default (frontend).
-- [x] **Coverage threshold:** 70% (CI variable, calibrate during pilot).
+- [x] **Coverage threshold:** 70% (CI variable), fixed after the SPEC-001 pilot (2026-07-27).
 - [x] **Architecture conformance:** .NET architecture tests (`Category=ArchitectureTests`), rules from ADR-001.
 - [x] Stack commands added to the **Auto** permission tier in `.claude/settings.json`.
 
@@ -80,7 +80,4 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 
 ## Next steps (in order)
 
-1. Freeze SPEC-001 (Gate 1) — human decision.
-2. Scaffold `backend/` (.NET solution with Api/Application/Domain/Infrastructure + architecture tests) and `frontend/` (Angular workspace) so CI goes green.
-3. Configure branch protection + CodeRabbit + SonarCloud (platform items above).
-4. Implement SPEC-001 through the full KAIFe flow (worktree → branch → PR → gates).
+Initial setup is **complete**: SPEC-001 was frozen (Gate G1, 2026-07-13), the `backend/` and `frontend/` scaffolds landed and CI is green, branch protection + CodeRabbit + SonarCloud are configured (platform items above), and SPEC-001 shipped through the full KAIFe flow. Ongoing work — further specs, tech-debt, and the platform-hardening items still unchecked above — is tracked as GitHub issues.
