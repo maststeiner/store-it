@@ -4,7 +4,7 @@
 > **Stack:** .NET 10 LTS (C#) backend · Angular (TypeScript) frontend
 > **Formatter:** CSharpier (backend, `dotnet csharpier format .`) · Prettier + ESLint (frontend)
 > **Static analysis:** Roslyn analyzers, `latest-recommended`, enforced at build time (warnings = errors)
-> **Last updated:** 2026-07-13
+> **Last updated:** 2026-07-27
 
 These guidelines are the primary reference for the Developer Agent and the Reviewer Agent.
 
@@ -85,8 +85,26 @@ type(scope): subject
 - **Body:** explains the *why*, wrapped at ~72 chars; reference specs/ADRs where relevant
 - **Breaking changes:** `type(scope)!: subject` plus a `BREAKING CHANGE:` footer — for the API also subject to ADR-006 (new version required)
 
-## TODO
+## Naming Conventions
 
-<!-- Customize per project -->
-- [ ] Define naming conventions for this project
-- [ ] Add further project-specific rules
+Beyond the general rule (descriptive names, no abbreviations except established ones), the project follows these stack conventions — the Reviewer Agent flags deviations.
+
+**Backend (C#)**
+
+- **Types** PascalCase; **interfaces** `I`-prefixed (`IStorageRepository`). One public type per file, filename = type name.
+- **Role suffixes** are load-bearing and consistent: use cases `*UseCases` (`StorageUseCases`), endpoints `*Endpoints`, EF config `*Configuration`, DI wiring `*ServiceCollectionExtensions`, exceptions `*Exception` (`StorageNotFoundException`).
+- **Domain stays noun-first and framework-free** (`Storage`, `Item`, `ExpiryRules`, `Unit`) — no technical suffixes leaking persistence/transport concerns.
+- **Locals/parameters** camelCase; **constants** PascalCase; **async** methods end in `Async` only when a sync sibling exists.
+- **EF migrations** keep the generated `<timestamp>_<Name>` form.
+
+**Frontend (TypeScript / Angular)**
+
+- **Files** kebab-case with a role suffix mirroring the symbol: routed pages `*-page` (`storage-list-page.ts` + co-located `.html`), dialogs `*-dialog`, services either `*.service.ts` or a role name (`storage-api.ts`, `translate.ts`), models `models.ts`.
+- **Classes** PascalCase, **members/signals/inputs** camelCase; specs co-located as `*.spec.ts`.
+- **No user-facing strings in components** — all text via i18n keys (see [test-guidelines] and ADR-002); the invariant brand wordmark ("store-it") is the sole documented exception.
+
+## Project-Specific Rules
+
+- **Server owns the rules:** the Angular client renders and delegates — no business logic, no status computation client-side (status is server-computed per ADR-002). A rule appearing in the UI is a review failure.
+- **Fixed domain lists are constants, not literals:** the unit list and the "expiring soon" threshold (3 days) live as named domain constants, never inlined in the UI.
+- **Cross boundaries via DTOs** (Api request/response models) — domain entities never serialize out directly.

@@ -26,6 +26,8 @@ As a **household member** I want to **track what is in my storages (pantry, free
 
 ## Acceptance Criteria (EARS Notation)
 
+> **Done-state:** all criteria below are implemented and verified — the [Verification](#verification) table is the source of truth for coverage and status. The checkboxes are left as authored on purpose: the frozen G1 body stays intact and traceable (changes are recorded as amendments, not by editing criteria in place).
+
 ### Storages
 
 A storage is a named object holding a list of items. Multiple storages can exist.

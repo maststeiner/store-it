@@ -2,7 +2,7 @@
 
 > **Owner:** Marcel Steiner (Architecture / QA Stewardship)
 > **Stack:** xUnit + coverlet (backend) · Angular default test setup (frontend)
-> **Last updated:** 2026-07-09
+> **Last updated:** 2026-07-27
 
 ---
 
@@ -61,10 +61,16 @@ CI (GitHub Actions ubuntu runner) provides a Docker daemon — no configuration 
 
 Failing tests block the Developer Agent. No feature is done before tests are green.
 
-## TODO
+## Test Data Strategy
 
-<!-- Customize per project -->
-- [ ] Fix coverage threshold after pilot experience
-- [ ] Define test data strategy (fixtures, builder pattern, etc.)
-- [x] E2E tests (Playwright) added with SPEC-001 — pyramid is now unit → service → integration → E2E; CI job `1b · End-to-end` runs the full stack (done 2026-07-20)
-- Frontend mutation testing (StrykerJS): **consciously dropped** (decision 2026-07-20). Weak value/effort ratio — the frontend is logic-thin (template + delegation, server-computed status per ADR-002), while the branch-heavy logic lives in the backend domain, already gated by Stryker.NET (60%). Revisit only if substantial client-side logic appears.
+- **No data-generation library** (Bogus/Faker) — deliberate. Arrange blocks stay explicit so a reader sees exactly which values drive the case.
+- **Domain / unit tests:** arrange inline, values chosen to make the scenario obvious (e.g. an expiry date `today + 2` for "expiring soon").
+- **Service tests:** share `ApiTestFixture` (in-process API host + Testcontainers PostgreSQL); each test seeds only the data it asserts on and cleans up via the fixture lifecycle.
+- **E2E tests:** each test creates its own uniquely-named data per run so parallel/repeat runs stay independent.
+- Introduce a builder pattern only once arrange blocks visibly repeat across many tests — not preemptively (simplicity over cleverness).
+
+## Decisions & Calibration
+
+- **Coverage threshold confirmed at 70%** after the SPEC-001 pilot (2026-07-27). Actuals sit comfortably above (backend ~98%, frontend ~84%), so the gate catches regressions without being noise. Enforced as a pipeline gate (backend coverlet · frontend `vitest-base.config.ts`). Revisit only if a later spec shows it miscalibrated.
+- **E2E tests (Playwright)** added with SPEC-001 (2026-07-20) — the pyramid is now unit → service → integration → E2E; CI job `1b · End-to-end` runs the full stack.
+- **Frontend mutation testing (StrykerJS): consciously dropped** (2026-07-20). Weak value/effort ratio — the frontend is logic-thin (template + delegation, server-computed status per ADR-002), while the branch-heavy logic lives in the backend domain, already gated by Stryker.NET (60%). Revisit only if substantial client-side logic appears.
