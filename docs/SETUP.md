@@ -30,7 +30,7 @@
 - [x] **[platform]** Conversation resolution required before merging (2026-07-18) — unresolved review threads technically block the merge.
 - [x] Wire vitest lcov coverage into the frontend scan (done: `vitest-base.config.ts` emits `lcov`, `ci.yml` passes `sonar.javascript.lcov.reportPaths=coverage/lcov.info`).
 - [x] **[platform]** Sonar branch model (fixed 2026-07-27): this org's SonarCloud plan persists analysis for **only the main branch + PRs** — long-lived side branches (e.g. `develop`) are rejected (`Organization is not allowed to access data from non main branches`). Because all integration happens on `develop`, the **Sonar main branch is set to `develop`** for both projects (Project → Administration → Branches and Pull Requests → rename main to `develop`). The `git main` branch is therefore *not* Sonar-analyzed; the `3 · *quality gate` jobs skip `push`-to-`main` via `if:` (PRs + `develop` pushes only). Symptom before the fix: frontend coverage read 0% because Sonar's `main` was frozen at the pre-code scaffold (16.07.), 47 commits behind `develop`.
-- [x] **Mutation testing** (retro 2026-07-18): Stryker.NET as CI job `1a` (break < 60%) — verifies tests kill mutants; AI-generated tests can look plausible while asserting nothing. Frontend (StrykerJS/vitest) deferred until real components exist (SPEC-001).
+- [x] **Mutation testing** (retro 2026-07-18): Stryker.NET as CI job `1a` (break < 60%) — verifies tests kill mutants; AI-generated tests can look plausible while asserting nothing. Frontend (StrykerJS/vitest) **consciously dropped** (decision 2026-07-20, see `docs/guidelines/test-guidelines.md`): the frontend is logic-thin (template + delegation, server-computed status per ADR-002) while the branch-heavy logic lives in the backend domain, already gated by Stryker.NET. Revisit only if substantial client-side logic appears.
 - [x] **Workflow lint** (retro 2026-07-18): actionlint 1.7.12 as CI job `5` — the pipeline itself is enforced infrastructure.
 - [x] **API contract gate** (ADR-006, wired 2026-07-19 with SPEC-001): OpenAPI artifact `backend/openapi/StoreIt.Api.json` (build-time generated), CI job `2 · API contract gate` — drift check + oasdiff v1.23.0 breaking check against target branch. Add to required checks after first green runs.
 - [ ] **[platform]** After first green runs: consider `1a · Backend mutation testing`, `1b · End-to-end (full stack)`, `2 · API contract gate` and `5 · Workflow lint (actionlint)` as required checks (expected-check pattern: never before they ran on open PRs).
@@ -74,7 +74,7 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 
 - [x] Architecture documented (arc42 sections 1–5 drafted; 5.2/6 refine with first features).
 - [x] Layering rules as ADR-001, wired into the CI `architecture` job.
-- [ ] First spec frozen by a human (Gate 1) — `SPEC-001` is in Draft.
+- [x] First spec frozen by a human (Gate 1) — `SPEC-001` frozen 2026-07-13 (Gate G1), with formal amendments recorded in the spec.
 - [x] WIP limit documented (`CLAUDE.md`: max. 3).
 - [x] Agent run log convention: one log per agent task in `docs/agent-logs/`.
 
