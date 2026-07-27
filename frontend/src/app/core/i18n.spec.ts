@@ -8,9 +8,7 @@ import { join } from 'node:path';
 const LANGUAGES = ['de', 'en', 'fr', 'it'] as const;
 const REFERENCE = 'en';
 
-interface Dict {
-  [key: string]: string | Dict;
-}
+type Dict = Record<string, unknown>;
 
 function loadDict(lang: string): Dict {
   const path = join(process.cwd(), 'public', 'assets', 'i18n', `${lang}.json`);
@@ -22,8 +20,10 @@ function flatten(dict: Dict, prefix = '', out = new Map<string, string>()): Map<
     const path = prefix ? `${prefix}.${key}` : key;
     if (typeof value === 'string') {
       out.set(path, value);
+    } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      flatten(value as Dict, path, out);
     } else {
-      flatten(value, path, out);
+      throw new Error(`Translation value at "${path}" must be a string or object`);
     }
   }
   return out;
