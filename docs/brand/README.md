@@ -15,6 +15,8 @@ Reusable logo assets. This folder is the **source of truth**; deployed copies
 
 > **Wordmark font:** the lockups render the text with an Avenir Next / Segoe UI / system-ui sans stack (weight 600), matching the app. For pixel-fixed output (print, third-party tools without that font) outline the text to paths first.
 
+> **Wordmark is invariant:** "store-it" is the product/brand name and is **never localized** — it renders identically in de/en/fr/it. The web header therefore hard-codes it rather than routing it through the TranslateService.
+
 The concept: three stacked drawers/shelves with handle notches — a storage unit
 that also reads as a stack ("store-it"). Chosen concept H2.
 
