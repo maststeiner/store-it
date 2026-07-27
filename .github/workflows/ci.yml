@@ -246,6 +246,10 @@ jobs:
   quality-backend:
     name: 3 · Backend quality gate
     runs-on: ubuntu-latest
+    # SonarCloud (this org's plan) persists only the main branch + PRs, and the
+    # project's main branch is set to `develop`. Analyze on PRs and develop pushes;
+    # skip main pushes, which the plan rejects as a non-main branch.
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/develop'
     defaults:
       run:
         working-directory: backend
@@ -281,6 +285,10 @@ jobs:
   quality-frontend:
     name: 3 · Frontend quality gate
     runs-on: ubuntu-latest
+    # SonarCloud (this org's plan) persists only the main branch + PRs, and the
+    # project's main branch is set to `develop`. Analyze on PRs and develop pushes;
+    # skip main pushes, which the plan rejects as a non-main branch.
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
