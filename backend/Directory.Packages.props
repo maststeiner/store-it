@@ -12,7 +12,10 @@
         <!-- Runtime / src -->
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
         <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
-        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+        <PackageVersion
+            Include="Microsoft.Extensions.DependencyInjection.Abstractions"
+            Version="10.0.10"
+        />
         <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.10" />
         <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
         <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
