@@ -1,0 +1,35 @@
+<Project>
+    <!-- Central Package Management: single source of truth for NuGet versions
+       across every store-it project. Individual .csproj files reference packages
+       WITHOUT a Version attribute. Enabling this also converged pre-existing
+       version drift across the test projects (xunit, xunit.runner.visualstudio,
+       Microsoft.NET.Test.Sdk, coverlet). -->
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Runtime / src -->
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.10" />
+        <PackageVersion Include="Microsoft.OpenApi" Version="2.11.0" />
+        <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Test tooling (versions converged to the newest previously in use) -->
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+        <PackageVersion Include="xunit" Version="2.9.3" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.4" />
+        <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+        <PackageVersion Include="coverlet.msbuild" Version="10.0.1" />
+        <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.10" />
+        <PackageVersion Include="Testcontainers.PostgreSql" Version="4.13.0" />
+        <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+        <PackageVersion Include="ReferencesRuler" Version="1.3.2" />
+        <!-- Used only by an architecture-test fixture project -->
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    </ItemGroup>
+</Project>
