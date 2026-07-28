@@ -43,6 +43,16 @@ CI (`1b · End-to-end`) uses a postgres service container and the runner's brows
 - Target: **≥ 70%**, fixed as the pipeline gate after the SPEC-001 pilot (see [Decisions & Calibration](#decisions--calibration)) — enforced by CI (backend coverlet · frontend `vitest-base.config.ts`).
 - Coverage is a means, not a goal: 100% meaningless tests do not beat 70% good ones.
 
+## Test Effectiveness
+
+Coverage measures *how much* code runs under test, not whether the tests would *catch a regression*. store-it treats effectiveness as a first-class concern:
+
+- **Mutation testing proves tests bite.** AI-generated tests often look right but assert nothing. Stryker.NET (backend, break < 60%) injects mutants and fails if the suite doesn't catch them. Scope it to business-critical modules; run nightly if per-PR runtime hurts. (Frontend mutation testing is intentionally out — see Decisions & Calibration.)
+- **Assertion minimum (anti-tautology).** Every test asserts observable behavior. No test without a real assertion; no assertion that is always true (e.g. `Assert.True(true)`, or asserting that a mock returns exactly what it was set up to return). A test that cannot fail is a defect.
+- **Determinism.** No wall-clock or randomness in tests. Time is injected via `TimeProvider` (already used across the use cases) and controlled with `FakeTimeProvider` — essential for the expiry logic (`expired` / `expiring soon`). No `DateTime.Now`, no unseeded randomness, no shared mutable state between tests.
+- **Flaky-test policy.** A non-deterministic test is quarantined immediately (skipped with a linked tracking issue), then root-caused — never "fixed" by a blind retry. Flakiness is a defect in the test or the code, not noise to tolerate.
+- **Isolated QA.** The QA persona derives tests from the spec's acceptance criteria and never reads the implementation — this prevents self-confirming tests and has caught real bugs (see Core Principle).
+
 ## Containers for Tests (Podman)
 
 Service/integration tests run against real PostgreSQL via Testcontainers. Locally the
@@ -63,6 +73,7 @@ Failing tests block the Developer Agent. No feature is done before tests are gre
 
 ## Test Data Strategy
 
+- **Synthetic data only** — tests use exclusively synthetic data; real *and* anonymized production data are forbidden. Keeps tests reproducible and prevents PII from entering the codebase.
 - **No data-generation library** (Bogus/Faker) — deliberate. Arrange blocks stay explicit so a reader sees exactly which values drive the case.
 - **Domain / unit tests:** arrange inline, values chosen to make the scenario obvious (e.g. an expiry date `today + 2` for "expiring soon").
 - **Service tests:** share `ApiTestFixture` (in-process API host + Testcontainers PostgreSQL); each test seeds only the data it asserts on and cleans up via the fixture lifecycle.
