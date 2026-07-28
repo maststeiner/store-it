@@ -14,9 +14,6 @@ on:
     branches: [develop, main] # post-merge runs keep the SonarCloud baseline current
   workflow_dispatch:
 
-env:
-  COVERAGE_THRESHOLD: 70 # Calibrate during pilot
-
 jobs:
 
   # ────────────────────────────────────────────
