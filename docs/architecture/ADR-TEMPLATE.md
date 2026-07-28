@@ -1,6 +1,6 @@
 # ADR-NNN: [Decision Title]
 
-> **Status:** Proposed | Accepted | Deprecated | Superseded by ADR-NNN
+> **Status:** Proposed | Research | Accepted | Deprecated | Superseded by ADR-NNN
 > **Date:** YYYY-MM-DD
 > **Deciders:** [Names]
 
