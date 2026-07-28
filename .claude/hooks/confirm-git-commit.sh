@@ -6,7 +6,8 @@
 set -euo pipefail
 input="$(cat)"
 
-if printf '%s' "$input" | grep -qE 'git[[:space:]]+commit'; then
+# Match `commit` even behind git global options (git -C dir commit, git -c k=v commit, …).
+if printf '%s' "$input" | grep -qE 'git([[:space:]]+[^[:space:]]+)*[[:space:]]+commit'; then
   cat <<'JSON'
 {"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"store-it requires explicit human sign-off on every commit. Review and confirm the commit message before it lands."}}
 JSON

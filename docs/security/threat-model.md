@@ -21,7 +21,7 @@ and **which risks nothing covers yet**. store-it is a public GitHub repository
 | R-02 | Business rules bypassed via the client | M | M | Client is render-only; all rules server-side; architecture gate (NetArchTest) forbids logic leaking outward | ✅ |
 | R-03 | SQL injection | H | L | EF Core parameterized queries only; no string-built SQL | ✅ |
 | R-04 | Sensitive data in logs / error responses | M | M | Structured logs to stdout; domain exceptions mapped to sanitized responses (`DomainExceptionHandler`); no PII in test data (synthetic-only policy) | 🟡 |
-| R-05 | Secrets committed to the repo | H | M | Env-based config (12-factor); no secrets in repo; **PreToolUse guardrails block agents from reading/editing secret files**; Trivy secret scan | ✅ |
+| R-05 | Secrets committed to the repo | H | M | Env-based config (12-factor); no secrets in repo; Trivy secret scan (independent detective control); PreToolUse guardrails deny agents secret-file access (best-effort / fail-open — see note) | 🟡 |
 | R-06 | Broken access control / no authn-authz | H | H | **Not yet addressed** — store-it has no user/auth concept. Deferred to ADR-004 (identity/auth). Until then the app is single-tenant/unauthenticated by design | ⚪ |
 | R-07 | Denial of service (resource exhaustion) | M | L | No app-level rate limiting yet; owner concern at the ingress/hosting layer (ADR-005) | ⚪ |
 | R-08 | CORS / API surface misconfiguration | M | L | API surface is explicit (minimal APIs, typed contracts); revisit CORS with the first real client deployment | 🟡 |
@@ -43,12 +43,12 @@ store-it is built with AI agents (KAIFe L4). That adds a risk class most threat 
 
 | ID | Risk | Impact | Likelihood | Mitigation in store-it | Status |
 |----|------|--------|-----------|------------------------|--------|
-| R-15 | AI-generated code carries security flaws (studies report 30–50%) | H | M | CodeRabbit adversarial review; SonarCloud security hotspots; human review gate (G2) | 🟡 |
+| R-15 | AI-generated code carries security flaws (internal risk assumption; industry security studies commonly cite ~30–50%) | H | M | CodeRabbit adversarial review; SonarCloud security hotspots; human review gate (G2) | 🟡 |
 | R-16 | Tests that look plausible but assert nothing | M | M | Stryker.NET mutation testing (backend, break < 60%); isolated QA persona reads the spec, never the code; assertion-minimum policy (test-guidelines) | ✅ |
 | R-17 | Code duplication from generation (~8× per industry data) | L | M | SonarCloud duplication detection in the quality gate | ✅ |
 | R-18 | Architecture erosion via AI edits | M | M | NetArchTest + ReferencesRuler architecture gate blocks layering violations on every build | ✅ |
 | R-19 | License contamination via generated code | M | L | Same controls as R-10 (license scans); permissive-only policy | 🟡 |
-| R-20 | Agent exfiltrates secrets or acts unprompted | H | L | PreToolUse guardrails: deny secret reads (bash + file), require human sign-off on every commit | ✅ |
+| R-20 | Agent exfiltrates secrets or acts unprompted | H | L | PreToolUse guardrails deny secret reads (bash + file) and require human sign-off on commits — best-effort / fail-open; backstopped by human review (Gate G2) and least-privilege CI | 🟡 |
 
 ---
 
@@ -60,5 +60,6 @@ Some concerns are the operator's, not the app's — store-it's job is to **not b
 - **Auth & fine-grained authorization** — deferred to ADR-004; no user concept exists yet.
 - **DoS / rate limiting / WAF** — expected at the ingress layer (ADR-005).
 - **Secret management / rotation** — env-injected at deploy time; the repo only guarantees no secret is committed.
+- **Guardrail hooks are best-effort, not absolute.** The PreToolUse hooks (R-05, R-20) are **fail-open** by design — a hook failure, an unmatched pattern, or a session that never loads them all permit the action. They lower risk; they do not guarantee it. The real backstops are the independent controls: Trivy secret scanning, human review (Gate G2), and least-privilege CI.
 
 Review this register whenever a new spec adds a data flow, a dependency, or a deployment surface.
