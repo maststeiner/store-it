@@ -1,9 +1,9 @@
 # Spec: Typed frontend API client generated from the OpenAPI contract
 
-> **Status:** Draft
+> **Status:** Frozen (Gate 1)
 > **Sprint:** 2026-S17
 > **Author:** Analyst Agent (orchestrated by Marcel Steiner)
-> **Last updated:** 2026-07-29
+> **Frozen:** 2026-07-29
 > **Source:** Issue #7 (tech-debt) — CodeRabbit review on PR #5
 
 ---
@@ -156,6 +156,6 @@ PR B branches from / rebases onto PR A (needs the clean contract as generator in
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-07-29 | Marcel Steiner (PO) |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
