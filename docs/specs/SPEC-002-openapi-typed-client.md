@@ -121,11 +121,16 @@ PR B branches from / rebases onto PR A (needs the clean contract as generator in
 
 <!-- To be confirmed/refined by Architect Agent after Gate 1 -->
 
-- [ ] Generator: `ng-openapi-gen` (Node-only, Angular-native; no Java toolchain added).
+- [ ] Generator: `ng-openapi-gen` (Node-only, Angular-native; no Java toolchain added),
+  `enumStyle: alias` + `enumArray: true` → union type `Unit` **plus** a runtime `UnitArray`
+  sidecar that satisfies AC-05 (dropdown source) with zero runtime overhead.
 - [ ] Generated client committed to the repo + CI drift gate (consistent with ADR-006's
   committed-contract approach); generated dir excluded from ESLint / coverage / Sonar.
 - [ ] Backend normalisation via an `IOpenApiSchemaTransformer` in `StoreIt.Api`
   (contract-only; no change to `ConfigureHttpJsonOptions` runtime behaviour).
+- [ ] Endpoints get stable `operationId`s via `.WithName(...)` (PR A) so generated method
+  names are clean (`getStorages`, `addItem`, …) rather than path-derived. Non-breaking
+  contract addition.
 - [ ] Layering unchanged: generated client lives in the frontend presentation/data layer;
   the domain `ApiError` + interceptor remain hand-written.
 - [ ] ADR required: **no new ADR** — this realises ADR-006's contract-first direction.
