@@ -91,7 +91,7 @@ Beyond the general rule (descriptive names, no abbreviations except established 
 
 **Backend (C#)**
 
-- **Types** PascalCase; **interfaces** `I`-prefixed (`IStorageRepository`). One public type per file, filename = type name.
+- **Types** PascalCase; **interfaces** `I`-prefixed (`IStorageRepository`). One *primary* public type per file (filename = type name) for entities, services and DTOs — **exception:** a feature's closely-related small types may be grouped in one file (e.g. `ItemUseCases.cs` holds the item use cases + their input records; `Contracts.cs` holds the boundary DTOs). In this small codebase, grouping by feature beats a sprawl of tiny files.
 - **Role suffixes** are load-bearing and consistent: use cases `*UseCases` (`StorageUseCases`), endpoints `*Endpoints`, EF config `*Configuration`, DI wiring `*ServiceCollectionExtensions`, exceptions `*Exception` (`StorageNotFoundException`).
 - **Use-case input models** bundling several parameters are named `<Operation>Input` (`AddItemInput`, `UpdateItemInput`) — **not** `*Command`. store-it has no command bus/mediator, so `Command` would overclaim CQRS semantics; these are parameter objects for a use case's `ExecuteAsync`. Introduce one once a signature grows past ~4 parameters; keep small signatures positional.
 - **Domain stays noun-first and framework-free** (`Storage`, `Item`, `ExpiryRules`, `Unit`) — no technical suffixes leaking persistence/transport concerns.
