@@ -4,7 +4,7 @@
 > **Stack:** .NET 10 LTS (C#) backend · Angular (TypeScript) frontend
 > **Formatter:** CSharpier (backend, `dotnet csharpier format .`) · Prettier + ESLint (frontend)
 > **Static analysis:** Roslyn analyzers, `latest-recommended`, enforced at build time (warnings = errors)
-> **Last updated:** 2026-07-27
+> **Last updated:** 2026-07-29
 
 These guidelines are the primary reference for the Developer Agent and the Reviewer Agent.
 
@@ -93,6 +93,7 @@ Beyond the general rule (descriptive names, no abbreviations except established 
 
 - **Types** PascalCase; **interfaces** `I`-prefixed (`IStorageRepository`). One public type per file, filename = type name.
 - **Role suffixes** are load-bearing and consistent: use cases `*UseCases` (`StorageUseCases`), endpoints `*Endpoints`, EF config `*Configuration`, DI wiring `*ServiceCollectionExtensions`, exceptions `*Exception` (`StorageNotFoundException`).
+- **Use-case input models** bundling several parameters are named `<Operation>Input` (`AddItemInput`, `UpdateItemInput`) — **not** `*Command`. store-it has no command bus/mediator, so `Command` would overclaim CQRS semantics; these are parameter objects for a use case's `ExecuteAsync`. Introduce one once a signature grows past ~4 parameters; keep small signatures positional.
 - **Domain stays noun-first and framework-free** (`Storage`, `Item`, `ExpiryRules`, `Unit`) — no technical suffixes leaking persistence/transport concerns.
 - **Locals/parameters** camelCase; **constants** PascalCase; **async** methods end in `Async` only when a sync sibling exists.
 - **EF migrations** keep the generated `<timestamp>_<Name>` form.

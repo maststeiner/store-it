@@ -88,12 +88,14 @@ public static class StorageEndpoints
             ) =>
             {
                 var item = await useCase.ExecuteAsync(
-                    storageId,
-                    request.Name,
-                    request.Amount,
-                    request.Unit,
-                    request.ExpiryDate,
-                    request.ProductionDate,
+                    new AddItemInput(
+                        storageId,
+                        request.Name,
+                        request.Amount,
+                        request.Unit,
+                        request.ExpiryDate,
+                        request.ProductionDate
+                    ),
                     ct
                 );
                 return TypedResults.Created(
@@ -115,13 +117,15 @@ public static class StorageEndpoints
             {
                 // AC-08: amount 0 removes the item — both outcomes are 204
                 await useCase.ExecuteAsync(
-                    storageId,
-                    itemId,
-                    request.Name,
-                    request.Amount,
-                    request.Unit,
-                    request.ExpiryDate,
-                    request.ProductionDate,
+                    new UpdateItemInput(
+                        storageId,
+                        itemId,
+                        request.Name,
+                        request.Amount,
+                        request.Unit,
+                        request.ExpiryDate,
+                        request.ProductionDate
+                    ),
                     ct
                 );
                 return TypedResults.NoContent();
