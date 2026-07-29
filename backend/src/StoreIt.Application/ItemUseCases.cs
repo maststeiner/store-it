@@ -27,25 +27,44 @@ public sealed class GetStorageItemsUseCase(IStorageRepository repository, TimePr
     }
 }
 
+/// <summary>Input for <see cref="AddItemUseCase"/> (AC-05/AC-06).</summary>
+public sealed record AddItemInput(
+    Guid StorageId,
+    string Name,
+    decimal Amount,
+    Unit Unit,
+    DateOnly? ExpiryDate,
+    DateOnly? ProductionDate
+);
+
 /// <summary>AC-05/AC-06: add an item to a storage.</summary>
 public sealed class AddItemUseCase(IStorageRepository repository)
 {
-    public async Task<Item> ExecuteAsync(
-        Guid storageId,
-        string name,
-        decimal amount,
-        Unit unit,
-        DateOnly? expiryDate,
-        DateOnly? productionDate,
-        CancellationToken cancellationToken
-    )
+    public async Task<Item> ExecuteAsync(AddItemInput command, CancellationToken cancellationToken)
     {
-        var storage = await repository.GetRequiredAsync(storageId, cancellationToken);
-        var item = storage.AddItem(name, amount, unit, expiryDate, productionDate);
+        var storage = await repository.GetRequiredAsync(command.StorageId, cancellationToken);
+        var item = storage.AddItem(
+            command.Name,
+            command.Amount,
+            command.Unit,
+            command.ExpiryDate,
+            command.ProductionDate
+        );
         await repository.SaveChangesAsync(cancellationToken);
         return item;
     }
 }
+
+/// <summary>Input for <see cref="UpdateItemUseCase"/> (AC-07/AC-08).</summary>
+public sealed record UpdateItemInput(
+    Guid StorageId,
+    Guid ItemId,
+    string Name,
+    decimal Amount,
+    Unit Unit,
+    DateOnly? ExpiryDate,
+    DateOnly? ProductionDate
+);
 
 /// <summary>
 /// AC-07/AC-08: update an item; amount 0 removes it. Returns false when removed.
@@ -53,18 +72,19 @@ public sealed class AddItemUseCase(IStorageRepository repository)
 public sealed class UpdateItemUseCase(IStorageRepository repository)
 {
     public async Task<bool> ExecuteAsync(
-        Guid storageId,
-        Guid itemId,
-        string name,
-        decimal amount,
-        Unit unit,
-        DateOnly? expiryDate,
-        DateOnly? productionDate,
+        UpdateItemInput command,
         CancellationToken cancellationToken
     )
     {
-        var storage = await repository.GetRequiredAsync(storageId, cancellationToken);
-        var kept = storage.UpdateItem(itemId, name, amount, unit, expiryDate, productionDate);
+        var storage = await repository.GetRequiredAsync(command.StorageId, cancellationToken);
+        var kept = storage.UpdateItem(
+            command.ItemId,
+            command.Name,
+            command.Amount,
+            command.Unit,
+            command.ExpiryDate,
+            command.ProductionDate
+        );
         await repository.SaveChangesAsync(cancellationToken);
         return kept;
     }
