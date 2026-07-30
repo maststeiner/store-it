@@ -41,7 +41,8 @@
         "other": "{{count}} laufen bald ab"
       },
       "fresh": "Alles frisch"
-    }
+    },
+    "openCard": "Lagerort {{name}} öffnen"
   },
   "items": {
     "count": {

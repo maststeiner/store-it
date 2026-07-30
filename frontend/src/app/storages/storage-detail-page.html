@@ -19,6 +19,7 @@
           class="icon-btn"
           (click)="saveRename()"
           [title]="'actions.save' | translate"
+          [attr.aria-label]="'actions.save' | translate"
         >
           ✓
         </button>
@@ -27,6 +28,7 @@
           class="icon-btn"
           (click)="renaming.set(false)"
           [title]="'actions.cancel' | translate"
+          [attr.aria-label]="'actions.cancel' | translate"
         >
           ✕
         </button>
@@ -41,6 +43,7 @@
         class="icon-btn"
         (click)="startRename()"
         [title]="'actions.rename' | translate"
+        [attr.aria-label]="'actions.rename' | translate"
       >
         ✎
       </button>
@@ -49,6 +52,7 @@
         class="icon-btn"
         (click)="deleteOpen.set(true)"
         [title]="'actions.delete' | translate"
+        [attr.aria-label]="'actions.delete' | translate"
       >
         🗑
       </button>
@@ -165,7 +169,12 @@
                 [attr.aria-label]="'items.form.production' | translate"
               />
               <span class="item-actions">
-                <button type="submit" class="icon-btn" [title]="'actions.save' | translate">
+                <button
+                  type="submit"
+                  class="icon-btn"
+                  [title]="'actions.save' | translate"
+                  [attr.aria-label]="'actions.save' | translate"
+                >
                   ✓
                 </button>
                 <button
@@ -173,6 +182,7 @@
                   class="icon-btn"
                   (click)="cancelItemEdit()"
                   [title]="'actions.cancel' | translate"
+                  [attr.aria-label]="'actions.cancel' | translate"
                 >
                   ✕
                 </button>
@@ -212,6 +222,7 @@
                   class="icon-btn"
                   (click)="startItemEdit(item)"
                   [title]="'actions.edit' | translate"
+                  [attr.aria-label]="'actions.edit' | translate"
                 >
                   ✎
                 </button>
@@ -220,6 +231,7 @@
                   class="icon-btn"
                   (click)="deleteItem(item)"
                   [title]="'actions.delete' | translate"
+                  [attr.aria-label]="'actions.delete' | translate"
                 >
                   🗑
                 </button>
