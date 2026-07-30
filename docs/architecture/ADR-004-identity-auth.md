@@ -1,6 +1,6 @@
 # ADR-004: Identity & authentication (direct OIDC federation, BFF)
 
-> **Status:** Proposed
+> **Status:** Accepted
 > **Date:** 2026-07-30
 > **Deciders:** Marcel Steiner
 
@@ -98,5 +98,5 @@ The Api layer and the Angular frontend MUST NOT implement ownership rules (ADR-0
 ---
 
 *Referenced by SPEC-003 (accounts & storage ownership). Resolves issue #16 and the
-`ARCHITECTURE.md` auth TODOs; mitigates threat-model R-06. A human decider moves this ADR
-from Proposed to Accepted.*
+`ARCHITECTURE.md` auth TODOs; mitigates threat-model R-06. Accepted by Marcel Steiner on
+2026-07-30.*
