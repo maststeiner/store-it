@@ -88,7 +88,7 @@ External actors: end users via web (later iOS). No third-party system integratio
 |-----------|------------|-----------|
 | Web UI ↔ API | HTTPS / REST / JSON | bidirectional |
 | API ↔ Database | PostgreSQL via EF Core (ADR-003) | outbound |
-| Auth | TODO: choose identity provider / scheme (see open ADRs) | — |
+| Auth | OIDC to external providers (Microsoft/Google), BFF session — [ADR-004](ADR-004-identity-auth.md) | inbound (login) |
 
 ---
 
@@ -163,8 +163,8 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 ## 8. Cross-cutting Concepts
 
 ### Security
-- Authentication + authorization required for every API call; access to a storage requires membership.
-- TODO: identity solution (ADR pending).
+- Authentication + authorization required for every API call; a storage is only accessible to its owner (per-storage ownership; sharing/membership is a later extension).
+- Identity via external OIDC providers with a BFF session — see [ADR-004](ADR-004-identity-auth.md).
 
 ### Error Handling & Logging
 - Problem-details style API errors; no internal details leaked to clients.
@@ -193,7 +193,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 | [ADR-001](ADR-001-monorepo-layering.md) | Monorepo with enforced backend layering | Accepted | 2026-07-09 |
 | [ADR-002](ADR-002-api-first.md) | API-first backend for all clients | Accepted | 2026-07-09 |
 | [ADR-003](ADR-003-persistence.md) | PostgreSQL + EF Core for persistence | Accepted | 2026-07-09 |
-| ADR-004 | Identity / auth solution | TODO | |
+| [ADR-004](ADR-004-identity-auth.md) | Identity / auth solution (direct OIDC federation, BFF) | Proposed | 2026-07-30 |
 | [ADR-006](ADR-006-api-versioning-contract-gate.md) | API versioning and contract gate | Accepted | 2026-07-18 |
 | [ADR-007](ADR-007-release-versioning.md) | Release process, SemVer tagging, breaking-change baseline | Accepted | 2026-07-31 |
 | ADR-005 | Kubernetes hosting & deployment strategy | TODO | |
