@@ -215,7 +215,10 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           if git show "origin/${BASE_REF}:backend/openapi/StoreIt.Api.json" > /tmp/base-spec.json 2>/dev/null; then
-            /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json --fail-on ERR
+            # --err-ignore: acknowledged breaking changes (ADR-006 / pre-v1 policy);
+            # each entry is documented in openapi/oasdiff-ignore.txt. Unlisted
+            # breaking changes still fail the gate.
+            /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json --fail-on ERR --err-ignore openapi/oasdiff-ignore.txt
           else
             echo "No contract on ${BASE_REF} yet — first introduction, skipping breaking check."
           fi
