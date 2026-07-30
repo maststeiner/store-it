@@ -39,28 +39,29 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         var root = await GetContractAsync();
         var schemas = root.GetProperty("components").GetProperty("schemas");
 
-        var amount = schemas
-            .GetProperty("ItemResponse")
-            .GetProperty("properties")
-            .GetProperty("amount");
-        // single "number", not a ["number","string"] array
-        Assert.Equal(JsonValueKind.String, amount.GetProperty("type").ValueKind);
-        Assert.Equal("number", amount.GetProperty("type").GetString());
-        Assert.False(amount.TryGetProperty("pattern", out _));
+        static JsonElement Property(JsonElement schemas, string schema, string property) =>
+            schemas.GetProperty(schema).GetProperty("properties").GetProperty(property);
 
-        var count = schemas
-            .GetProperty("StorageResponse")
-            .GetProperty("properties")
-            .GetProperty("itemCount");
-        Assert.Equal("integer", count.GetProperty("type").GetString());
+        static void AssertPlainType(JsonElement property, string expectedType)
+        {
+            // single scalar type, not a ["<type>","string"] array, and no string pattern
+            Assert.Equal(JsonValueKind.String, property.GetProperty("type").ValueKind);
+            Assert.Equal(expectedType, property.GetProperty("type").GetString());
+            Assert.False(property.TryGetProperty("pattern", out _));
+        }
+
+        // every numeric property the transformer targets — request and response
+        AssertPlainType(Property(schemas, "ItemResponse", "amount"), "number");
+        AssertPlainType(Property(schemas, "ItemRequest", "amount"), "number");
+        AssertPlainType(Property(schemas, "StorageResponse", "itemCount"), "integer");
+        AssertPlainType(Property(schemas, "StorageResponse", "expiredCount"), "integer");
+        AssertPlainType(Property(schemas, "StorageResponse", "expiringSoonCount"), "integer");
 
         // dates must stay nullable strings — the transformer must not touch them
-        var expiryDate = schemas
-            .GetProperty("ItemResponse")
-            .GetProperty("properties")
-            .GetProperty("expiryDate")
-            .GetProperty("type");
-        Assert.Equal(JsonValueKind.Array, expiryDate.ValueKind);
+        Assert.Equal(
+            JsonValueKind.Array,
+            Property(schemas, "ItemResponse", "expiryDate").GetProperty("type").ValueKind
+        );
     }
 }
 
@@ -96,6 +97,7 @@ public sealed class NumericSchemaTransformerTests
 
         Assert.Equal(JsonSchemaType.Integer, schema.Type);
         Assert.Null(schema.Pattern);
+        // Format intentionally not set/asserted — int32 count fields emit no format
     }
 
     [Fact]
