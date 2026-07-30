@@ -41,7 +41,8 @@
         "other": "{{count}} expiring soon"
       },
       "fresh": "All fresh"
-    }
+    },
+    "openCard": "Open storage {{name}}"
   },
   "items": {
     "count": {

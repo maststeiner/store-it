@@ -15,9 +15,16 @@ import { TranslatePipe } from '../core/translate';
   imports: [TranslatePipe],
   template: `
     <div class="overlay">
-      <div class="dialog" role="alertdialog" aria-modal="true" [attr.aria-label]="title()">
-        <h2 class="dialog-title">{{ title() }}</h2>
-        <p class="dialog-message">{{ message() }}</p>
+      <div
+        #dialog
+        class="dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
+      >
+        <h2 id="confirm-dialog-title" class="dialog-title">{{ title() }}</h2>
+        <p id="confirm-dialog-message" class="dialog-message">{{ message() }}</p>
         <div class="dialog-actions">
           <button type="button" class="btn-ghost" (click)="cancelled.emit()">
             {{ 'actions.cancel' | translate }}
@@ -36,6 +43,7 @@ export class ConfirmDialog implements AfterViewInit {
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();
 
+  private readonly dialog = viewChild.required<ElementRef<HTMLElement>>('dialog');
   private readonly confirmButton =
     viewChild.required<ElementRef<HTMLButtonElement>>('confirmButton');
 
@@ -47,5 +55,30 @@ export class ConfirmDialog implements AfterViewInit {
   @HostListener('document:keydown.escape')
   protected onEscape(): void {
     this.cancelled.emit();
+  }
+
+  // Focus trap: keep Tab / Shift+Tab cycling between the dialog's controls
+  // so focus can't escape to the (inert) background while the modal is open.
+  @HostListener('document:keydown.tab', ['$event'])
+  @HostListener('document:keydown.shift.tab', ['$event'])
+  protected onTab(event: Event): void {
+    const keyEvent = event as KeyboardEvent;
+    const focusables = Array.from(
+      this.dialog().nativeElement.querySelectorAll<HTMLElement>('button'),
+    );
+    if (focusables.length === 0) {
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+
+    if (keyEvent.shiftKey && active === first) {
+      last.focus();
+      event.preventDefault();
+    } else if (!keyEvent.shiftKey && active === last) {
+      first.focus();
+      event.preventDefault();
+    }
   }
 }

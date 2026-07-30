@@ -27,7 +27,7 @@
     @for (storage of storages() ?? []; track storage.id) {
       @if (editId() === storage.id) {
         <div class="storage-card">
-          <div class="storage-icon">🥫</div>
+          <div class="storage-icon" aria-hidden="true">🥫</div>
           <div class="inline-edit">
             <input
               class="inline-input"
@@ -41,6 +41,7 @@
               class="icon-btn"
               (click)="saveEdit(storage)"
               [title]="'actions.save' | translate"
+              [attr.aria-label]="'actions.save' | translate"
             >
               ✓
             </button>
@@ -49,6 +50,7 @@
               class="icon-btn"
               (click)="cancelEdit()"
               [title]="'actions.cancel' | translate"
+              [attr.aria-label]="'actions.cancel' | translate"
             >
               ✕
             </button>
@@ -62,11 +64,12 @@
           class="storage-card"
           role="button"
           tabindex="0"
+          [attr.aria-label]="'storages.openCard' | translate: { name: storage.name }"
           (click)="open(storage)"
           (keydown.enter)="open(storage)"
           (keydown.space)="open(storage); $event.preventDefault()"
         >
-          <div class="storage-icon">🥫</div>
+          <div class="storage-icon" aria-hidden="true">🥫</div>
           <div>
             <div class="storage-name">{{ storage.name }}</div>
             <div class="storage-meta">
@@ -109,6 +112,7 @@
               class="icon-btn"
               (click)="startEdit(storage, $event)"
               [title]="'actions.rename' | translate"
+              [attr.aria-label]="'actions.rename' | translate"
             >
               ✎
             </button>
@@ -117,6 +121,7 @@
               class="icon-btn"
               (click)="askDelete(storage, $event)"
               [title]="'actions.delete' | translate"
+              [attr.aria-label]="'actions.delete' | translate"
             >
               🗑
             </button>
@@ -142,6 +147,7 @@
             class="icon-btn"
             (click)="cancelCreate()"
             [title]="'actions.cancel' | translate"
+            [attr.aria-label]="'actions.cancel' | translate"
           >
             ✕
           </button>

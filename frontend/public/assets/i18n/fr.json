@@ -41,7 +41,8 @@
         "other": "{{count}} bientôt périmés"
       },
       "fresh": "Tout est frais"
-    }
+    },
+    "openCard": "Ouvrir le rangement {{name}}"
   },
   "items": {
     "count": {

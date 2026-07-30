@@ -41,7 +41,8 @@
         "other": "{{count}} in scadenza"
       },
       "fresh": "Tutto fresco"
-    }
+    },
+    "openCard": "Apri la dispensa {{name}}"
   },
   "items": {
     "count": {
