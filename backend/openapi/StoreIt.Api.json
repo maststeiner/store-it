@@ -10,6 +10,7 @@
         "tags": [
           "Storages"
         ],
+        "operationId": "getStorages",
         "responses": {
           "200": {
             "description": "OK",
@@ -30,6 +31,7 @@
         "tags": [
           "Storages"
         ],
+        "operationId": "createStorage",
         "requestBody": {
           "content": {
             "application/json": {
@@ -59,6 +61,7 @@
         "tags": [
           "Storages"
         ],
+        "operationId": "renameStorage",
         "parameters": [
           {
             "name": "storageId",
@@ -97,6 +100,7 @@
         "tags": [
           "Storages"
         ],
+        "operationId": "deleteStorage",
         "parameters": [
           {
             "name": "storageId",
@@ -120,6 +124,7 @@
         "tags": [
           "Items"
         ],
+        "operationId": "getItems",
         "parameters": [
           {
             "name": "storageId",
@@ -151,6 +156,7 @@
         "tags": [
           "Items"
         ],
+        "operationId": "addItem",
         "parameters": [
           {
             "name": "storageId",
@@ -192,6 +198,7 @@
         "tags": [
           "Items"
         ],
+        "operationId": "updateItem",
         "parameters": [
           {
             "name": "storageId",
@@ -232,6 +239,7 @@
         "tags": [
           "Items"
         ],
+        "operationId": "deleteItem",
         "parameters": [
           {
             "name": "storageId",
