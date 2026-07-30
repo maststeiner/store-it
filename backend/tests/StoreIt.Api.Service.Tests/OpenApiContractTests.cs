@@ -9,7 +9,8 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
     private async Task<JsonElement> GetContractAsync()
     {
         var json = await _client.GetStringAsync("/openapi/v1.json");
-        return JsonDocument.Parse(json).RootElement;
+        using var document = JsonDocument.Parse(json);
+        return document.RootElement.Clone();
     }
 
     [Fact]
@@ -18,14 +19,16 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         var root = await GetContractAsync();
         var paths = root.GetProperty("paths");
 
-        Assert.Equal(
-            "getStorages",
-            paths.GetProperty("/api/v1/storages").GetProperty("get").GetProperty("operationId").GetString());
-        Assert.Equal(
-            "createStorage",
-            paths.GetProperty("/api/v1/storages").GetProperty("post").GetProperty("operationId").GetString());
-        Assert.Equal(
-            "addItem",
-            paths.GetProperty("/api/v1/storages/{storageId}/items").GetProperty("post").GetProperty("operationId").GetString());
+        static string OperationId(JsonElement paths, string path, string verb) =>
+            paths.GetProperty(path).GetProperty(verb).GetProperty("operationId").GetString()!;
+
+        Assert.Equal("getStorages", OperationId(paths, "/api/v1/storages", "get"));
+        Assert.Equal("createStorage", OperationId(paths, "/api/v1/storages", "post"));
+        Assert.Equal("renameStorage", OperationId(paths, "/api/v1/storages/{storageId}", "put"));
+        Assert.Equal("deleteStorage", OperationId(paths, "/api/v1/storages/{storageId}", "delete"));
+        Assert.Equal("getItems", OperationId(paths, "/api/v1/storages/{storageId}/items", "get"));
+        Assert.Equal("addItem", OperationId(paths, "/api/v1/storages/{storageId}/items", "post"));
+        Assert.Equal("updateItem", OperationId(paths, "/api/v1/storages/{storageId}/items/{itemId}", "put"));
+        Assert.Equal("deleteItem", OperationId(paths, "/api/v1/storages/{storageId}/items/{itemId}", "delete"));
     }
 }
