@@ -18,7 +18,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddHealthChecks();
-builder.Services.AddOpenApi("v1");
+builder.Services.AddOpenApi("v1", options => options.AddSchemaTransformer<NumericSchemaTransformer>());
 
 var app = builder.Build();
 
