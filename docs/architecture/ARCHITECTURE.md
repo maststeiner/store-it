@@ -80,7 +80,7 @@ store-it is a digital pantry management application:
 [store-it API] ──persists──> [Database]
 ```
 
-External actors: end users via web (later iOS). No third-party system integrations in the MVP.
+External actors: end users via web (later iOS). The only external system integration is the identity providers (Microsoft/Google OIDC) for sign-in (ADR-004); no other third-party integrations in the MVP.
 
 ### Technical Context
 
@@ -163,7 +163,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 ## 8. Cross-cutting Concepts
 
 ### Security
-- Authentication + authorization required for every API call; a storage is only accessible to its owner (per-storage ownership; sharing/membership is a later extension).
+- Authentication + authorization required for every **protected** API call (`/api/v1/**`); `/health` and the `/auth/*` endpoints are anonymous by design (SPEC-003 allowlist). A storage is only accessible to its owner (per-storage ownership; sharing/membership is a later extension).
 - Identity via external OIDC providers with a BFF session — see [ADR-004](ADR-004-identity-auth.md).
 
 ### Error Handling & Logging

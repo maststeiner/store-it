@@ -12,8 +12,9 @@ store-it has had no user concept: SPEC-001 shipped a walking skeleton where *all
 storages are globally visible* (an explicit MVP simplification). SPEC-003 removes that
 by introducing accounts and per-storage ownership, which requires an identity solution.
 This ADR is the long-standing `TODO` in `ARCHITECTURE.md` (Technical Context, Security)
-and GitHub issue #16, and it directly mitigates threat-model risk **R-06 (Broken access
-control / no authn-authz)**.
+and GitHub issue #16, and it is the **planned mitigation** for threat-model risk **R-06
+(Broken access control / no authn-authz)** — R-06 is marked mitigated only once the
+implementation lands with passing tests (SPEC-003 Task 12).
 
 Constraints and forces:
 - The product owner does not want to build or operate an own identity provider or manage
@@ -72,7 +73,7 @@ linking is out of scope — SPEC-003 EC-03).
 
 **Positive:**
 - No credential storage, no own IdP, no broker infrastructure to operate.
-- Tokens never reach the browser (R-06 downgraded from "Not yet addressed" to mitigated).
+- Tokens never reach the browser — the design that will downgrade R-06 from "Not yet addressed" once implemented.
 - Ownership isolation is enforced centrally at the data layer, hard to forget.
 - Local `User` decouples the domain from IdP identifiers and pre-stages future sharing.
 
@@ -98,5 +99,5 @@ The Api layer and the Angular frontend MUST NOT implement ownership rules (ADR-0
 ---
 
 *Referenced by SPEC-003 (accounts & storage ownership). Resolves issue #16 and the
-`ARCHITECTURE.md` auth TODOs; mitigates threat-model R-06. Accepted by Marcel Steiner on
-2026-07-30.*
+`ARCHITECTURE.md` auth TODOs; is the planned mitigation for threat-model R-06 (marked
+mitigated after implementation). Accepted by Marcel Steiner on 2026-07-30.*
