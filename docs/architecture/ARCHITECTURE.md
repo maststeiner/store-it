@@ -195,6 +195,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 | [ADR-003](ADR-003-persistence.md) | PostgreSQL + EF Core for persistence | Accepted | 2026-07-09 |
 | ADR-004 | Identity / auth solution | TODO | |
 | [ADR-006](ADR-006-api-versioning-contract-gate.md) | API versioning and contract gate | Accepted | 2026-07-18 |
+| [ADR-007](ADR-007-release-versioning.md) | Release process, SemVer tagging, breaking-change baseline | Accepted | 2026-07-31 |
 | ADR-005 | Kubernetes hosting & deployment strategy | TODO | |
 
 ---
