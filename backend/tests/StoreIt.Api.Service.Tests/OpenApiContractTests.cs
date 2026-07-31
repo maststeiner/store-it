@@ -93,15 +93,25 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         var root = await GetContractAsync();
         var schemas = root.GetProperty("components").GetProperty("schemas");
 
-        static void AssertStringEnum(JsonElement schema)
+        static void AssertStringEnum(JsonElement schema, string?[] expectedValues)
         {
             // enums serialise as strings (JsonStringEnumConverter); the contract must
             // say so explicitly so generated clients emit a typed string enum + value list
             Assert.Equal("string", schema.GetProperty("type").GetString());
-            Assert.NotEmpty(schema.GetProperty("enum").EnumerateArray());
+            var values = new List<string?>();
+            foreach (var value in schema.GetProperty("enum").EnumerateArray())
+            {
+                values.Add(value.GetString());
+            }
+            Assert.Equal(expectedValues, values);
         }
 
-        AssertStringEnum(schemas.GetProperty("Unit"));
-        AssertStringEnum(schemas.GetProperty("ExpiryStatus"));
+        // Locale-neutral API codes (SPEC-001, arc42 §8): the API exposes codes; clients
+        // translate them to display labels (e.g. Gram -> "g"). Assert the exact code set.
+        AssertStringEnum(
+            schemas.GetProperty("Unit"),
+            ["Piece", "Gram", "Kilogram", "Milliliter", "Liter", "Pack"]
+        );
+        AssertStringEnum(schemas.GetProperty("ExpiryStatus"), ["Ok", "ExpiringSoon", "Expired"]);
     }
 }
