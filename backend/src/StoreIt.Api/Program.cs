@@ -20,7 +20,11 @@ builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi(
     "v1",
-    options => options.AddSchemaTransformer<NumericSchemaTransformer>()
+    options =>
+    {
+        options.AddSchemaTransformer<NumericSchemaTransformer>();
+        options.AddSchemaTransformer<EnumSchemaTransformer>();
+    }
 );
 
 var app = builder.Build();

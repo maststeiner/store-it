@@ -275,7 +275,8 @@
           "Ok",
           "ExpiringSoon",
           "Expired"
-        ]
+        ],
+        "type": "string"
       },
       "ItemRequest": {
         "required": [
@@ -408,7 +409,8 @@
           "Milliliter",
           "Liter",
           "Pack"
-        ]
+        ],
+        "type": "string"
       }
     }
   },

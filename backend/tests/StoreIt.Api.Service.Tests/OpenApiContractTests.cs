@@ -86,4 +86,22 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         AssertNullableIsoDate(Property(schemas, "ItemRequest", "expiryDate"));
         AssertNullableIsoDate(Property(schemas, "ItemRequest", "productionDate"));
     }
+
+    [Fact]
+    public async Task Contract_ForStringEnums_DeclaresStringType()
+    {
+        var root = await GetContractAsync();
+        var schemas = root.GetProperty("components").GetProperty("schemas");
+
+        static void AssertStringEnum(JsonElement schema)
+        {
+            // enums serialise as strings (JsonStringEnumConverter); the contract must
+            // say so explicitly so generated clients emit a typed string enum + value list
+            Assert.Equal("string", schema.GetProperty("type").GetString());
+            Assert.NotEmpty(schema.GetProperty("enum").EnumerateArray());
+        }
+
+        AssertStringEnum(schemas.GetProperty("Unit"));
+        AssertStringEnum(schemas.GetProperty("ExpiryStatus"));
+    }
 }
