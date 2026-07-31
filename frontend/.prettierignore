@@ -5,3 +5,6 @@ coverage/
 playwright-report/
 test-results/
 .playwright/
+
+# Generated API client (ng-openapi-gen) — keeps its own formatting
+src/app/api/
