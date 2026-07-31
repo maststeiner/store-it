@@ -15,6 +15,7 @@ Changes after the G1 freeze are recorded here rather than silently editing the f
 |---|------|--------|-------------|
 | A1 | 2026-07-19 | **AC-01a** added — storage list also returns per-storage `expiredCount` / `expiringSoonCount` (server-computed) for the overview status chips. | Marcel Steiner (PO) |
 | A2 | 2026-07-19 | Technical constraint added — API versioning + OpenAPI contract gate per **ADR-006** (does not change any AC). | Marcel Steiner (PO) |
+| A3 | 2026-07-31 | Editorial — unit display labels in the fixed list normalized to English (`Stück` → `Piece`, `Packung` → `Pack`) to match the enum codes and the English-only repo. No AC or behavior change. | Marcel Steiner (PO) |
 
 ---
 
@@ -40,7 +41,7 @@ A storage is a named object holding a list of items. Multiple storages can exist
 
 ### Items
 
-An item has: name · amount (decimal, max. **one decimal place**, > 0) · unit (from a **fixed list**: Stück, g, kg, ml, l, Packung) · **at least one of** expiry date / production date (both allowed).
+An item has: name · amount (decimal, max. **one decimal place**, > 0) · unit (from a **fixed list**: Piece, g, kg, ml, l, Pack) · **at least one of** expiry date / production date (both allowed).
 
 - [ ] AC-05: WHEN the user adds an item with a valid name, amount, unit, and at least one date (expiry or production) THE system SHALL persist it and return it in that storage's item list.
 - [ ] AC-06: WHEN the user adds an item with an empty name, an amount ≤ 0, more than one decimal place, a unit outside the fixed list, or neither expiry nor production date THE system SHALL reject the request with a validation error.
