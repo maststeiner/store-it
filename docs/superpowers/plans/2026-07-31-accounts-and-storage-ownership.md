@@ -19,7 +19,7 @@
 - **Authorization semantics:** unauthenticated on `/api/v1/**` → **401**; cross-user access by id → **404** (existence not disclosed); `GET /health` stays open with no IdP dependency.
 - **Frontend:** Angular standalone + signals; no new i18n library (use the in-house `TranslateService` + `translate` pipe); all user-facing strings in **de/en/fr/it**; functional guards/interceptors via `withInterceptors`/`CanActivateFn`.
 - **Tests are derived from the ACs (QA persona), not from the code.** TDD: failing test first.
-- **Branch/PR:** all work on `feature/spec-003-auth` (worktree `../store-it-worktrees/spec-003-auth`). Commit locally; **do not push** — the human pushes, opens the PR to `develop`, and merges (Gates G2/G3). DB/schema-migration commands are Approval-tier.
+- **Branch/PR (two-stage):** the frozen baseline (SPEC-003 + ADR-004 + this plan) ships as its **own docs PR** on `feature/spec-003-auth` → `develop` first, so it is reviewed (incl. CodeRabbit) and merged as the shared baseline before any code exists. **Implementation then happens on a fresh `feature/spec-003-auth-impl` branch cut from the updated `develop`** (own worktree). All commits are local; **do not push** — the human pushes, opens each PR to `develop`, and merges (Gates G2/G3). DB/schema-migration commands are Approval-tier.
 
 ---
 
@@ -1681,4 +1681,4 @@ git commit -m "test(e2e): cover login redirect and authenticated overview via de
 - [ ] Contract: `git diff --stat -- backend/openapi/StoreIt.Api.json` shows only intended auth changes.
 - [ ] Update the SPEC-003 Verification table (fill in the real test names) and flip its Gate G2 row once the AI + human review pass.
 - [ ] Write the agent run log under `docs/agent-logs/` (DoD requirement).
-- [ ] Hand off: the human pushes `feature/spec-003-auth`, opens the PR to `develop`, and runs Gates G2/G3. **Highlight the Development-only `/auth/dev-login` endpoint in the PR description.**
+- [ ] Hand off: the human pushes the implementation branch `feature/spec-003-auth-impl`, opens the PR to `develop`, and runs Gates G2/G3. **Highlight the Development-only `/auth/dev-login` endpoint in the PR description.** (The baseline docs PR on `feature/spec-003-auth` is merged first, before this implementation branch is cut.)
