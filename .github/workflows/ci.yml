@@ -82,6 +82,12 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install
         run: npm ci
+      - name: Generate API client (drift check)
+        # The committed client must match the backend OpenAPI contract — regenerate
+        # and fail if it drifts (analogous to the backend contract gate, ADR-006).
+        run: |
+          npm run generate:api
+          git diff --exit-code -- src/app/api
       - name: Lint
         run: npm run lint
       - name: Test + coverage gate
