@@ -215,14 +215,19 @@ jobs:
       - name: Breaking-change check (vs. last released tag)
         if: github.event_name == 'pull_request'
         run: |
-          LAST_TAG="$(git tag --list 'v*' --sort=-v:refname | head -n1)"
+          # Baseline = the latest release tag: a strict vMAJOR.MINOR.PATCH tag
+          # reachable from main (ADR-007). Until the first release, /api/v1 is
+          # pre-release and breaking changes are allowed.
+          LAST_TAG="$(git tag --list 'v*.*.*' --merged origin/main --sort=-v:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
           if [ -z "$LAST_TAG" ]; then
             echo "No release tag yet — /api/v1 is pre-release, breaking changes allowed (ADR-007). Skipping."
           elif git show "${LAST_TAG}:backend/openapi/StoreIt.Api.json" > /tmp/base-spec.json 2>/dev/null; then
             echo "Comparing against the released contract at ${LAST_TAG}."
             /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json --fail-on ERR
           else
-            echo "Release ${LAST_TAG} carries no contract file — skipping breaking check."
+            echo "::error::Release ${LAST_TAG} has no committed contract (backend/openapi/StoreIt.Api.json). Every release must carry its contract baseline (ADR-007)."
+            exit 1
           fi
 
   dependency-review:

@@ -14,7 +14,7 @@ That is too strict for a pre-release API. The intent of ADR-006 is to protect *p
 
 ## Decision
 
-1. **A release is a `develop` → `main` merge, marked by an annotated SemVer tag `vMAJOR.MINOR.PATCH`.** `main` is the released line (consistent with the SonarCloud branch model). The tag is the immutable release marker.
+1. **A release is a `develop` → `main` merge, marked by an annotated SemVer tag `vMAJOR.MINOR.PATCH`.** `main` is the released line (GitFlow-light) — this is distinct from SonarCloud's *analyzed* branch, which is `develop`. **Release tags are protected** (a GitHub `v*` tag-protection rule): since the breaking-change gate reads the contract at the latest tag, that tag must not be movable or deletable. The CI selects the baseline strictly — an annotated `vMAJOR.MINOR.PATCH` tag reachable from `main`.
 2. **Pre-release semantics (SemVer `0.x`): while no `v*` tag exists, `/api/v1` is unfrozen** — breaking changes to it are allowed. The first stable tag **`v1.0.0`** freezes the released `/api/v1` contract; from then on a breaking change requires a new path version (`/api/v2`, per ADR-006).
 3. **The breaking-change baseline is the OpenAPI contract at the latest release tag**, not `develop`. This refines ADR-006 stage 2:
    - No `v*` tag yet → skip the breaking check (pre-release, breaking allowed).
