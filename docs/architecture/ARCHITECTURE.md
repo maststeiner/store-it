@@ -207,7 +207,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 | Usability | Add an item (web form) | ≤ 15 seconds, one screen |
 | Reliability | Expiry list is consistent with stored items | Zero tolerance — covered by service tests |
 | Evolvability | New client (iOS) consumes the API | No API changes needed that break the web client |
-| Security | User without membership calls a storage endpoint | 403, covered by service tests |
+| Security | User requests another owner's storage by id | 404 — existence not disclosed (owner-only model, SPEC-003); membership-based 403 is a future sharing scenario | covered by service tests |
 
 ---
 
