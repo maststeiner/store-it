@@ -12,6 +12,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4200',
     trace: 'on-first-retry',
+    // Pin the UI language so text selectors are deterministic (the app picks the
+    // locale from navigator.language, falling back to English).
+    locale: 'en-US',
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
