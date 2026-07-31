@@ -29,8 +29,14 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         Assert.Equal("deleteStorage", OperationId(paths, "/api/v1/storages/{storageId}", "delete"));
         Assert.Equal("getItems", OperationId(paths, "/api/v1/storages/{storageId}/items", "get"));
         Assert.Equal("addItem", OperationId(paths, "/api/v1/storages/{storageId}/items", "post"));
-        Assert.Equal("updateItem", OperationId(paths, "/api/v1/storages/{storageId}/items/{itemId}", "put"));
-        Assert.Equal("deleteItem", OperationId(paths, "/api/v1/storages/{storageId}/items/{itemId}", "delete"));
+        Assert.Equal(
+            "updateItem",
+            OperationId(paths, "/api/v1/storages/{storageId}/items/{itemId}", "put")
+        );
+        Assert.Equal(
+            "deleteItem",
+            OperationId(paths, "/api/v1/storages/{storageId}/items/{itemId}", "delete")
+        );
     }
 
     [Fact]
