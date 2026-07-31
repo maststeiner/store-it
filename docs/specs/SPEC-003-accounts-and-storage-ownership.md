@@ -180,8 +180,9 @@ fully localized in **de / en / fr / it**):
     defined places so the first user can be created.
 - [ ] Unauthenticated allowlist (secure-by-default; everything else requires a session):
   `GET /health`, `GET /auth/login/{provider}`, `GET /auth/callback/{provider}`,
-  `POST /auth/logout`, `GET /auth/me` (returns 401 when anonymous), and the OpenAPI
-  document (dev/non-prod). `/health` stays a pure liveness check with **no** external
+  `POST /auth/logout`, `GET /auth/me` (returns 401 when anonymous), `GET /auth/csrf`
+  (issues the XSRF cookie the SPA echoes on mutations), and the OpenAPI document
+  (dev/non-prod). `/health` stays a pure liveness check with **no** external
   IdP dependency (so a provider outage does not evict the API from the load balancer).
 - [ ] API versioning & contract gate per ADR-006: requiring auth on `/api/v1/**` is a
   deliberate **behavioural** contract change. As there are no external consumers yet and
@@ -192,8 +193,9 @@ fully localized in **de / en / fr / it**):
   (12-factor) and are **never committed** (KAIFe §7).
 - [ ] ADR required: **yes** — this feature authors **ADR-004** (direct OIDC federation
   + BFF decision, no broker);
-  it also updates threat-model **R-06** from "Not yet addressed" to mitigated and resolves
-  the `ARCHITECTURE.md` TODOs (:91, :167, :196).
+  it is the **planned mitigation** for threat-model **R-06** — marked mitigated only after
+  the implementation tests pass (Task 12); this docs baseline does not itself claim
+  mitigation — and resolves the `ARCHITECTURE.md` TODOs (:91, :167, :196).
 
 ---
 

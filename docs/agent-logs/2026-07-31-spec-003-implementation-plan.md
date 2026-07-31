@@ -47,7 +47,7 @@
 
 ---
 
-# PHASE 1 — Backend
+## Phase 1 — Backend
 
 ### Task 1: `User` domain entity
 
@@ -92,7 +92,12 @@
 - **Intent:** table `users`, `ValueGeneratedNever` Id, **unique index on `(Issuer, Subject)`**. Repository is standard CRUD **except** `SaveChangesAsync` translates the Npgsql unique violation to the Application signal (non-obvious — keep):
   ```csharp
   catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: "23505" })
-      { throw new UserAlreadyExistsException(); }
+  {
+      // detach the failed insert so the retry (reload + refresh) does not re-add it
+      foreach (var e in dbContext.ChangeTracker.Entries<User>().Where(e => e.State == EntityState.Added))
+          e.State = EntityState.Detached;
+      throw new UserAlreadyExistsException();
+  }
   ```
 - **Verification:** covered end-to-end by the authenticated service tests (Task 10); no standalone DB test.
 
@@ -125,7 +130,7 @@
 
 - **Files:** packages (`Directory.Packages.props` + `Api.csproj`: `Microsoft.AspNetCore.Authentication.OpenIdConnect`); create `CurrentUser.cs`, `AuthenticationSetup.cs`, `AuthEndpoints.cs`; modify `Program.cs`, `appsettings.json` (non-secret shape); test `Service.Tests/AuthEndpointsTests.cs`.
 - **Interfaces:** `IServiceCollection.AddStoreItAuthentication(IConfiguration)` (cookie + per-provider OIDC + `OnTokenValidated` provisioning + fallback authz policy) · `IEndpointRouteBuilder.MapAuthEndpoints()` · `CurrentUser : ICurrentUser` (reads `sub_local` from the cookie principal).
-- **Endpoints (all anonymous):** `GET /auth/login/{provider}` · `GET /auth/callback/{provider}` (OIDC) · `POST /auth/logout` (clears cookie) · `GET /auth/me` (200 profile / 401).
+- **Endpoints (all anonymous):** `GET /auth/login/{provider}` · `GET /auth/callback/{provider}` (OIDC) · `POST /auth/logout` (clears cookie) · `GET /auth/me` (200 profile / 401) · `GET /auth/csrf` (Task 8a). The `{provider}` segment is **allowlisted** to `microsoft`/`google` (mapped to fixed schemes; **400** for anything else) *before* `ChallengeAsync` — the raw path value never reaches the auth system.
 - **Cookie:** `HttpOnly`, `SameSite=Lax`, `SecurePolicy=Always`; `OnRedirectToLogin/AccessDenied` return 401/403 instead of redirecting (it's an API).
 - **Provision-once (:764 — non-obvious, keep):** provisioning runs in the OIDC callback, **not** per request — so later requests are read-only.
   ```csharp
@@ -165,7 +170,7 @@
       return await next(ctx);
   });
   ```
-- **Tests:** `Post_WithoutCsrfToken_Returns403`. Extend `CreateClientAs` with a CSRF-priming helper so the authenticated POST/PUT/DELETE tests (Tasks 8/10) keep passing.
+- **Tests:** `Post_WithoutCsrfToken_Returns403` · `Post_WithMismatchedCsrfToken_Returns403`. Extend `CreateClientAs` with a CSRF-priming helper so the authenticated POST/PUT/DELETE tests (Tasks 8/10) keep passing.
 
 ### Task 9: EF migration — Approval-tier
 
@@ -178,11 +183,11 @@
 
 - **Files:** modify `CreateStorageUseCase` (inject `ICurrentUser`, `Storage.Create(name, currentUser.UserId!.Value)`); `StorageEndpoints.cs` (`MapGroup("/api/v1/storages").RequireAuthorization().ProducesProblem(401)`); test `Service.Tests/OwnershipTests.cs`.
 - **Intent:** create stamps owner server-side; all reads are already scoped by the query filter, so cross-user by-id naturally 404s. Update any SPEC-001 service test using a bare `CreateClient()` to `CreateClientAs("owner")` (AC-12).
-- **Tests:** `Storages_Anonymous_Returns401` · `List_ReturnsOnlyOwnStorages` · `GetById_OtherUsersStorage_Returns404` · `Items_CrossUser_AllOperationsReturn404` (**read + create + update + delete**, :1064). Then run `Architecture.Tests` (no layering regressions).
+- **Tests:** `Storages_Anonymous_Returns401` · `List_ReturnsOnlyOwnStorages` · `ByIdWrite_OnAnotherUsersStorage_Returns404` (SPEC-001 has **no** `GET /storages/{id}` route, so cross-user by-id is exercised via the existing **PUT rename** and **DELETE** endpoints) · `Items_CrossUser_AllOperationsReturn404` (**read + create + update + delete**, :1064). Then run `Architecture.Tests` (no layering regressions).
 
 ### Task 11: Regenerate & commit the OpenAPI contract
 
-- **Files:** `openapi/StoreIt.Api.json`; add `Produces`/`ProducesProblem` metadata on `/auth/*` and `401` on `/api/v1/**`.
+- **Files:** `openapi/StoreIt.Api.json`; add `Produces`/`ProducesProblem` metadata on `/auth/*` and, on `/api/v1/**` as applicable, `401` (unauth), `403` (CSRF failure) and `404` (cross-user by-id).
 - **Intent:** build regenerates the doc; review the diff — only auth additions (new paths, 401s), no SPEC-001 shape changes.
 
 ### Task 12: Update threat-model R-06
@@ -192,7 +197,7 @@
 
 ---
 
-# PHASE 2 — Frontend
+## Phase 2 — Frontend
 
 ### Task 13: `AuthService`
 
@@ -228,6 +233,7 @@
 ### Task 18: E2E — login redirect + authenticated overview
 
 - **Files:** create dev-only `Api/DevAuthEndpoints.cs` (`POST /auth/dev-login`, mapped **only** when `app.Environment.IsDevelopment()`); map conditionally in `Program.cs`; create `e2e/auth.spec.ts`.
+- **Same session invariant as production:** dev-login must run the **same provisioning + `sub_local` claim** contract (provision a `User` via `ProvisionUserUseCase`, stamp `CurrentUser.LocalIdClaim` on the cookie). Otherwise an authenticated principal without a local id makes `CreateStorageUseCase` fail — the invariant "every authenticated request carries a resolvable `sub_local`" must hold for both the OIDC and dev-login flows.
 - **Security:** dev-login is never reachable outside Development — call this out in the PR description (G2).
 - **Tests:** `unauthenticated_/storages_redirects_to_login` · `after_dev_login_overview_is_reachable` — use **`page.request.post('/auth/dev-login')`** (:1659) so the session cookie lands in the browser context `page.goto` uses.
 
