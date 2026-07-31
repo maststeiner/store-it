@@ -55,6 +55,24 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
             Assert.False(property.TryGetProperty("pattern", out _));
         }
 
+        static void AssertNullableIsoDate(JsonElement property)
+        {
+            // nullable ISO date: type is the ["string","null"] union, format "date" —
+            // the numeric normalisation must leave these string members untouched
+            var type = property.GetProperty("type");
+            Assert.Equal(JsonValueKind.Array, type.ValueKind);
+            bool hasString = false,
+                hasNull = false;
+            foreach (var member in type.EnumerateArray())
+            {
+                hasString |= member.GetString() == "string";
+                hasNull |= member.GetString() == "null";
+            }
+            Assert.True(hasString, "date field must allow 'string'");
+            Assert.True(hasNull, "date field must allow 'null'");
+            Assert.Equal("date", property.GetProperty("format").GetString());
+        }
+
         // every numeric property the transformer targets — request and response
         AssertPlainType(Property(schemas, "ItemResponse", "amount"), "number");
         AssertPlainType(Property(schemas, "ItemRequest", "amount"), "number");
@@ -62,10 +80,10 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         AssertPlainType(Property(schemas, "StorageResponse", "expiredCount"), "integer");
         AssertPlainType(Property(schemas, "StorageResponse", "expiringSoonCount"), "integer");
 
-        // dates must stay nullable strings — the normalisation must not touch them
-        Assert.Equal(
-            JsonValueKind.Array,
-            Property(schemas, "ItemResponse", "expiryDate").GetProperty("type").ValueKind
-        );
+        // every public date field stays a nullable ISO date — normalisation must not touch them
+        AssertNullableIsoDate(Property(schemas, "ItemResponse", "expiryDate"));
+        AssertNullableIsoDate(Property(schemas, "ItemResponse", "productionDate"));
+        AssertNullableIsoDate(Property(schemas, "ItemRequest", "expiryDate"));
+        AssertNullableIsoDate(Property(schemas, "ItemRequest", "productionDate"));
     }
 }
