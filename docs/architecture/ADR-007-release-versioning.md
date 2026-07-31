@@ -20,6 +20,7 @@ That is too strict for a pre-release API. The intent of ADR-006 is to protect *p
    - No `v*` tag yet → skip the breaking check (pre-release, breaking allowed).
    - A tag exists → `oasdiff breaking <contract@latest-tag> <PR-contract> --fail-on ERR`.
    - The **drift check is unchanged** — the committed contract must always match the code, released or not.
+   - **Replaces** the interim `--err-ignore` acknowledgment list (`backend/openapi/oasdiff-ignore.txt`, added for SPEC-002): under the tag baseline, pre-release breaking changes are allowed wholesale, so per-change listing is unnecessary.
 4. **Three distinct version concepts** (kept separate to avoid confusion):
    - **API path version** (`/api/v1`, `/api/v2`) — in the URL; changes only on a breaking change *after* a stable release.
    - **OpenAPI `info.version`** — document metadata for the current API version (v1 → `1.x`); evolves additively within v1; a `/api/v2` document starts at `2.0.0`.
