@@ -3,7 +3,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
 import { ErrorMessages } from './error-messages';
-import { ApiError } from './storage-api';
+import { ApiError } from './api-error';
 import { TranslateService } from './translate';
 
 describe('ErrorMessages', () => {

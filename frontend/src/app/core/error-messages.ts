@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 
-import { ApiError } from './storage-api';
+import { ApiError } from './api-error';
 import { TranslateService } from './translate';
 
 const GENERIC_KEY = 'errors.generic';

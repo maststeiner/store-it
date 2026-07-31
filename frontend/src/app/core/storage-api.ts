@@ -2,17 +2,12 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, throwError } from 'rxjs';
 
+import { ApiError } from './api-error';
 import { ItemRequest, StorageItem, StorageSummary } from './models';
 
-export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly errorCode: string | null,
-  ) {
-    super(errorCode ?? `HTTP ${status}`);
-    this.name = 'ApiError';
-  }
-}
+// Re-exported during the migration so callers keep one ApiError class; this whole
+// file is removed once components move to the generated client + interceptor.
+export { ApiError };
 
 const BASE_URL = '/api/v1';
 
