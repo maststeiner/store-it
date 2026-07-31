@@ -6,11 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <!-- Expose internals (e.g. NumericSchemaTransformer) to the service-test project -->
-        <InternalsVisibleTo Include="StoreIt.Api.Service.Tests" />
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\StoreIt.Application\StoreIt.Application.csproj" />
         <ProjectReference Include="..\StoreIt.Domain\StoreIt.Domain.csproj" />
         <ProjectReference Include="..\StoreIt.Infrastructure\StoreIt.Infrastructure.csproj" />

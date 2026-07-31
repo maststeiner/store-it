@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.OpenApi;
 
 namespace StoreIt.Api.Service.Tests;
 
@@ -15,7 +14,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
     }
 
     [Fact]
-    public async Task Endpoints_have_stable_operation_ids()
+    public async Task Contract_ForV1Endpoints_ExposesStableOperationIds()
     {
         var root = await GetContractAsync();
         var paths = root.GetProperty("paths");
@@ -40,7 +39,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
     }
 
     [Fact]
-    public async Task Numeric_properties_are_plain_numbers_without_string_union()
+    public async Task Contract_ForNumericProperties_UsesPlainTypesWithoutStringUnion()
     {
         var root = await GetContractAsync();
         var schemas = root.GetProperty("components").GetProperty("schemas");
@@ -63,60 +62,10 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         AssertPlainType(Property(schemas, "StorageResponse", "expiredCount"), "integer");
         AssertPlainType(Property(schemas, "StorageResponse", "expiringSoonCount"), "integer");
 
-        // dates must stay nullable strings — the transformer must not touch them
+        // dates must stay nullable strings — the normalisation must not touch them
         Assert.Equal(
             JsonValueKind.Array,
             Property(schemas, "ItemResponse", "expiryDate").GetProperty("type").ValueKind
         );
-    }
-}
-
-public sealed class NumericSchemaTransformerTests
-{
-    [Fact]
-    public async Task Collapses_number_or_string_to_number_and_drops_pattern()
-    {
-        var schema = new OpenApiSchema
-        {
-            Type = JsonSchemaType.Number | JsonSchemaType.String,
-            Pattern = @"^-?(?:0|[1-9]\d*)(?:\.\d+)?$",
-            Format = "double",
-        };
-
-        await new NumericSchemaTransformer().TransformAsync(schema, null!, CancellationToken.None);
-
-        Assert.Equal(JsonSchemaType.Number, schema.Type);
-        Assert.Null(schema.Pattern);
-        Assert.Equal("double", schema.Format);
-    }
-
-    [Fact]
-    public async Task Collapses_integer_or_string_to_integer()
-    {
-        var schema = new OpenApiSchema
-        {
-            Type = JsonSchemaType.Integer | JsonSchemaType.String,
-            Pattern = @"^-?(?:0|[1-9]\d*)$",
-        };
-
-        await new NumericSchemaTransformer().TransformAsync(schema, null!, CancellationToken.None);
-
-        Assert.Equal(JsonSchemaType.Integer, schema.Type);
-        Assert.Null(schema.Pattern);
-        // Format intentionally not set/asserted — int32 count fields emit no format
-    }
-
-    [Fact]
-    public async Task Leaves_nullable_string_dates_untouched()
-    {
-        var schema = new OpenApiSchema
-        {
-            Type = JsonSchemaType.Null | JsonSchemaType.String,
-            Format = "date",
-        };
-
-        await new NumericSchemaTransformer().TransformAsync(schema, null!, CancellationToken.None);
-
-        Assert.Equal(JsonSchemaType.Null | JsonSchemaType.String, schema.Type);
     }
 }
