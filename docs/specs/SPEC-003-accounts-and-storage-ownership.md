@@ -163,7 +163,9 @@ fully localized in **de / en / fr / it**):
   - `Storage.OwnerId` → FK to `User.Id`, **non-nullable**, `ON DELETE CASCADE`.
   - `Item` has no own owner column; ownership is transitive via its `Storage`.
   - Migration: dev data is synthetic → **fresh start**; the migration adds the `User`
-    table and non-nullable `Storage.OwnerId`, removing pre-existing owner-less storages.
+    table and non-nullable `Storage.OwnerId` (no server default). It is **non-destructive** —
+    if the `storages` table is non-empty it fails rather than deleting data; the dev DB is
+    recreated (drop + update). No blanket `DELETE` (it could destroy data on staging/prod).
 - [ ] **Ownership enforced at the data-access layer via EF Core Global Query Filters**
   (defense-in-depth, not a per-handler `WHERE`):
   - A scoped `ICurrentUser` service resolves the current local `User.Id` from the session
@@ -184,8 +186,8 @@ fully localized in **de / en / fr / it**):
 - [ ] API versioning & contract gate per ADR-006: requiring auth on `/api/v1/**` is a
   deliberate **behavioural** contract change. As there are no external consumers yet and
   the path stays `v1`, it is recorded as an intentional change in
-  `backend/openapi/v1.yaml` (adding `401` responses and the `/auth/*` endpoints) rather
-  than opening `v2`.
+  `backend/openapi/StoreIt.Api.json` (the repo's canonical generated contract — adding
+  `401` responses and the `/auth/*` endpoints) rather than opening `v2`.
 - [ ] Secrets (per-provider OIDC client id/secret) come from the environment
   (12-factor) and are **never committed** (KAIFe §7).
 - [ ] ADR required: **yes** — this feature authors **ADR-004** (direct OIDC federation
