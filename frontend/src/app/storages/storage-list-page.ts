@@ -2,9 +2,9 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
+import { StorageResponse } from '../api/models';
+import { StoragesService } from '../api/services';
 import { ErrorMessages } from '../core/error-messages';
-import { StorageSummary } from '../core/models';
-import { StorageApi } from '../core/storage-api';
 import { TranslatePipe } from '../core/translate';
 import { ConfirmDialog } from '../shared/confirm-dialog';
 
@@ -14,11 +14,11 @@ import { ConfirmDialog } from '../shared/confirm-dialog';
   templateUrl: './storage-list-page.html',
 })
 export class StorageListPage implements OnInit {
-  private readonly api = inject(StorageApi);
+  private readonly storagesApi = inject(StoragesService);
   private readonly router = inject(Router);
   private readonly errors = inject(ErrorMessages);
 
-  protected readonly storages = signal<StorageSummary[] | null>(null);
+  protected readonly storages = signal<StorageResponse[] | null>(null);
   protected readonly loadError = signal<string | null>(null);
   protected readonly totalItems = computed(() =>
     (this.storages() ?? []).reduce((sum, storage) => sum + storage.itemCount, 0),
@@ -32,13 +32,13 @@ export class StorageListPage implements OnInit {
   protected editName = '';
   protected readonly editError = signal<string | null>(null);
 
-  protected readonly deleteTarget = signal<StorageSummary | null>(null);
+  protected readonly deleteTarget = signal<StorageResponse | null>(null);
 
   ngOnInit(): void {
     this.load();
   }
 
-  protected open(storage: StorageSummary): void {
+  protected open(storage: StorageResponse): void {
     this.router.navigate(['/storages', storage.id]);
   }
 
@@ -54,7 +54,7 @@ export class StorageListPage implements OnInit {
   }
 
   protected create(): void {
-    this.api.createStorage(this.createName.trim()).subscribe({
+    this.storagesApi.createStorage({ body: { name: this.createName.trim() } }).subscribe({
       next: () => {
         this.createOpen.set(false);
         this.createName = '';
@@ -64,7 +64,7 @@ export class StorageListPage implements OnInit {
     });
   }
 
-  protected startEdit(storage: StorageSummary, event: Event): void {
+  protected startEdit(storage: StorageResponse, event: Event): void {
     event.stopPropagation();
     this.editId.set(storage.id);
     this.editName = storage.name;
@@ -76,17 +76,19 @@ export class StorageListPage implements OnInit {
     this.editError.set(null);
   }
 
-  protected saveEdit(storage: StorageSummary): void {
-    this.api.renameStorage(storage.id, this.editName.trim()).subscribe({
-      next: () => {
-        this.editId.set(null);
-        this.load();
-      },
-      error: (error: unknown) => this.editError.set(this.errors.messageFor(error)),
-    });
+  protected saveEdit(storage: StorageResponse): void {
+    this.storagesApi
+      .renameStorage({ storageId: storage.id, body: { name: this.editName.trim() } })
+      .subscribe({
+        next: () => {
+          this.editId.set(null);
+          this.load();
+        },
+        error: (error: unknown) => this.editError.set(this.errors.messageFor(error)),
+      });
   }
 
-  protected askDelete(storage: StorageSummary, event: Event): void {
+  protected askDelete(storage: StorageResponse, event: Event): void {
     event.stopPropagation();
     this.deleteTarget.set(storage);
   }
@@ -96,7 +98,7 @@ export class StorageListPage implements OnInit {
     if (!target) {
       return;
     }
-    this.api.deleteStorage(target.id).subscribe({
+    this.storagesApi.deleteStorage({ storageId: target.id }).subscribe({
       next: () => {
         this.deleteTarget.set(null);
         this.load();
@@ -109,7 +111,7 @@ export class StorageListPage implements OnInit {
   }
 
   private load(): void {
-    this.api.getStorages().subscribe({
+    this.storagesApi.getStorages().subscribe({
       next: (storages) => {
         this.storages.set(storages);
         this.loadError.set(null);

@@ -1,8 +1,9 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { apiErrorInterceptor } from '../core/api-error.interceptor';
 import { TranslateService } from '../core/translate';
 import { StorageListPage } from './storage-list-page';
 
@@ -32,7 +33,11 @@ describe('StorageListPage', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [StorageListPage],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
+        provideHttpClientTesting(),
+        provideRouter([]),
+      ],
     }).compileComponents();
 
     TestBed.inject(TranslateService).setTranslation('en', TRANSLATIONS);
