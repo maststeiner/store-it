@@ -9,7 +9,8 @@
     "test": "ng test",
     "test:coverage": "ng test --coverage --runner-config vitest-base.config.ts --watch=false",
     "e2e": "playwright test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "generate:api": "ng-openapi-gen"
   },
   "private": true,
   "packageManager": "npm@10.9.8",
@@ -33,6 +34,7 @@
     "angular-eslint": "22.1.0",
     "eslint": "^10.6.0",
     "jsdom": "^28.0.0",
+    "ng-openapi-gen": "^1.0.5",
     "prettier": "3.9.5",
     "typescript": "~6.0.2",
     "typescript-eslint": "8.62.1",
