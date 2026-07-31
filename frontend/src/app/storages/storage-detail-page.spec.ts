@@ -1,9 +1,10 @@
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 
-import { StorageItem } from '../core/models';
+import { ItemResponse } from '../api/models';
+import { apiErrorInterceptor } from '../core/api-error.interceptor';
 import { TranslateService } from '../core/translate';
 import { StorageDetailPage } from './storage-detail-page';
 
@@ -40,7 +41,7 @@ const TRANSLATIONS = {
   errors: { generic: 'Something went wrong.', item: { dates: { missing: 'One date required.' } } },
 };
 
-function item(partial: Partial<StorageItem>): StorageItem {
+function item(partial: Partial<ItemResponse>): ItemResponse {
   return {
     id: 'i1',
     name: 'Item',
@@ -60,7 +61,7 @@ describe('StorageDetailPage', () => {
     await TestBed.configureTestingModule({
       imports: [StorageDetailPage],
       providers: [
-        provideHttpClient(),
+        provideHttpClient(withInterceptors([apiErrorInterceptor])),
         provideHttpClientTesting(),
         provideRouter([{ path: '**', children: [] }]),
         {
@@ -74,7 +75,7 @@ describe('StorageDetailPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  function flushInitialLoad(items: StorageItem[]) {
+  function flushInitialLoad(items: ItemResponse[]) {
     http.expectOne('/api/v1/storages').flush([
       {
         id: 's1',
