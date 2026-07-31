@@ -12,9 +12,9 @@ test('create a storage and see it in the overview', async ({ page }) => {
   const name = uniqueName('Pantry');
 
   await page.goto('/storages');
-  await page.getByRole('button', { name: /neuer schrank|new storage/i }).click();
+  await page.getByRole('button', { name: /new storage/i }).click();
   await page.getByRole('textbox').last().fill(name);
-  await page.getByRole('button', { name: /anlegen|create/i }).click();
+  await page.getByRole('button', { name: /create/i }).click();
 
   await expect(page.getByText(name)).toBeVisible();
 });
@@ -24,9 +24,9 @@ test('add an item and see it grouped by expiry status', async ({ page }) => {
 
   // Arrange: a fresh storage
   await page.goto('/storages');
-  await page.getByRole('button', { name: /neuer schrank|new storage/i }).click();
+  await page.getByRole('button', { name: /new storage/i }).click();
   await page.getByRole('textbox').last().fill(storageName);
-  await page.getByRole('button', { name: /anlegen|create/i }).click();
+  await page.getByRole('button', { name: /create/i }).click();
   await page.getByText(storageName).click();
 
   // Act: add an item that is already expired (yesterday)
@@ -34,7 +34,7 @@ test('add an item and see it grouped by expiry status', async ({ page }) => {
   await page.locator('#item-name').fill('Yogurt');
   await page.locator('#item-amount').fill('2');
   await page.locator('#item-expiry').fill(yesterday);
-  await page.getByRole('button', { name: /hinzufügen|add/i }).click();
+  await page.getByRole('button', { name: /add/i }).click();
 
   // Assert: item appears in the "expired" group
   await expect(page.locator('.group.expired')).toContainText('Yogurt');
@@ -44,14 +44,14 @@ test('reject an item without any date (server validation surfaces in the UI)', a
   const storageName = uniqueName('Cellar');
 
   await page.goto('/storages');
-  await page.getByRole('button', { name: /neuer schrank|new storage/i }).click();
+  await page.getByRole('button', { name: /new storage/i }).click();
   await page.getByRole('textbox').last().fill(storageName);
-  await page.getByRole('button', { name: /anlegen|create/i }).click();
+  await page.getByRole('button', { name: /create/i }).click();
   await page.getByText(storageName).click();
 
   await page.locator('#item-name').fill('Flour');
   await page.locator('#item-amount').fill('1');
-  await page.getByRole('button', { name: /hinzufügen|add/i }).click();
+  await page.getByRole('button', { name: /add/i }).click();
 
   await expect(page.locator('.add-form .form-error')).toBeVisible();
 });
