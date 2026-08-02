@@ -40,7 +40,9 @@ CI (`1b · End-to-end`) uses a postgres service container and the runner's brows
 
 ## Coverage
 
-- Target: **≥ 70%**, fixed as the pipeline gate after the SPEC-001 pilot (see [Decisions & Calibration](#decisions--calibration)) — enforced by CI (backend coverlet · frontend `vitest-base.config.ts`).
+- **Two bars, on purpose:**
+  - **≥ 70% overall** — the pipeline gate (backend coverlet · frontend `vitest-base.config.ts`), fixed after the SPEC-001 pilot (see [Decisions & Calibration](#decisions--calibration)).
+  - **≥ 80% on _new_ code** — enforced per PR by SonarCloud (`new_coverage`). So a PR can go red on SonarCloud coverage even when the overall figure is well above 70%: **new code is held to the higher bar** (write the tests with the change).
 - Coverage is a means, not a goal: 100% meaningless tests do not beat 70% good ones.
 
 ## Test Effectiveness
