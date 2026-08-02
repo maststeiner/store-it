@@ -12,6 +12,10 @@ on:
     branches: [develop, main]
   push:
     branches: [develop, main] # post-merge runs keep the SonarCloud baseline current
+  schedule:
+    - cron: '0 3 * * *' # nightly full mutation backstop on develop (job 1a).
+      # NOTE: GitHub fires `schedule` only from the default branch (main), so this
+      # activates once this file reaches main; the job checks out develop to mutate.
   workflow_dispatch:
 
 jobs:
@@ -49,21 +53,27 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-          # Full history so Stryker can diff the PR against its base branch (--since).
+          # Full history so Stryker can diff a PR against its base branch (--since).
           fetch-depth: 0
+          # The nightly backstop mutates develop (the integration line); every other
+          # trigger uses its own ref (PR merge ref / pushed branch).
+          ref: ${{ github.event_name == 'schedule' && 'refs/heads/develop' || github.ref }}
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           dotnet-version: '10.x'
-      # Mutation testing is expensive, so scope it to when it adds value: run the
-      # full suite post-merge on develop/main (backstop against coverage erosion in
-      # untouched files), only the changed code on PRs that touch the backend
-      # (Stryker --since), and skip the heavy step entirely on PRs that don't.
-      # The job itself always completes green so the required check is satisfied.
+      # Mutation testing is expensive, so scope it to when it adds value: a nightly
+      # full run on develop (backstop against coverage erosion in untouched files;
+      # also runnable on demand via "Run workflow"/workflow_dispatch), only the
+      # changed code on PRs that touch the backend (Stryker --since), and skip the
+      # heavy step otherwise — including post-merge pushes, which the backstop covers.
+      # The job itself always completes green so the required check passes.
       - name: Decide mutation scope
         id: scope
         run: |
-          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             echo "mode=full" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
           elif git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" | grep -q '^backend/'; then
             echo "mode=incremental" >> "$GITHUB_OUTPUT"
           else
@@ -80,9 +90,9 @@ jobs:
       - name: Stryker mutation testing (changed code only)
         if: steps.scope.outputs.mode == 'incremental'
         run: dotnet stryker --since:"origin/${GITHUB_BASE_REF}"
-      - name: No backend changes — mutation testing skipped
+      - name: Mutation testing skipped
         if: steps.scope.outputs.mode == 'skip'
-        run: echo "PR touches no backend/ files; skipping mutation testing."
+        run: echo "No backend/ changes to mutate (or a post-merge push — covered by the nightly backstop); skipping."
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always() && steps.scope.outputs.mode != 'skip'
         with:
