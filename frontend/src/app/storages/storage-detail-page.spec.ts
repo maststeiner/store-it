@@ -241,6 +241,35 @@ describe('StorageDetailPage', () => {
     expect(element.querySelector('form.item-edit')).toBeNull();
   });
 
+  it('renames the storage and reloads it, reflecting the new name', async () => {
+    const fixture = TestBed.createComponent(StorageDetailPage);
+    fixture.detectChanges();
+    flushInitialLoad([]);
+    await fixture.whenStable();
+
+    const element = fixture.nativeElement as HTMLElement;
+    (element.querySelector('.detail-head .icon-btn') as HTMLButtonElement).click(); // pencil
+    await fixture.whenStable();
+
+    const input = element.querySelector('.inline-input') as HTMLInputElement;
+    input.value = 'Cellar';
+    input.dispatchEvent(new Event('input'));
+    (element.querySelector('.inline-edit .icon-btn') as HTMLButtonElement).click(); // save ✓
+
+    const put = http.expectOne('/api/v1/storages/s1');
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body.name).toBe('Cellar');
+    put.flush(null);
+
+    // saveRename() reloads the single storage on success
+    http
+      .expectOne('/api/v1/storages/s1')
+      .flush({ id: 's1', name: 'Cellar', itemCount: 0, expiredCount: 0, expiringSoonCount: 0 });
+    await fixture.whenStable();
+
+    expect(element.querySelector('.detail-head h1')?.textContent).toContain('Cellar');
+  });
+
   it('deletes the whole storage after confirmation and navigates away', async () => {
     const fixture = TestBed.createComponent(StorageDetailPage);
     fixture.detectChanges();
