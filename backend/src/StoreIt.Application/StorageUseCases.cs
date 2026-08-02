@@ -57,6 +57,20 @@ public sealed class ListStoragesUseCase(IStorageRepository repository, TimeProvi
     }
 }
 
+/// <summary>Get a single storage with status counts — lets a client refresh one
+/// storage without fetching the whole list (#29).</summary>
+public sealed class GetStorageUseCase(IStorageRepository repository, TimeProvider timeProvider)
+{
+    public async Task<StorageSummary> ExecuteAsync(
+        Guid storageId,
+        CancellationToken cancellationToken
+    )
+    {
+        var storage = await repository.GetRequiredAsync(storageId, cancellationToken);
+        return StorageSummary.From(storage, timeProvider.Today());
+    }
+}
+
 /// <summary>AC-03: rename a storage.</summary>
 public sealed class RenameStorageUseCase(IStorageRepository repository, TimeProvider timeProvider)
 {

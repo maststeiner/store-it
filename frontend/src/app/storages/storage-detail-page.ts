@@ -175,9 +175,8 @@ export class StorageDetailPage implements OnInit {
   }
 
   private loadStorage(): void {
-    this.storagesApi.getStorages().subscribe({
-      next: (storages) =>
-        this.storage.set(storages.find((storage) => storage.id === this.storageId) ?? null),
+    this.storagesApi.getStorage({ storageId: this.storageId }).subscribe({
+      next: (storage) => this.storage.set(storage),
       error: (error: unknown) => this.loadError.set(this.errors.messageFor(error)),
     });
   }

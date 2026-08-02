@@ -14,6 +14,8 @@ import { createStorage } from '../fn/storages/create-storage';
 import { CreateStorage$Params } from '../fn/storages/create-storage';
 import { deleteStorage } from '../fn/storages/delete-storage';
 import { DeleteStorage$Params } from '../fn/storages/delete-storage';
+import { getStorage } from '../fn/storages/get-storage';
+import { GetStorage$Params } from '../fn/storages/get-storage';
 import { getStorages } from '../fn/storages/get-storages';
 import { GetStorages$Params } from '../fn/storages/get-storages';
 import { renameStorage } from '../fn/storages/rename-storage';
@@ -75,6 +77,33 @@ export class StoragesService extends BaseService {
    */
   createStorage(params: CreateStorage$Params, context?: HttpContext): Observable<StorageResponse> {
     const resp = this.createStorage$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<StorageResponse>): StorageResponse => r.body)
+    );
+  }
+
+  /** Path part for operation `getStorage()` */
+  static readonly GetStoragePath = '/api/v1/storages/{storageId}';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `getStorage()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getStorage$Response(params: GetStorage$Params, context?: HttpContext): Observable<StrictHttpResponse<StorageResponse>> {
+    const obs = getStorage(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `getStorage$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getStorage(params: GetStorage$Params, context?: HttpContext): Observable<StorageResponse> {
+    const resp = this.getStorage$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<StorageResponse>): StorageResponse => r.body)
     );
