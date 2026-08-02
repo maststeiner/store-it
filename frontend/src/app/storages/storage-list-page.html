@@ -60,52 +60,51 @@
           }
         </div>
       } @else {
-        <div
-          class="storage-card"
-          role="button"
-          tabindex="0"
-          [attr.aria-label]="'storages.openCard' | translate: { name: storage.name }"
-          (click)="open(storage)"
-          (keydown.enter)="open(storage)"
-          (keydown.space)="open(storage); $event.preventDefault()"
-        >
-          <div class="storage-icon" aria-hidden="true">🥫</div>
-          <div>
-            <div class="storage-name">{{ storage.name }}</div>
-            <div class="storage-meta">
-              {{
-                (storage.itemCount === 1 ? 'items.count.one' : 'items.count.other')
-                  | translate: { count: storage.itemCount }
-              }}
+        <div class="storage-card">
+          <button
+            type="button"
+            class="card-open"
+            [attr.aria-label]="'storages.openCard' | translate: { name: storage.name }"
+            (click)="open(storage)"
+          >
+            <div class="storage-icon" aria-hidden="true">🥫</div>
+            <div>
+              <div class="storage-name">{{ storage.name }}</div>
+              <div class="storage-meta">
+                {{
+                  (storage.itemCount === 1 ? 'items.count.one' : 'items.count.other')
+                    | translate: { count: storage.itemCount }
+                }}
+              </div>
             </div>
-          </div>
-          @if (storage.itemCount > 0) {
-            <div class="chips">
-              @if (storage.expiredCount > 0) {
-                <span class="chip expired">
-                  {{
-                    (storage.expiredCount === 1
-                      ? 'storages.chips.expired.one'
-                      : 'storages.chips.expired.other'
-                    ) | translate: { count: storage.expiredCount }
-                  }}
-                </span>
-              }
-              @if (storage.expiringSoonCount > 0) {
-                <span class="chip expiring">
-                  {{
-                    (storage.expiringSoonCount === 1
-                      ? 'storages.chips.expiring.one'
-                      : 'storages.chips.expiring.other'
-                    ) | translate: { count: storage.expiringSoonCount }
-                  }}
-                </span>
-              }
-              @if (storage.expiredCount === 0 && storage.expiringSoonCount === 0) {
-                <span class="chip ok">{{ 'storages.chips.fresh' | translate }}</span>
-              }
-            </div>
-          }
+            @if (storage.itemCount > 0) {
+              <div class="chips">
+                @if (storage.expiredCount > 0) {
+                  <span class="chip expired">
+                    {{
+                      (storage.expiredCount === 1
+                        ? 'storages.chips.expired.one'
+                        : 'storages.chips.expired.other'
+                      ) | translate: { count: storage.expiredCount }
+                    }}
+                  </span>
+                }
+                @if (storage.expiringSoonCount > 0) {
+                  <span class="chip expiring">
+                    {{
+                      (storage.expiringSoonCount === 1
+                        ? 'storages.chips.expiring.one'
+                        : 'storages.chips.expiring.other'
+                      ) | translate: { count: storage.expiringSoonCount }
+                    }}
+                  </span>
+                }
+                @if (storage.expiredCount === 0 && storage.expiringSoonCount === 0) {
+                  <span class="chip ok">{{ 'storages.chips.fresh' | translate }}</span>
+                }
+              </div>
+            }
+          </button>
           <div class="card-actions">
             <button
               type="button"

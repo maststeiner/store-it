@@ -85,7 +85,7 @@ describe('StorageListPage', () => {
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('.chip.expired')?.textContent).toContain('1 expired');
     expect(element.querySelector('.chip.expiring')?.textContent).toContain('2 expiring soon');
-    expect(element.querySelectorAll('.chip.ok').length).toBe(1); // only Cellar — Empty has no chips
+    expect(element.querySelectorAll('.chip.ok')).toHaveLength(1); // only Cellar — Empty has no chips
   });
 
   it('shows the translated validation message when creating with an empty name', async () => {
@@ -194,6 +194,6 @@ describe('StorageListPage', () => {
     await fixture.whenStable();
 
     expect(element.querySelector('app-confirm-dialog')).toBeNull();
-    expect(element.querySelectorAll('.storage-card:not(.ghost)').length).toBe(0);
+    expect(element.querySelectorAll('.storage-card:not(.ghost)')).toHaveLength(0);
   });
 });
