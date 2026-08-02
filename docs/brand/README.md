@@ -41,8 +41,10 @@ Gradient: `linear-gradient(135deg, #3E9C93 → #6FA8D6)`.
 - **Web:** the app serves a copy at `frontend/public/logo.svg` (favicon + header).
   When the logo changes here, update that copy too.
 - **Web home-screen icon:** `frontend/public/apple-touch-icon.png` (180×180) is generated from the square master. Regenerate after a logo change:
+
   ```sh
   sips -s format png -z 180 180 docs/brand/store-it-icon-square.svg \
     --out frontend/public/apple-touch-icon.png
   ```
+
 - **iOS/Android app (planned):** export `store-it-icon-square.svg` to the required PNG sizes (full-bleed; the OS masks the corners).
