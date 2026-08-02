@@ -49,17 +49,42 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+          # Full history so Stryker can diff the PR against its base branch (--since).
+          fetch-depth: 0
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
           dotnet-version: '10.x'
+      # Mutation testing is expensive, so scope it to when it adds value: run the
+      # full suite post-merge on develop/main (backstop against coverage erosion in
+      # untouched files), only the changed code on PRs that touch the backend
+      # (Stryker --since), and skip the heavy step entirely on PRs that don't.
+      # The job itself always completes green so the required check is satisfied.
+      - name: Decide mutation scope
+        id: scope
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" | grep -q '^backend/'; then
+            echo "mode=incremental" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+          fi
       - name: Restore tools
+        if: steps.scope.outputs.mode != 'skip'
         run: dotnet tool restore
       # Verifies the tests actually test something (kills mutants) — AI-generated
       # tests can look plausible while asserting nothing. Break threshold: 60%.
-      - name: Stryker mutation testing
+      - name: Stryker mutation testing (full)
+        if: steps.scope.outputs.mode == 'full'
         run: dotnet stryker
+      - name: Stryker mutation testing (changed code only)
+        if: steps.scope.outputs.mode == 'incremental'
+        run: dotnet stryker --since:"origin/${GITHUB_BASE_REF}"
+      - name: No backend changes — mutation testing skipped
+        if: steps.scope.outputs.mode == 'skip'
+        run: echo "PR touches no backend/ files; skipping mutation testing."
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        if: always()
+        if: always() && steps.scope.outputs.mode != 'skip'
         with:
           name: mutation-report
           path: backend/StrykerOutput/**/reports/
