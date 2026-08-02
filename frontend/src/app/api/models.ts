@@ -4,6 +4,7 @@
 export type { ExpiryStatus } from './models/expiry-status';
 export type { ItemRequest } from './models/item-request';
 export type { ItemResponse } from './models/item-response';
+export type { ProblemDetails } from './models/problem-details';
 export type { StorageRequest } from './models/storage-request';
 export type { StorageResponse } from './models/storage-response';
 export type { Unit } from './models/unit';

@@ -2,8 +2,29 @@ using StoreIt.Domain;
 
 namespace StoreIt.Application;
 
-/// <summary>An item together with its server-computed expiry status (AC-11/AC-12).</summary>
-public sealed record ItemWithStatus(Item Item, ExpiryStatus Status);
+/// <summary>Application projection of an item with its server-computed expiry status
+/// (AC-11/AC-12). Scalar fields only — the domain entity stays inside the Application layer.</summary>
+public sealed record ItemWithStatus(
+    Guid Id,
+    string Name,
+    decimal Amount,
+    Unit Unit,
+    DateOnly? ExpiryDate,
+    DateOnly? ProductionDate,
+    ExpiryStatus Status
+)
+{
+    public static ItemWithStatus From(Item item, DateOnly today) =>
+        new(
+            item.Id,
+            item.Name,
+            item.Amount,
+            item.Unit,
+            item.ExpiryDate,
+            item.ProductionDate,
+            item.GetExpiryStatus(today)
+        );
+}
 
 /// <summary>
 /// AC-10: items of a storage, sorted by expiry date ascending (items without expiry
@@ -22,7 +43,7 @@ public sealed class GetStorageItemsUseCase(IStorageRepository repository, TimePr
 
         return storage
             .GetItemsSortedByExpiry()
-            .Select(item => new ItemWithStatus(item, item.GetExpiryStatus(today)))
+            .Select(item => ItemWithStatus.From(item, today))
             .ToList();
     }
 }
