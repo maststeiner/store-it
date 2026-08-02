@@ -13,7 +13,7 @@
     "generate:api": "ng-openapi-gen"
   },
   "private": true,
-  "packageManager": "npm@10.9.8",
+  "packageManager": "npm@10.9.9",
   "dependencies": {
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
