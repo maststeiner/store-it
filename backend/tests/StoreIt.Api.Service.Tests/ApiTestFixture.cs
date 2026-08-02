@@ -15,7 +15,7 @@ namespace StoreIt.Api.Service.Tests;
 public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder(
-        "postgres:17-alpine"
+        "postgres:18-alpine"
     ).Build();
 
     public async Task InitializeAsync()
