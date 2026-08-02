@@ -2,7 +2,7 @@
 # Dev/prod parity: real PostgreSQL, no in-memory substitute (coding guidelines, ADR-003).
 services:
   postgres:
-    image: docker.io/library/postgres:17-alpine
+    image: docker.io/library/postgres:18-alpine
     environment:
       POSTGRES_DB: storeit
       POSTGRES_USER: storeit
