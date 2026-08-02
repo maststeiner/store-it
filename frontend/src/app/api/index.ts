@@ -20,6 +20,8 @@ export type { GetStorages$Params as GetStorages$Params } from './fn/storages/get
 export { getStorages as getStorages } from './fn/storages/get-storages';
 export type { CreateStorage$Params as CreateStorage$Params } from './fn/storages/create-storage';
 export { createStorage as createStorage } from './fn/storages/create-storage';
+export type { GetStorage$Params as GetStorage$Params } from './fn/storages/get-storage';
+export { getStorage as getStorage } from './fn/storages/get-storage';
 export type { RenameStorage$Params as RenameStorage$Params } from './fn/storages/rename-storage';
 export { renameStorage as renameStorage } from './fn/storages/rename-storage';
 export type { DeleteStorage$Params as DeleteStorage$Params } from './fn/storages/delete-storage';

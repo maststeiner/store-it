@@ -76,15 +76,13 @@ describe('StorageDetailPage', () => {
   });
 
   function flushInitialLoad(items: ItemResponse[]) {
-    http.expectOne('/api/v1/storages').flush([
-      {
-        id: 's1',
-        name: 'Freezer',
-        itemCount: items.length,
-        expiredCount: 0,
-        expiringSoonCount: 0,
-      },
-    ]);
+    http.expectOne('/api/v1/storages/s1').flush({
+      id: 's1',
+      name: 'Freezer',
+      itemCount: items.length,
+      expiredCount: 0,
+      expiringSoonCount: 0,
+    });
     http.expectOne('/api/v1/storages/s1/items').flush(items);
   }
 
@@ -166,8 +164,8 @@ describe('StorageDetailPage', () => {
         item({ id: 'i2', name: 'Peas', amount: 2, expiryDate: '2027-03-01', expiryStatus: 'Ok' }),
       ]);
     http
-      .expectOne('/api/v1/storages')
-      .flush([{ id: 's1', name: 'Freezer', itemCount: 1, expiredCount: 0, expiringSoonCount: 0 }]);
+      .expectOne('/api/v1/storages/s1')
+      .flush({ id: 's1', name: 'Freezer', itemCount: 1, expiredCount: 0, expiringSoonCount: 0 });
     await fixture.whenStable();
 
     expect((element.textContent ?? '').includes('Peas')).toBe(true);
@@ -191,8 +189,8 @@ describe('StorageDetailPage', () => {
 
     http.expectOne('/api/v1/storages/s1/items').flush([]);
     http
-      .expectOne('/api/v1/storages')
-      .flush([{ id: 's1', name: 'Freezer', itemCount: 0, expiredCount: 0, expiringSoonCount: 0 }]);
+      .expectOne('/api/v1/storages/s1')
+      .flush({ id: 's1', name: 'Freezer', itemCount: 0, expiredCount: 0, expiringSoonCount: 0 });
     await fixture.whenStable();
 
     expect(element.querySelector('.item-row')).toBeNull();
@@ -236,8 +234,8 @@ describe('StorageDetailPage', () => {
       }),
     ]);
     http
-      .expectOne('/api/v1/storages')
-      .flush([{ id: 's1', name: 'Freezer', itemCount: 1, expiredCount: 0, expiringSoonCount: 1 }]);
+      .expectOne('/api/v1/storages/s1')
+      .flush({ id: 's1', name: 'Freezer', itemCount: 1, expiredCount: 0, expiringSoonCount: 1 });
     await fixture.whenStable();
 
     expect(element.querySelector('form.item-edit')).toBeNull();

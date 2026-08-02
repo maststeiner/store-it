@@ -57,6 +57,35 @@
       }
     },
     "/api/v1/storages/{storageId}": {
+      "get": {
+        "tags": [
+          "Storages"
+        ],
+        "operationId": "getStorage",
+        "parameters": [
+          {
+            "name": "storageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "put": {
         "tags": [
           "Storages"

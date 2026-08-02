@@ -81,6 +81,13 @@ internal static class ApiTestHelpers
         return storages;
     }
 
+    public static async Task<StorageResponse> GetStorageAsync(this HttpClient client, Guid id)
+    {
+        var storage = await client.GetFromJsonAsync<StorageResponse>($"/api/v1/storages/{id}");
+        Assert.NotNull(storage);
+        return storage;
+    }
+
     public static async Task<IReadOnlyList<ItemResponse>> GetItemsAsync(
         this HttpClient client,
         Guid storageId

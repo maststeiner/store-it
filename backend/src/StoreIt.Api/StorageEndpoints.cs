@@ -27,6 +27,17 @@ public static class StorageEndpoints
             .WithName("getStorages");
 
         storages
+            .MapGet(
+                "/{storageId:guid}",
+                async Task<Ok<StorageResponse>> (
+                    Guid storageId,
+                    GetStorageUseCase useCase,
+                    CancellationToken ct
+                ) => TypedResults.Ok(StorageResponse.From(await useCase.ExecuteAsync(storageId, ct)))
+            )
+            .WithName("getStorage");
+
+        storages
             .MapPost(
                 "/",
                 async Task<Created<StorageResponse>> (

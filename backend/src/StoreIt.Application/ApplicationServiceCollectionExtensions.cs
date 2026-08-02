@@ -10,6 +10,7 @@ public static class ApplicationServiceCollectionExtensions
 
         services.AddScoped<CreateStorageUseCase>();
         services.AddScoped<ListStoragesUseCase>();
+        services.AddScoped<GetStorageUseCase>();
         services.AddScoped<RenameStorageUseCase>();
         services.AddScoped<DeleteStorageUseCase>();
         services.AddScoped<GetStorageItemsUseCase>();

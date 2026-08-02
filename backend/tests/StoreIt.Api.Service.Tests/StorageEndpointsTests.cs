@@ -96,6 +96,32 @@ public class StorageEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
         Assert.Equal(0, storage.ExpiringSoonCount);
     }
 
+    // --- #29: get a single storage by id (with status counts) ---
+
+    [Fact]
+    public async Task GetStorage_ExistingStorage_ReturnsItWithStatusCounts()
+    {
+        var created = await _client.CreateStorageAsync("SingleGet");
+        await _client.AddItemAsync(created.Id, ItemBody(name: "Milk", expiryDate: Today.AddDays(-1))); // expired
+        await _client.AddItemAsync(created.Id, ItemBody(name: "Eggs", expiryDate: Today.AddDays(2))); // soon
+
+        var storage = await _client.GetStorageAsync(created.Id);
+
+        Assert.Equal(created.Id, storage.Id);
+        Assert.Equal("SingleGet", storage.Name);
+        Assert.Equal(2, storage.ItemCount);
+        Assert.Equal(1, storage.ExpiredCount);
+        Assert.Equal(1, storage.ExpiringSoonCount);
+    }
+
+    [Fact]
+    public async Task GetStorage_UnknownStorage_ReturnsNotFound()
+    {
+        var response = await _client.GetAsync($"/api/v1/storages/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     // --- AC-02: empty name rejected ---
 
     [Fact]
