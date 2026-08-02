@@ -16,9 +16,9 @@ public sealed record StorageResponse(
 {
     public static StorageResponse From(StorageSummary summary) =>
         new(
-            summary.Storage.Id,
-            summary.Storage.Name,
-            summary.Storage.Items.Count,
+            summary.Id,
+            summary.Name,
+            summary.ItemCount,
             summary.ExpiredCount,
             summary.ExpiringSoonCount
         );
@@ -36,12 +36,12 @@ public sealed record ItemResponse(
 {
     public static ItemResponse From(ItemWithStatus itemWithStatus) =>
         new(
-            itemWithStatus.Item.Id,
-            itemWithStatus.Item.Name,
-            itemWithStatus.Item.Amount,
-            itemWithStatus.Item.Unit,
-            itemWithStatus.Item.ExpiryDate,
-            itemWithStatus.Item.ProductionDate,
+            itemWithStatus.Id,
+            itemWithStatus.Name,
+            itemWithStatus.Amount,
+            itemWithStatus.Unit,
+            itemWithStatus.ExpiryDate,
+            itemWithStatus.ProductionDate,
             itemWithStatus.Status
         );
 }

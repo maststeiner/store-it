@@ -3,10 +3,17 @@ using StoreIt.Domain;
 namespace StoreIt.Application;
 
 /// <summary>
-/// A storage with server-computed status counts for the overview chips
-/// (spec addendum, PO decision 2026-07-19 — status logic stays server-side, ADR-002).
+/// Application projection of a storage with server-computed status counts (spec
+/// addendum, PO decision 2026-07-19 — status logic stays server-side, ADR-002).
+/// Scalar fields only: the domain entity does not cross out of the Application layer.
 /// </summary>
-public sealed record StorageSummary(Storage Storage, int ExpiredCount, int ExpiringSoonCount)
+public sealed record StorageSummary(
+    Guid Id,
+    string Name,
+    int ItemCount,
+    int ExpiredCount,
+    int ExpiringSoonCount
+)
 {
     public static StorageSummary From(Storage storage, DateOnly today)
     {
@@ -27,7 +34,13 @@ public sealed record StorageSummary(Storage Storage, int ExpiredCount, int Expir
             }
         }
 
-        return new StorageSummary(storage, expired, expiringSoon);
+        return new StorageSummary(
+            storage.Id,
+            storage.Name,
+            storage.Items.Count,
+            expired,
+            expiringSoon
+        );
     }
 }
 

@@ -36,7 +36,8 @@ public static class StorageEndpoints
                 ) =>
                     TypedResults.Ok(StorageResponse.From(await useCase.ExecuteAsync(storageId, ct)))
             )
-            .WithName("getStorage");
+            .WithName("getStorage")
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         storages
             .MapPost(
@@ -49,12 +50,13 @@ public static class StorageEndpoints
                 {
                     var summary = await useCase.ExecuteAsync(request.Name, ct);
                     return TypedResults.Created(
-                        $"/api/v1/storages/{summary.Storage.Id}",
+                        $"/api/v1/storages/{summary.Id}",
                         StorageResponse.From(summary)
                     );
                 }
             )
-            .WithName("createStorage");
+            .WithName("createStorage")
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         storages
             .MapPut(
@@ -71,7 +73,9 @@ public static class StorageEndpoints
                         )
                     )
             )
-            .WithName("renameStorage");
+            .WithName("renameStorage")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         storages
             .MapDelete(
@@ -86,7 +90,8 @@ public static class StorageEndpoints
                     return TypedResults.NoContent();
                 }
             )
-            .WithName("deleteStorage");
+            .WithName("deleteStorage")
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         var items = storages.MapGroup("/{storageId:guid}/items").WithTags("Items");
 
@@ -102,7 +107,8 @@ public static class StorageEndpoints
                         (await useCase.ExecuteAsync(storageId, ct)).Select(ItemResponse.From)
                     )
             )
-            .WithName("getItems");
+            .WithName("getItems")
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         items
             .MapPost(
@@ -131,7 +137,9 @@ public static class StorageEndpoints
                     );
                 }
             )
-            .WithName("addItem");
+            .WithName("addItem")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         items
             .MapPut(
@@ -160,7 +168,9 @@ public static class StorageEndpoints
                     return TypedResults.NoContent();
                 }
             )
-            .WithName("updateItem");
+            .WithName("updateItem")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         items
             .MapDelete(
@@ -176,7 +186,8 @@ public static class StorageEndpoints
                     return TypedResults.NoContent();
                 }
             )
-            .WithName("deleteItem");
+            .WithName("deleteItem")
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         return app;
     }

@@ -121,11 +121,53 @@ public class StorageEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
     }
 
     [Fact]
+    public async Task GetStorage_EmptyStorage_ReturnsZeroStatusCounts()
+    {
+        var created = await _client.CreateStorageAsync("EmptySingleGet");
+
+        var storage = await _client.GetStorageAsync(created.Id);
+
+        Assert.Equal(created.Id, storage.Id);
+        Assert.Equal("EmptySingleGet", storage.Name);
+        Assert.Equal(0, storage.ItemCount);
+        Assert.Equal(0, storage.ExpiredCount);
+        Assert.Equal(0, storage.ExpiringSoonCount);
+    }
+
+    [Fact]
+    public async Task GetStorage_BoundaryExpiryDates_CountsTodayAndThreeDaysAsExpiringSoon()
+    {
+        // Mirrors the AC-01a boundary on the single-storage endpoint:
+        // today and +3 days are "expiring soon", -1 day is expired, +4 days is neither.
+        var created = await _client.CreateStorageAsync("BoundarySingleGet");
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Past", expiryDate: Today.AddDays(-1))
+        );
+        await _client.AddItemAsync(created.Id, ItemBody(name: "Today", expiryDate: Today));
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Edge", expiryDate: Today.AddDays(3))
+        );
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Later", expiryDate: Today.AddDays(4))
+        );
+
+        var storage = await _client.GetStorageAsync(created.Id);
+
+        Assert.Equal(4, storage.ItemCount);
+        Assert.Equal(1, storage.ExpiredCount);
+        Assert.Equal(2, storage.ExpiringSoonCount);
+    }
+
+    [Fact]
     public async Task GetStorage_UnknownStorage_ReturnsNotFound()
     {
         var response = await _client.GetAsync($"/api/v1/storages/{Guid.NewGuid()}");
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("storage.notFound", await response.ReadErrorCodeAsync());
     }
 
     // --- AC-02: empty name rejected ---
