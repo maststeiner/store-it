@@ -102,8 +102,14 @@ public class StorageEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
     public async Task GetStorage_ExistingStorage_ReturnsItWithStatusCounts()
     {
         var created = await _client.CreateStorageAsync("SingleGet");
-        await _client.AddItemAsync(created.Id, ItemBody(name: "Milk", expiryDate: Today.AddDays(-1))); // expired
-        await _client.AddItemAsync(created.Id, ItemBody(name: "Eggs", expiryDate: Today.AddDays(2))); // soon
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Milk", expiryDate: Today.AddDays(-1))
+        ); // expired
+        await _client.AddItemAsync(
+            created.Id,
+            ItemBody(name: "Eggs", expiryDate: Today.AddDays(2))
+        ); // soon
 
         var storage = await _client.GetStorageAsync(created.Id);
 
