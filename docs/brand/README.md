@@ -7,7 +7,8 @@ Reusable logo assets. This folder is the **source of truth**; deployed copies
 
 | File | Use |
 |------|-----|
-| `store-it-icon.svg` | **App icon / favicon** — the mark on a rounded gradient tile (self-contained). Master for generating iOS/Android PNG icons. |
+| `store-it-icon.svg` | **App icon / favicon** — the mark on a rounded gradient tile (self-contained). Used as the web SVG favicon. |
+| `store-it-icon-square.svg` | **Full-bleed square app-icon master** (no rounded corners — iOS/Android round themselves). Source for the raster home-screen PNGs. |
 | `store-it-mark.svg` | **Mark only, light bg** — the drawer stack in gradient, no tile. |
 | `store-it-mark-dark.svg` | **Mark only, dark bg** — light drawer fills, no tile. |
 | `store-it-lockup.svg` | **Logo + wordmark, light bg** — horizontal lockup (mark + “store-it”). |
@@ -39,4 +40,9 @@ Gradient: `linear-gradient(135deg, #3E9C93 → #6FA8D6)`.
 - **On dark:** use the white/light drawer fills (see the web dark header).
 - **Web:** the app serves a copy at `frontend/public/logo.svg` (favicon + header).
   When the logo changes here, update that copy too.
-- **iOS app (planned):** export `store-it-icon.svg` to the required PNG sizes.
+- **Web home-screen icon:** `frontend/public/apple-touch-icon.png` (180×180) is generated from the square master. Regenerate after a logo change:
+  ```sh
+  sips -s format png -z 180 180 docs/brand/store-it-icon-square.svg \
+    --out frontend/public/apple-touch-icon.png
+  ```
+- **iOS/Android app (planned):** export `store-it-icon-square.svg` to the required PNG sizes (full-bleed; the OS masks the corners).
