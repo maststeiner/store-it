@@ -33,6 +33,6 @@
         <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
         <PackageVersion Include="ReferencesRuler" Version="1.3.2" />
         <!-- Used only by an architecture-test fixture project -->
-        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     </ItemGroup>
 </Project>
