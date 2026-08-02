@@ -33,7 +33,8 @@ public static class StorageEndpoints
                     Guid storageId,
                     GetStorageUseCase useCase,
                     CancellationToken ct
-                ) => TypedResults.Ok(StorageResponse.From(await useCase.ExecuteAsync(storageId, ct)))
+                ) =>
+                    TypedResults.Ok(StorageResponse.From(await useCase.ExecuteAsync(storageId, ct)))
             )
             .WithName("getStorage");
 
