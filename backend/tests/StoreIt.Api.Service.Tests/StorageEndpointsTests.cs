@@ -12,7 +12,7 @@ public class StorageEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
 {
     private readonly HttpClient _client = factory.CreateClient();
 
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Now);
+    private static readonly DateOnly Today = ApiTestFixture.Today;
 
     // --- AC-01: create storage ---
 
@@ -168,6 +168,7 @@ public class StorageEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("storage.notFound", await response.ReadErrorCodeAsync());
+        await response.AssertNoStorageDataAsync();
     }
 
     // --- AC-02: empty name rejected ---

@@ -14,7 +14,7 @@ public class ItemEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
 {
     private readonly HttpClient _client = factory.CreateClient();
 
-    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.Now);
+    private static readonly DateOnly Today = ApiTestFixture.Today;
 
     // --- EC-03: empty storage ---
 
