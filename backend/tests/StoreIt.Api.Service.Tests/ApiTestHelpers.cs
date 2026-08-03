@@ -106,4 +106,22 @@ internal static class ApiTestHelpers
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         return document.RootElement.GetProperty("errorCode").GetString();
     }
+
+    /// <summary>
+    /// Asserts an error (ProblemDetails) response body exposes none of the
+    /// <c>StorageResponse</c> fields — an unknown id must return 404 without leaking data.
+    /// </summary>
+    public static async Task AssertNoStorageDataAsync(this HttpResponseMessage response)
+    {
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        foreach (
+            var field in new[] { "id", "name", "itemCount", "expiredCount", "expiringSoonCount" }
+        )
+        {
+            Assert.False(
+                document.RootElement.TryGetProperty(field, out _),
+                $"404 body must not expose storage field '{field}'"
+            );
+        }
+    }
 }
