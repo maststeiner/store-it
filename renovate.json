@@ -15,6 +15,16 @@
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Microsoft.OpenApi 3.x is coupled to ASP.NET Core 11 (the AspNetCore.OpenApi 10 source generator breaks against it on .NET 10); hold at 2.x until the .NET 11 move — tech-debt #62",
+      "matchPackageNames": ["Microsoft.OpenApi"],
+      "allowedVersions": "<3.0.0"
+    },
+    {
+      "description": "TypeScript 7 is not supported by Angular 22; hold at 6.x until an Angular release supports it — tech-debt #63",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7.0.0"
     }
   ]
 }
