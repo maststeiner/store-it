@@ -282,8 +282,13 @@ jobs:
       - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
-          # License policy (docs/SETUP.md): permissive licenses only
+          # License policy (docs/SETUP.md): permissive licenses only. The copyleft
+          # deny-list targets what we *ship* (npm/nuget runtime deps); it must not
+          # apply to CI-only GitHub Actions, which are build tooling and are never
+          # distributed — copyleft obligations arise on distribution, not CI use.
+          # There is no ecosystem filter, so exempt such actions explicitly by purl.
           deny-licenses: GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, LGPL-2.1-only, LGPL-2.1-or-later, LGPL-3.0-only, LGPL-3.0-or-later, SSPL-1.0
+          allow-dependencies-licenses: pkg:githubactions/sonarsource/sonarqube-scan-action
 
   # ────────────────────────────────────────────
   # 3 · Code Quality (SonarCloud — monorepo: one project per app)
@@ -352,7 +357,7 @@ jobs:
         run: |
           npm ci
           npm run test:coverage
-      - uses: SonarSource/sonarqube-scan-action@689fb39b34b9aa95ebc5f8f119343ddd51542402 # v4
+      - uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
