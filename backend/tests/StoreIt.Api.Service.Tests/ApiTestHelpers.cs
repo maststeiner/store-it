@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -98,6 +99,25 @@ internal static class ApiTestHelpers
         );
         Assert.NotNull(items);
         return items;
+    }
+
+    /// <summary>
+    /// Asserts a malformed route id is answered with 400 ProblemDetails and the
+    /// locale-neutral <c>request.invalidId</c> code (issue #69) — the same error class
+    /// on every endpoint, not the 404 the removed <c>:guid</c> route constraint produced.
+    /// The detail names the offending parameter so a client can tell which id was wrong.
+    /// </summary>
+    public static async Task AssertInvalidRouteIdAsync(
+        this HttpResponseMessage response,
+        string parameterName
+    )
+    {
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("request.invalidId", await response.ReadErrorCodeAsync());
+
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Contains(parameterName, document.RootElement.GetProperty("detail").GetString());
     }
 
     /// <summary>Reads the "errorCode" extension from a ProblemDetails response body.</summary>

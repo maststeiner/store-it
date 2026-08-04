@@ -418,6 +418,69 @@ public class ItemEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
         Assert.Equal("storage.notFound", await response.ReadErrorCodeAsync());
     }
 
+    // --- #69: a malformed route id is a client error (400), not a missing resource ---
+
+    [Fact]
+    public async Task GetItems_MalformedStorageId_ReturnsBadRequestWithErrorCode()
+    {
+        var response = await _client.GetAsync("/api/v1/storages/abc/items");
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
+
+    [Fact]
+    public async Task AddItem_MalformedStorageId_ReturnsBadRequestWithErrorCode()
+    {
+        var response = await _client.PostAsJsonAsync(
+            "/api/v1/storages/abc/items",
+            ItemBody(expiryDate: Today.AddDays(3))
+        );
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
+
+    [Fact]
+    public async Task UpdateItem_MalformedStorageId_ReturnsBadRequestWithErrorCode()
+    {
+        var response = await _client.PutAsJsonAsync(
+            $"/api/v1/storages/abc/items/{Guid.NewGuid()}",
+            ItemBody(expiryDate: Today.AddDays(3))
+        );
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
+
+    [Fact]
+    public async Task UpdateItem_MalformedItemId_ReturnsBadRequestWithErrorCode()
+    {
+        var storage = await _client.CreateStorageAsync("MalformedItemIdUpdate");
+
+        var response = await _client.PutAsJsonAsync(
+            $"/api/v1/storages/{storage.Id}/items/abc",
+            ItemBody(expiryDate: Today.AddDays(3))
+        );
+
+        await response.AssertInvalidRouteIdAsync("itemId");
+    }
+
+    [Fact]
+    public async Task DeleteItem_MalformedStorageId_ReturnsBadRequestWithErrorCode()
+    {
+        var response = await _client.DeleteAsync($"/api/v1/storages/abc/items/{Guid.NewGuid()}");
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
+
+    [Fact]
+    public async Task DeleteItem_MalformedItemId_ReturnsBadRequestWithErrorCode()
+    {
+        var storage = await _client.CreateStorageAsync("MalformedItemIdDelete");
+
+        var response = await _client.DeleteAsync($"/api/v1/storages/{storage.Id}/items/abc");
+
+        await response.AssertInvalidRouteIdAsync("itemId");
+    }
+
     // --- AC-10: sorting ---
 
     [Fact]
