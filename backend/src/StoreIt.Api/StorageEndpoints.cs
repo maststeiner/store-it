@@ -26,7 +26,12 @@ public static class StorageEndpoints
     /// </summary>
     public static IEndpointRouteBuilder MapStorageEndpointsV1(this IEndpointRouteBuilder app)
     {
-        var storages = app.MapGroup("/api/v1/storages").WithTags("Storages");
+        // SPEC-003: the whole storages tree (incl. nested items) requires an
+        // authenticated session; ownership isolation is enforced by the EF query filter.
+        var storages = app.MapGroup("/api/v1/storages")
+            .WithTags("Storages")
+            .RequireAuthorization()
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         MapGetStorages(storages);
         MapGetStorage(storages);
