@@ -18,6 +18,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<UpdateItemUseCase>();
         services.AddScoped<DeleteItemUseCase>();
 
+        services.AddScoped<ProvisionUserUseCase>();
+
         return services;
     }
 }
