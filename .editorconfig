@@ -58,3 +58,7 @@ dotnet_diagnostic.S1479.severity = error   # switch with too many cases
 dotnet_diagnostic.S1448.severity = error   # class with too many methods
 dotnet_diagnostic.S2436.severity = error   # too many generic parameters
 dotnet_diagnostic.S138.severity = error     # too many lines in a method (> 80)
+# EF Core migrations are auto-generated — exempt them from analyzer style rules
+# (e.g. CA1861 on the generated multi-column index arrays).
+[**/Migrations/*.cs]
+generated_code = true
