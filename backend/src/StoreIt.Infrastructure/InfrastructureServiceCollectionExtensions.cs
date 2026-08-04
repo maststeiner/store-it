@@ -32,6 +32,7 @@ public static class InfrastructureServiceCollectionExtensions
             }
         );
         services.AddScoped<IStorageRepository, StorageRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         return services;
     }
 }
