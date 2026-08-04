@@ -114,4 +114,72 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         );
         AssertStringEnum(schemas.GetProperty("ExpiryStatus"), ["Ok", "ExpiringSoon", "Expired"]);
     }
+
+    /// <summary>Every v1 operation that carries a GUID route id (issue #69).</summary>
+    private static readonly (string Path, string Verb)[] RouteIdOperations =
+    [
+        ("/api/v1/storages/{storageId}", "get"),
+        ("/api/v1/storages/{storageId}", "put"),
+        ("/api/v1/storages/{storageId}", "delete"),
+        ("/api/v1/storages/{storageId}/items", "get"),
+        ("/api/v1/storages/{storageId}/items", "post"),
+        ("/api/v1/storages/{storageId}/items/{itemId}", "put"),
+        ("/api/v1/storages/{storageId}/items/{itemId}", "delete"),
+    ];
+
+    [Fact]
+    public async Task Contract_ForOperationsWithRouteIds_DeclaresBadRequestProblemDetails()
+    {
+        // #69: a malformed route id answers 400 ProblemDetails API-wide — the contract
+        // declares it on every id-carrying operation so generated clients can handle it.
+        var root = await GetContractAsync();
+        var paths = root.GetProperty("paths");
+
+        foreach (var (path, verb) in RouteIdOperations)
+        {
+            var schemaReference = paths
+                .GetProperty(path)
+                .GetProperty(verb)
+                .GetProperty("responses")
+                .GetProperty("400")
+                .GetProperty("content")
+                .GetProperty("application/problem+json")
+                .GetProperty("schema")
+                .GetProperty("$ref")
+                .GetString();
+
+            Assert.Equal("#/components/schemas/ProblemDetails", schemaReference);
+        }
+    }
+
+    [Fact]
+    public async Task Contract_ForRouteIdParameters_DeclaresUuidFormat()
+    {
+        // Ids bind as strings in the handlers (#69) — the published contract still
+        // documents them as GUIDs so clients keep generating uuid-typed parameters.
+        var root = await GetContractAsync();
+        var paths = root.GetProperty("paths");
+        var pathParameters = 0;
+
+        foreach (var (path, verb) in RouteIdOperations)
+        {
+            foreach (
+                var parameter in paths
+                    .GetProperty(path)
+                    .GetProperty(verb)
+                    .GetProperty("parameters")
+                    .EnumerateArray()
+            )
+            {
+                Assert.Equal("path", parameter.GetProperty("in").GetString());
+                var schema = parameter.GetProperty("schema");
+                Assert.Equal("string", schema.GetProperty("type").GetString());
+                Assert.Equal("uuid", schema.GetProperty("format").GetString());
+                pathParameters++;
+            }
+        }
+
+        // 5 storageId-only operations + 2 operations carrying storageId and itemId
+        Assert.Equal(9, pathParameters);
+    }
 }

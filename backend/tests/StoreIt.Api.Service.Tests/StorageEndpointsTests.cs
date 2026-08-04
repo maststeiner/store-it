@@ -273,4 +273,41 @@ public class StorageEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("storage.notFound", await response.ReadErrorCodeAsync());
     }
+
+    // --- #69: a malformed storage id is a client error (400), not a missing resource ---
+
+    [Fact]
+    public async Task GetStorage_MalformedStorageId_ReturnsBadRequestWithErrorCode()
+    {
+        var response = await _client.GetAsync("/api/v1/storages/abc");
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
+
+    [Fact]
+    public async Task GetStorage_MalformedStorageId_LeaksNoStorageData()
+    {
+        var response = await _client.GetAsync("/api/v1/storages/abc");
+
+        await response.AssertNoStorageDataAsync();
+    }
+
+    [Fact]
+    public async Task RenameStorage_MalformedStorageId_ReturnsBadRequestWithErrorCode()
+    {
+        var response = await _client.PutAsJsonAsync(
+            "/api/v1/storages/abc",
+            new { name = "Cellar" }
+        );
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
+
+    [Fact]
+    public async Task DeleteStorage_MalformedStorageId_ReturnsBadRequestWithErrorCode()
+    {
+        var response = await _client.DeleteAsync("/api/v1/storages/abc");
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
 }

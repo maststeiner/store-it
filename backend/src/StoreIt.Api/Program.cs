@@ -24,6 +24,7 @@ builder.Services.AddOpenApi(
     {
         options.AddSchemaTransformer<NumericSchemaTransformer>();
         options.AddSchemaTransformer<EnumSchemaTransformer>();
+        options.AddOperationTransformer<RouteIdFormatTransformer>();
     }
 );
 
