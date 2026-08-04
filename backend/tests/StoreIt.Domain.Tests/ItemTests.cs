@@ -11,9 +11,12 @@ namespace StoreIt.Domain.Tests;
 public class ItemTests
 {
     private static readonly DateOnly Today = new(2026, 7, 13);
+    private static readonly Guid AnyOwner = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
     private static Item CreateItem(DateOnly? expiryDate, DateOnly? productionDate) =>
-        Storage.Create("Pantry").AddItem("Milk", 1m, Unit.Liter, expiryDate, productionDate);
+        Storage
+            .Create("Pantry", AnyOwner)
+            .AddItem("Milk", 1m, Unit.Liter, expiryDate, productionDate);
 
     // --- Unit validation (AC-06) ---
 
@@ -21,7 +24,7 @@ public class ItemTests
     public void AddItem_WithUndefinedUnit_ThrowsDomainValidationException()
     {
         // AC-06: unit must be from the fixed list; an out-of-range enum value is rejected
-        var storage = Storage.Create("Pantry");
+        var storage = Storage.Create("Pantry", AnyOwner);
 
         var exception = Assert.Throws<DomainValidationException>(() =>
             storage.AddItem("Mystery", 1m, (Unit)999, Today.AddDays(5), null)

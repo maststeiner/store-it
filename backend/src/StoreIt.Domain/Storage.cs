@@ -9,18 +9,34 @@ public class Storage
 
     public Guid Id { get; private set; }
     public string Name { get; private set; } = null!;
+
+    /// <summary>SPEC-003: the owning user. Every storage belongs to exactly one owner.</summary>
+    public Guid OwnerId { get; private set; }
+
     public IReadOnlyCollection<Item> Items => _items.AsReadOnly();
 
     private Storage() { } // EF Core
 
-    private Storage(string name)
+    private Storage(string name, Guid ownerId)
     {
+        if (ownerId == Guid.Empty)
+        {
+            throw new DomainValidationException(
+                "storage.owner.missing",
+                "Storage owner must be provided."
+            );
+        }
+
         Id = Guid.NewGuid();
+        OwnerId = ownerId;
         Rename(name);
     }
 
-    /// <summary>AC-01/AC-02: create a storage with a non-empty name.</summary>
-    public static Storage Create(string name) => new(name);
+    /// <summary>
+    /// AC-01/AC-02: create a storage with a non-empty name, owned by
+    /// <paramref name="ownerId"/> (SPEC-003).
+    /// </summary>
+    public static Storage Create(string name, Guid ownerId) => new(name, ownerId);
 
     /// <summary>AC-03: rename (same validation as AC-02).</summary>
     public void Rename(string name)
