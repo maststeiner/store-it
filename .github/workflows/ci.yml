@@ -282,12 +282,14 @@ jobs:
       - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           fail-on-severity: high
-          # License policy (docs/SETUP.md): permissive licenses only. The copyleft
-          # deny-list targets what we *ship* (npm/nuget runtime deps); it must not
-          # apply to CI-only GitHub Actions, which are build tooling and are never
-          # distributed — copyleft obligations arise on distribution, not CI use.
-          # There is no ecosystem filter, so exempt such actions explicitly by purl.
-          deny-licenses: GPL-2.0-only, GPL-2.0-or-later, GPL-3.0-only, GPL-3.0-or-later, AGPL-3.0-only, AGPL-3.0-or-later, LGPL-2.1-only, LGPL-2.1-or-later, LGPL-3.0-only, LGPL-3.0-or-later, SSPL-1.0
+          # License policy (docs/SETUP.md): permissive licenses only — enforced as an
+          # allow-list (default-deny), so anything outside the set fails the gate for
+          # review, not just a fixed list of copyleft identifiers.
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
+          # The allow-list governs what we *ship* (npm/nuget runtime deps). CI-only
+          # GitHub Actions are build tooling that is never distributed, so license
+          # obligations don't arise from CI use; there is no ecosystem filter, so
+          # exempt such actions explicitly by purl (the SonarQube action is LGPL-3.0).
           allow-dependencies-licenses: pkg:githubactions/sonarsource/sonarqube-scan-action
 
   # ────────────────────────────────────────────
