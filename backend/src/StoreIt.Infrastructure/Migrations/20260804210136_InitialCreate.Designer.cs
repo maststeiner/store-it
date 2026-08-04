@@ -12,7 +12,7 @@ using StoreIt.Infrastructure;
 namespace StoreIt.Infrastructure.Migrations
 {
     [DbContext(typeof(StoreItDbContext))]
-    [Migration("20260721192256_InitialCreate")]
+    [Migration("20260804210136_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -70,9 +70,49 @@ namespace StoreIt.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("OwnerId");
+
                     b.ToTable("storages", (string)null);
+                });
+
+            modelBuilder.Entity("StoreIt.Domain.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("Issuer")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Issuer", "Subject")
+                        .IsUnique();
+
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("StoreIt.Domain.Item", b =>
@@ -80,6 +120,15 @@ namespace StoreIt.Infrastructure.Migrations
                     b.HasOne("StoreIt.Domain.Storage", null)
                         .WithMany("Items")
                         .HasForeignKey("storage_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StoreIt.Domain.Storage", b =>
+                {
+                    b.HasOne("StoreIt.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
