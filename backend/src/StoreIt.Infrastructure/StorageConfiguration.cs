@@ -19,6 +19,17 @@ public sealed class StorageConfiguration : IEntityTypeConfiguration<Storage>
         builder.Property(s => s.Id).ValueGeneratedNever();
         builder.Property(s => s.Name).IsRequired().HasMaxLength(200);
 
+        // SPEC-003: every storage belongs to exactly one owner. FK → users(Id);
+        // deleting the owner cascades to their storages (and, transitively, items).
+        builder.Property(s => s.OwnerId).IsRequired();
+        builder
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(s => s.OwnerId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(s => s.OwnerId);
+
         // Aggregate: items live and die with their storage (EC-06: no orphans).
         // Required FK — removing an item from the collection deletes the row
         // instead of nulling the FK (AC-09).
