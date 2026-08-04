@@ -35,10 +35,12 @@ public static class AuthenticationSetup
         services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieScheme;
-                // The default challenge (Microsoft) is only used if a bare
-                // ChallengeAsync() is ever called; /auth/login always picks an
-                // explicit, allowlisted scheme.
-                options.DefaultChallengeScheme = MicrosoftScheme;
+                // Route bare ChallengeAsync() to the cookie scheme so the
+                // FallbackPolicy (RequireAuthenticatedUser) returns 401 — not a
+                // redirect to the OIDC authority — for unauthenticated API calls.
+                // /auth/login always passes the provider scheme explicitly, so it
+                // is unaffected by this default.
+                options.DefaultChallengeScheme = CookieScheme;
             })
             .AddCookie(CookieScheme, options =>
             {
