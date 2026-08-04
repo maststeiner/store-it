@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -45,9 +46,69 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:storeit", _postgres.GetConnectionString());
-        // Replace the app's TimeProvider.System with the pinned clock (runs after the
-        // app's registrations, so this wins) — makes status-count math deterministic.
-        builder.ConfigureTestServices(services => services.AddSingleton(Clock));
+
+        // Dummy OIDC config so AddOpenIdConnect can bind at startup even though the
+        // committed appsettings ships empty ClientId/secret. Tests never reach the IdP
+        // (the "Test" scheme below authenticates), but the host must still boot.
+        foreach (var provider in new[] { "Microsoft", "Google" })
+        {
+            builder.UseSetting(
+                $"Authentication:{provider}:Authority",
+                "https://login.test.local"
+            );
+            builder.UseSetting($"Authentication:{provider}:ClientId", "test-client-id");
+            builder.UseSetting($"Authentication:{provider}:ClientSecret", "test-client-secret");
+            builder.UseSetting(
+                $"Authentication:{provider}:CallbackPath",
+                $"/auth/callback/{provider.ToLowerInvariant()}"
+            );
+        }
+
+        builder.ConfigureTestServices(services =>
+        {
+            // Replace the app's TimeProvider.System with the pinned clock (runs after the
+            // app's registrations, so this wins) — makes status-count math deterministic.
+            services.AddSingleton(Clock);
+
+            // Make "Test" the default scheme so tests authenticate via request headers
+            // (see TestAuthHandler) without a live IdP. Anonymous by default: routes stay
+            // open unless a request supplies X-Test-Subject.
+            services
+                .AddAuthentication(TestAuthHandler.SchemeName)
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                    TestAuthHandler.SchemeName,
+                    _ => { }
+                );
+        });
+    }
+
+    /// <summary>
+    /// A client authenticated as <paramref name="subject"/> via the "Test" scheme.
+    /// The request headers drive <see cref="TestAuthHandler"/>, which provisions the
+    /// user and stamps the sub_local claim — exercising real provisioning.
+    /// </summary>
+    public HttpClient CreateClientAs(
+        string subject,
+        string? issuer = null,
+        string? email = null,
+        string? name = null
+    )
+    {
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Add("X-Test-Subject", subject);
+        if (issuer is not null)
+        {
+            client.DefaultRequestHeaders.Add("X-Test-Issuer", issuer);
+        }
+        if (email is not null)
+        {
+            client.DefaultRequestHeaders.Add("X-Test-Email", email);
+        }
+        if (name is not null)
+        {
+            client.DefaultRequestHeaders.Add("X-Test-Name", name);
+        }
+        return client;
     }
 
     async Task IAsyncLifetime.DisposeAsync()

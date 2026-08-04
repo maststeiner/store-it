@@ -11,6 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
+// SPEC-003: BFF cookie session + per-provider OIDC challenge schemes.
+builder.Services.AddStoreItAuthentication(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter())
 );
@@ -32,8 +37,14 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
+// Authentication runs before authorization. Authorization stays permissive in this
+// task (no fallback policy) — the secure-by-default cutover is Task 10.
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapHealthChecks("/health");
 app.MapOpenApi();
+app.MapAuthEndpoints();
 app.MapStorageEndpointsV1();
 
 await app.RunAsync();
