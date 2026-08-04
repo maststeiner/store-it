@@ -37,14 +37,15 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
-// Authentication runs before authorization. Authorization stays permissive in this
-// task (no fallback policy) — the secure-by-default cutover is Task 10.
+// Authentication runs before authorization. Secure-by-default (SPEC-003): a
+// RequireAuthenticatedUser fallback policy guards every endpoint; the public ones
+// below opt out explicitly with .AllowAnonymous().
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHealthChecks("/health");
-app.MapOpenApi();
-app.MapAuthEndpoints();
+app.MapHealthChecks("/health").AllowAnonymous();
+app.MapOpenApi().AllowAnonymous();
+app.MapAuthEndpoints(); // the /auth group is already .AllowAnonymous()
 app.MapStorageEndpointsV1();
 
 await app.RunAsync();

@@ -45,11 +45,24 @@ public sealed record StorageSummary(
 }
 
 /// <summary>AC-01: create a storage and return it in the storage list.</summary>
-public sealed class CreateStorageUseCase(IStorageRepository repository, TimeProvider timeProvider)
+public sealed class CreateStorageUseCase(
+    IStorageRepository repository,
+    ICurrentUser currentUser,
+    TimeProvider timeProvider
+)
 {
     public async Task<StorageSummary> ExecuteAsync(string name, CancellationToken cancellationToken)
     {
-        var storage = Storage.Create(name);
+        // SPEC-003: the owner is stamped server-side from the authenticated session.
+        // Endpoints require authentication (fallback policy), so UserId is present here;
+        // guard defensively rather than persist an ownerless storage.
+        var ownerId =
+            currentUser.UserId
+            ?? throw new InvalidOperationException(
+                "Cannot create a storage without an authenticated user."
+            );
+
+        var storage = Storage.Create(name, ownerId);
         repository.Add(storage);
         await repository.SaveChangesAsync(cancellationToken);
         return StorageSummary.From(storage, timeProvider.Today());

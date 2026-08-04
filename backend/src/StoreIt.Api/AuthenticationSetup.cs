@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using StoreIt.Application;
@@ -59,10 +60,14 @@ public static class AuthenticationSetup
                 options => ConfigureOidc(options, configuration.GetSection("Authentication:Google"))
             );
 
-        // Permissive by default in this task — the RequireAuthenticatedUser fallback
-        // policy (secure-by-default) is the ownership cutover (Task 10), NOT here,
-        // so existing SPEC-001 service tests keep passing.
-        services.AddAuthorization();
+        // Secure-by-default (SPEC-003 ownership cutover): every endpoint requires an
+        // authenticated user unless it opts out with .AllowAnonymous() (the /auth group,
+        // /health, and the OpenAPI document — see Program.cs).
+        services.AddAuthorization(options =>
+            options.FallbackPolicy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .Build()
+        );
 
         return services;
     }

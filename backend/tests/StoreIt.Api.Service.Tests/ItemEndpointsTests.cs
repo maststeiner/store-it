@@ -12,7 +12,9 @@ namespace StoreIt.Api.Service.Tests;
 /// </summary>
 public class ItemEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestFixture>
 {
-    private readonly HttpClient _client = factory.CreateClient();
+    // SPEC-003 (AC-12): SPEC-001 behaviour is additive under auth — these tests now
+    // run as a signed-in owner so the storages tree (RequireAuthorization) is reachable.
+    private readonly HttpClient _client = factory.CreateClientAs("owner");
 
     private static readonly DateOnly Today = ApiTestFixture.Today;
 
