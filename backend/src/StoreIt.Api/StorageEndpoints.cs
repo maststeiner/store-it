@@ -19,11 +19,25 @@ public static class StorageEndpoints
     /// (SPEC-002).
     /// Route ids bind as strings and are parsed explicitly (see
     /// <see cref="TryParseRouteId"/>) so a malformed id answers 400 API-wide.
+    /// The two route groups are mapped by one method each: the per-endpoint id
+    /// guards add up, and one method for all nine endpoints exceeded the
+    /// cognitive-complexity budget (SonarCloud S3776).
     /// </summary>
     public static IEndpointRouteBuilder MapStorageEndpointsV1(this IEndpointRouteBuilder app)
     {
         var storages = app.MapGroup("/api/v1/storages").WithTags("Storages");
 
+        MapStorageRoutes(storages);
+        MapItemRoutes(storages);
+
+        return app;
+    }
+
+    /// <summary>
+    /// Collection and single-storage routes under /api/v1/storages.
+    /// </summary>
+    private static void MapStorageRoutes(RouteGroupBuilder storages)
+    {
         storages
             .MapGet(
                 "/",
@@ -121,7 +135,13 @@ public static class StorageEndpoints
             .WithName("deleteStorage")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
+    }
 
+    /// <summary>
+    /// Item routes nested under a storage: /api/v1/storages/{storageId}/items.
+    /// </summary>
+    private static void MapItemRoutes(RouteGroupBuilder storages)
+    {
         var items = storages.MapGroup("/{storageId}/items").WithTags("Items");
 
         items
@@ -276,8 +296,6 @@ public static class StorageEndpoints
             .WithName("deleteItem")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
-
-        return app;
     }
 
     /// <summary>
