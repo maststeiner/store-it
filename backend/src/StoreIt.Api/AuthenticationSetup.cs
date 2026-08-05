@@ -29,7 +29,8 @@ public static class AuthenticationSetup
 
     public static IServiceCollection AddStoreItAuthentication(
         this IServiceCollection services,
-        IConfiguration configuration
+        IConfiguration configuration,
+        IWebHostEnvironment env
     )
     {
         services.AddAuthentication(options =>
@@ -55,11 +56,11 @@ public static class AuthenticationSetup
             })
             .AddOpenIdConnect(
                 MicrosoftScheme,
-                options => ConfigureOidc(options, configuration.GetSection("Authentication:Microsoft"))
+                options => ConfigureOidc(options, configuration.GetSection("Authentication:Microsoft"), env)
             )
             .AddOpenIdConnect(
                 GoogleScheme,
-                options => ConfigureOidc(options, configuration.GetSection("Authentication:Google"))
+                options => ConfigureOidc(options, configuration.GetSection("Authentication:Google"), env)
             );
 
         // Secure-by-default (SPEC-003 ownership cutover): every endpoint requires an
@@ -74,7 +75,7 @@ public static class AuthenticationSetup
         return services;
     }
 
-    private static void ConfigureOidc(OpenIdConnectOptions options, IConfigurationSection config)
+    private static void ConfigureOidc(OpenIdConnectOptions options, IConfigurationSection config, IWebHostEnvironment env)
     {
         // The session lives in the cookie; OIDC only handles the challenge/callback.
         options.SignInScheme = CookieScheme;
@@ -98,7 +99,10 @@ public static class AuthenticationSetup
         // Config may be empty at startup (secrets arrive via env in real deploys, and
         // tests never reach the IdP). Defer authority/metadata validation to
         // challenge-time so an empty ClientId cannot fail host startup.
-        options.RequireHttpsMetadata = false;
+        // RequireHttpsMetadata is relaxed only in Development (local/test); in all
+        // other environments it stays true to prevent MITM/downgrade attacks on the
+        // OIDC discovery document.
+        options.RequireHttpsMetadata = !env.IsDevelopment();
 
         // Provision-once: resolve and persist the local user during the OIDC callback,
         // then stamp the internal id onto the principal as the sub_local claim.
@@ -116,8 +120,17 @@ public static class AuthenticationSetup
                 return;
             }
 
+            var issuer =
+                principal.FindFirstValue("iss")
+                ?? (string.IsNullOrEmpty(options.Authority) ? null : options.Authority);
+            if (issuer is null)
+            {
+                ctx.Fail("No issuer: the 'iss' claim is absent and Authority is not configured.");
+                return;
+            }
+
             var user = await provision.ExecuteAsync(
-                principal.FindFirstValue("iss") ?? options.Authority!,
+                issuer,
                 subject,
                 principal.FindFirstValue(ClaimTypes.Email) ?? principal.FindFirstValue("email"),
                 principal.FindFirstValue("name") ?? principal.FindFirstValue(ClaimTypes.Name),
