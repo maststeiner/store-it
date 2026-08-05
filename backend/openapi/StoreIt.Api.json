@@ -48,6 +48,19 @@
         }
       }
     },
+    "/auth/csrf": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "csrf",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/auth/me": {
       "get": {
         "tags": [

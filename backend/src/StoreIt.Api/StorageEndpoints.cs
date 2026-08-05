@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http.HttpResults;
 using StoreIt.Application;
 
@@ -31,7 +32,8 @@ public static class StorageEndpoints
         var storages = app.MapGroup("/api/v1/storages")
             .WithTags("Storages")
             .RequireAuthorization()
-            .ProducesProblem(StatusCodes.Status401Unauthorized);
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .AddEndpointFilter(CsrfValidationFilter);
 
         MapGetStorages(storages);
         MapGetStorage(storages);
@@ -351,5 +353,38 @@ public static class StorageEndpoints
             extensions: new Dictionary<string, object?> { ["errorCode"] = InvalidRouteIdErrorCode }
         );
         return false;
+    }
+
+    /// <summary>
+    /// SPEC-003 (Task 8a): CSRF endpoint filter for the storages group.
+    /// POST/PUT/DELETE require a valid double-submit token (X-XSRF-TOKEN header matched
+    /// against the HttpOnly antiforgery cookie). GET/HEAD pass through unchanged.
+    /// Returns 403 Forbidden when the token is missing or invalid.
+    /// </summary>
+    private static async ValueTask<object?> CsrfValidationFilter(
+        EndpointFilterInvocationContext ctx,
+        EndpointFilterDelegate next
+    )
+    {
+        var method = ctx.HttpContext.Request.Method;
+        if (
+            method.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            || method.Equals("PUT", StringComparison.OrdinalIgnoreCase)
+            || method.Equals("DELETE", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            var antiforgery =
+                ctx.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
+            try
+            {
+                await antiforgery.ValidateRequestAsync(ctx.HttpContext);
+            }
+            catch (AntiforgeryValidationException)
+            {
+                return Results.StatusCode(StatusCodes.Status403Forbidden);
+            }
+        }
+
+        return await next(ctx);
     }
 }

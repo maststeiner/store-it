@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace StoreIt.Api;
@@ -50,6 +51,29 @@ public static class AuthEndpoints
                 }
             )
             .WithName("logout");
+
+        auth.MapGet(
+                "/csrf",
+                (IAntiforgery antiforgery, HttpContext http) =>
+                {
+                    // Generate and store the antiforgery token pair: the HttpOnly cookie
+                    // holds the server-side token; we additionally set a JS-readable
+                    // XSRF-TOKEN cookie so the SPA can read and echo it as X-XSRF-TOKEN.
+                    var tokens = antiforgery.GetAndStoreTokens(http);
+                    http.Response.Cookies.Append(
+                        "XSRF-TOKEN",
+                        tokens.RequestToken!,
+                        new CookieOptions
+                        {
+                            HttpOnly = false,
+                            SameSite = SameSiteMode.Lax,
+                            Secure = true,
+                        }
+                    );
+                    return Results.NoContent();
+                }
+            )
+            .WithName("csrf");
 
         auth.MapGet(
                 "/me",
