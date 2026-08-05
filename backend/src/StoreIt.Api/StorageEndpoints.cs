@@ -33,6 +33,8 @@ public static class StorageEndpoints
             .WithTags("Storages")
             .RequireAuthorization()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .AddEndpointFilter(CsrfValidationFilter);
 
         MapGetStorages(storages);
