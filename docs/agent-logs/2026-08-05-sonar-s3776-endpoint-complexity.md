@@ -49,6 +49,8 @@ Fix the single open maintainability violation on SonarCloud:
 | # | Intervention | Reason |
 |---|--------------|--------|
 | 1 | Orchestrator allowed `sonarcloud.io` through the sandbox network policy | The agent refused to guess the violation; SonarCloud was blocked by default-deny, so the finding was fetched from the API first |
+| 2 | *"deine checkboxen abhaken wenn du es gemacht hast, und sonst nachholen"* | The PR was opened with most G2/G3 boxes unticked and merely annotated. The agent had left work implied-but-undone: the CodeRabbit result was never checked, no AC→test mapping existed, and the two deferred items sat in prose instead of `tech-debt` issues as the checklist requires. Caught up: CodeRabbit verified (0 findings), verification table added, issues #74 + #75 filed, boxes ticked. |
+| 3 | Orchestrator ticked both human-attestation boxes on the PR while the agent was working | Gate G2 human review. Note: the agent's first attempt to rewrite the PR body would have silently reverted those two ticks — it only failed on an unrelated GraphQL error. The retry diffed the live body first and preserved the human ticks plus CodeRabbit's appended release notes. Rewriting a PR body is a read-modify-write on a document a human also edits; treat it as such. |
 
 ## Verification
 
@@ -60,13 +62,25 @@ Fix the single open maintainability violation on SonarCloud:
 | Coverage | 99.42 % line / 95 % branch total (unchanged) |
 | OpenAPI contract drift | none — `openapi/StoreIt.Api.json` unchanged |
 | S3776 reproduced locally | **yes** — `SonarAnalyzer.CSharp` 10.15 pulled in temporarily reported the identical message (`18 to the 15 allowed`) at `StorageEndpoints.cs(23,41)` on the pre-fix file, and reported nothing on the post-fix file in the same setup. Scaffolding (package refs + `.editorconfig` severity override) reverted; not part of the diff. |
+| SonarCloud PR analysis (authoritative) | quality gate passed, 0 open issues on PR #73 for both backend and frontend. The `develop` finding stays OPEN until the post-merge analysis of `develop` runs. |
+| CI | all 13 jobs green, including `3 · Backend quality gate` (`sonar.qualitygate.wait=true`) |
+| Automated AI review (G2) | CodeRabbit auto-reviewed, profile `assertive`: 4/4 pre-merge checks passed, zero findings, no inline comments |
+| Acceptance criteria | no SPEC-001 AC added, removed, or reinterpreted — route registrations were relocated. All nine registrations are exercised over real HTTP by the pre-existing AC-derived service tests, including the malformed-id paths (`/storages/abc`, `/storages/abc/items`, `/storages/{id}/items/abc`) that cover the guards being moved. AC→test mapping in the PR description. |
 
 ## Outcome
 
-- **Result:** ready for review
-- **Deviations from spec:** n/a (no spec — tech-debt fix)
-- **Harness follow-up:** optional, not done here — adding `SonarAnalyzer.CSharp` as a
-  permanent analyzer package would catch S3776-class findings at build time (gate 1)
-  instead of after the push (gate 3). It would first surface whatever else the rule set
-  flags across the solution, so it belongs in its own tech-debt issue rather than in
-  this fix.
+- **Result:** ready for merge — all 13 CI jobs green, CodeRabbit clean, SonarCloud PR
+  analysis at 0 open issues, human attestation given by the orchestrator. Merge is a
+  human's call (G3).
+- **Deviations from spec:** none — no SPEC-001 acceptance criterion is touched.
+- **Deferred, now tracked as issues** (repo rule: deferred findings become `tech-debt`
+  issues, never prose):
+  - **#74** — run `SonarAnalyzer.CSharp` at build time so S3776-class findings fail gate 1
+    instead of gate 3. Kept separate because enabling the full rule set will surface an
+    unknown backlog in existing code that needs triage before the rules break the build.
+  - **#75** — collapse the duplicated two-id guards in `updateItem`/`deleteItem`. Would drop
+    `MapItemRoutes` from 12 to 8 and remove real duplication, but it changes handler bodies,
+    which this PR deliberately did not.
+- **Harness follow-up:** #74 is the harness sharpening for this class of finding. Second,
+  smaller lesson recorded under intervention 3: rewriting a PR body is a read-modify-write
+  on a document humans also edit — diff the live version first.
