@@ -40,7 +40,9 @@ public static class AuthEndpoints
                     );
                 }
             )
-            .WithName("login");
+            .WithName("login")
+            .Produces(StatusCodes.Status302Found)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         auth.MapPost(
                 "/logout",
@@ -50,7 +52,8 @@ public static class AuthEndpoints
                     return TypedResults.NoContent();
                 }
             )
-            .WithName("logout");
+            .WithName("logout")
+            .Produces(StatusCodes.Status204NoContent);
 
         auth.MapGet(
                 "/csrf",
@@ -73,7 +76,8 @@ public static class AuthEndpoints
                     return Results.NoContent();
                 }
             )
-            .WithName("csrf");
+            .WithName("csrf")
+            .Produces(StatusCodes.Status204NoContent);
 
         auth.MapGet(
                 "/me",
@@ -95,7 +99,9 @@ public static class AuthEndpoints
                     );
                 }
             )
-            .WithName("me");
+            .WithName("me")
+            .Produces<UserProfileResponse>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         return app;
     }
