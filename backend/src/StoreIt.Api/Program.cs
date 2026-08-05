@@ -59,4 +59,13 @@ app.MapOpenApi().AllowAnonymous();
 app.MapAuthEndpoints(); // the /auth group is already .AllowAnonymous()
 app.MapStorageEndpointsV1();
 
+// ⚠️  DEVELOPMENT ONLY — never reachable in Staging or Production.
+// Provides a POST /auth/dev-login shortcut for Playwright E2E tests so they can
+// establish a real cookie session without an OIDC provider. The endpoint runs the
+// same ProvisionUserUseCase + sub_local claim contract as the production OIDC flow.
+if (app.Environment.IsDevelopment())
+{
+    app.MapDevAuthEndpoints();
+}
+
 await app.RunAsync();
