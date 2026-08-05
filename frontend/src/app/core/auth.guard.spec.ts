@@ -85,4 +85,28 @@ describe('authGuard', () => {
     expect(loadMe).toHaveBeenCalledOnce();
     expect(result).toEqual(router.parseUrl('/login'));
   });
+
+  it('undefined_then_loadMe_populates_user_allows', async () => {
+    const userSignal = signal<AuthUser | null | undefined>(undefined);
+    const loadMe = vi.fn().mockImplementation(() => {
+      userSignal.set({ displayName: 'Bob', email: 'bob@example.com' });
+      return Promise.resolve();
+    });
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'login', children: [] }]),
+        { provide: AuthService, useValue: { user: userSignal, loadMe } },
+      ],
+    });
+
+    const result = await TestBed.runInInjectionContext(() =>
+      authGuard(fakeRoute(), fakeState()),
+    );
+
+    expect(loadMe).toHaveBeenCalledOnce();
+    expect(result).toBe(true);
+  });
 });
