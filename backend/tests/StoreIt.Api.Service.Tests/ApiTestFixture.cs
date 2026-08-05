@@ -83,9 +83,12 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
     }
 
     /// <summary>
-    /// A client authenticated as <paramref name="subject"/> via the "Test" scheme.
-    /// The request headers drive <see cref="TestAuthHandler"/>, which provisions the
-    /// user and stamps the sub_local claim — exercising real provisioning.
+    /// A client authenticated as <paramref name="subject"/> via the "Test" scheme,
+    /// pre-primed with a valid CSRF token pair so existing mutation tests pass without
+    /// any change. The client calls <c>GET /auth/csrf</c> to obtain the double-submit
+    /// cookies, then sets the JS-readable token as the default <c>X-XSRF-TOKEN</c>
+    /// header. The antiforgery HttpOnly cookie is managed automatically by the
+    /// <see cref="HttpClient"/>'s <see cref="System.Net.CookieContainer"/>.
     /// </summary>
     public HttpClient CreateClientAs(
         string subject,
@@ -108,7 +111,39 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         {
             client.DefaultRequestHeaders.Add("X-Test-Name", name);
         }
+
+        // SPEC-003 (Task 8a): prime the client with a CSRF token pair so mutation
+        // requests carry both the antiforgery cookie (auto-managed by the CookieContainer)
+        // and the X-XSRF-TOKEN header expected by the endpoint filter.
+        PrimeCsrfAsync(client).GetAwaiter().GetResult();
+
         return client;
+    }
+
+    /// <summary>
+    /// Calls <c>GET /auth/csrf</c>, reads the <c>XSRF-TOKEN</c> response cookie, and
+    /// sets it as the default <c>X-XSRF-TOKEN</c> header on <paramref name="client"/>.
+    /// The antiforgery (HttpOnly) cookie is retained automatically by the CookieContainer.
+    /// </summary>
+    private static async Task PrimeCsrfAsync(HttpClient client)
+    {
+        var csrfResponse = await client.GetAsync("/auth/csrf");
+        csrfResponse.EnsureSuccessStatusCode();
+
+        // The XSRF-TOKEN cookie is JS-readable (HttpOnly=false) and holds the request
+        // token. Extract it from the Set-Cookie header and echo it as the CSRF header.
+        if (
+            csrfResponse.Headers.TryGetValues("Set-Cookie", out var setCookies)
+            && setCookies.FirstOrDefault(c => c.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal))
+                is { } xsrfCookieLine
+        )
+        {
+            // Cookie line format: "XSRF-TOKEN=<value>; path=/; ..."
+            var tokenValue = xsrfCookieLine
+                .Split(';')[0]
+                .Split('=', 2)[1];
+            client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", tokenValue);
+        }
     }
 
     async Task IAsyncLifetime.DisposeAsync()

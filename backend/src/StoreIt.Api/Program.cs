@@ -16,6 +16,11 @@ builder.Services.AddStoreItAuthentication(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
+// SPEC-003 (Task 8a): double-submit CSRF protection for cookie-authenticated mutations.
+// The SPA reads the JS-readable XSRF-TOKEN cookie (set by GET /auth/csrf) and echoes it
+// back as the X-XSRF-TOKEN request header; the antiforgery middleware validates the pair.
+builder.Services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
+
 builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter())
 );
@@ -42,6 +47,12 @@ app.UseExceptionHandler();
 // below opt out explicitly with .AllowAnonymous().
 app.UseAuthentication();
 app.UseAuthorization();
+// SPEC-003 (Task 8a): CSRF middleware after auth so it can access the user context.
+// Mutation endpoints validate the double-submit token pair via an endpoint filter
+// (see StorageEndpoints); the middleware itself is placed here for correctness but
+// ValidateRequestAsync is called per-endpoint rather than globally, so GET/HEAD/HEAD
+// requests and anonymous endpoints (auth, health) are unaffected.
+app.UseAntiforgery();
 
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapOpenApi().AllowAnonymous();
