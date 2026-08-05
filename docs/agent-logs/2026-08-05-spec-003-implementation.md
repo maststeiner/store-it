@@ -49,3 +49,9 @@ Notable controller decisions (recorded in the ledger):
 - Deferred minors (see ledger): OpenAPI 403/404 over-declared on GET endpoints (conservative); a few frontend cosmetic/style items and negative-path test gaps. None load-bearing.
 - E2E execution and the OIDC callback path are validated in CI (full stack), not locally.
 - Data & compliance (KAIFe §7): only synthetic identities used (`e2e@store-it.local`, issuer `dev`); OIDC secrets are empty in `appsettings.json` and come from the environment.
+
+## Local runtime verification + post-review hardening
+
+Ran the real backend (Development, Podman Postgres) and drove the HTTP surface with `curl`: anonymous `/api/v1/**` → 401, `/health` → 200, `POST /auth/dev-login` → session with a real JIT-provisioned user, `GET /auth/me` → profile, mutation without CSRF token → 403, mutation with session+token → 201 (owner stamped), list → only the owner's storage. All as specified.
+
+**Finding fixed in-branch (commit `d4c99bf`):** with unconfigured OIDC (empty `ClientId`, the appsettings default), the OIDC handler threw on every request — `/health` returned 500. Fix: register each OIDC provider only when its `ClientId` is non-empty, and return `400 auth.provider.unconfigured` for a login attempt to an unconfigured provider. `/health` and the app now boot resiliently without OIDC secrets (a k8s liveness probe no longer cascades on an auth misconfig). Regression test `NoOidcConfigTests` added; re-verified at runtime (`/health` → 200 with empty config). Backend service suite: 62/62.
