@@ -12,7 +12,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
 // SPEC-003: BFF cookie session + per-provider OIDC challenge schemes.
-builder.Services.AddStoreItAuthentication(builder.Configuration);
+builder.Services.AddStoreItAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
