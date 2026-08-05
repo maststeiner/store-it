@@ -74,7 +74,22 @@
     "Liter": "l",
     "Pack": "conf."
   },
+  "auth": {
+    "login": {
+      "title": "Accedi a store-it",
+      "subtitle": "Scegli il tuo provider di identità per continuare.",
+      "microsoft": "Accedi con Microsoft",
+      "google": "Accedi con Google"
+    },
+    "session": {
+      "signedInAs": "Accesso effettuato come {{name}}",
+      "logout": "Esci"
+    }
+  },
   "errors": {
+    "auth": {
+      "sessionExpired": "La tua sessione è scaduta. Accedi di nuovo."
+    },
     "generic": "Qualcosa è andato storto. Riprova.",
     "storage": {
       "name": {

@@ -19,6 +19,14 @@
         <option [value]="lang">{{ 'languages.' + lang | translate }}</option>
       }
     </select>
+    @if (auth.user(); as u) {
+      <span class="session-user">{{
+        'auth.session.signedInAs' | translate: { name: (u.displayName ?? u.email) ?? '' }
+      }}</span>
+      <button class="btn btn-secondary btn-sm" type="button" (click)="auth.logout()">
+        {{ 'auth.session.logout' | translate }}
+      </button>
+    }
   </div>
 </header>
 
