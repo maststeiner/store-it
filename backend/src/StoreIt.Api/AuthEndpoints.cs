@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Extensions.Configuration;
 
 namespace StoreIt.Api;
 
@@ -17,20 +18,35 @@ public static class AuthEndpoints
 
         auth.MapGet(
                 "/login/{provider}",
-                (string provider, string? returnUrl, HttpContext http) =>
+                (string provider, string? returnUrl, HttpContext http, IConfiguration config) =>
                 {
                     // Allowlist the provider to a fixed scheme BEFORE challenge — the raw
                     // path segment never reaches the auth system (400 for anything else).
                     var scheme = provider.ToLowerInvariant() switch
                     {
                         "microsoft" => AuthenticationSetup.MicrosoftScheme,
-                        "google" => AuthenticationSetup.GoogleScheme,
-                        _ => null,
+                        "google"    => AuthenticationSetup.GoogleScheme,
+                        _           => null,
                     };
                     if (scheme is null)
                     {
                         return Results.BadRequest(
                             new { errorCode = "auth.provider.unsupported" }
+                        );
+                    }
+
+                    // Guard against challenging a scheme that was never registered.
+                    // AuthenticationSetup skips OIDC providers with an empty ClientId, so
+                    // ChallengeAsync on a missing scheme would throw; return 400 instead.
+                    // clientIdKey is always non-null here: the scheme-null branch above
+                    // returns early, so the _ arm is unreachable.
+                    var clientIdKey = scheme == AuthenticationSetup.MicrosoftScheme
+                        ? "Authentication:Microsoft:ClientId"
+                        : "Authentication:Google:ClientId";
+                    if (string.IsNullOrEmpty(config[clientIdKey]))
+                    {
+                        return Results.BadRequest(
+                            new { errorCode = "auth.provider.unconfigured" }
                         );
                     }
 

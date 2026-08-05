@@ -33,7 +33,7 @@ public static class AuthenticationSetup
         IWebHostEnvironment env
     )
     {
-        services.AddAuthentication(options =>
+        var builder = services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieScheme;
                 // Route bare ChallengeAsync() to the cookie scheme so the
@@ -53,15 +53,28 @@ public static class AuthenticationSetup
                 options.Events.OnRedirectToAccessDenied = ReturnStatus(
                     StatusCodes.Status403Forbidden
                 );
-            })
-            .AddOpenIdConnect(
+            });
+
+        // Register each OIDC provider only when its ClientId is present. An empty
+        // ClientId at startup causes AddOpenIdConnect to throw ArgumentException on
+        // every request (including /health) — making app health depend on auth config.
+        // With no provider registered the app still boots and serves all non-OIDC
+        // endpoints; /auth/login/{provider} returns 400 for unconfigured providers.
+        if (!string.IsNullOrEmpty(configuration["Authentication:Microsoft:ClientId"]))
+        {
+            builder.AddOpenIdConnect(
                 MicrosoftScheme,
                 options => ConfigureOidc(options, configuration.GetSection("Authentication:Microsoft"), env)
-            )
-            .AddOpenIdConnect(
+            );
+        }
+
+        if (!string.IsNullOrEmpty(configuration["Authentication:Google:ClientId"]))
+        {
+            builder.AddOpenIdConnect(
                 GoogleScheme,
                 options => ConfigureOidc(options, configuration.GetSection("Authentication:Google"), env)
             );
+        }
 
         // Secure-by-default (SPEC-003 ownership cutover): every endpoint requires an
         // authenticated user unless it opts out with .AllowAnonymous() (the /auth group,
