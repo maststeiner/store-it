@@ -2,7 +2,7 @@
 
 > **Owner:** Marcel Steiner (Architecture / Security Stewardship)
 > **Scope:** the store-it application, its repository, and its CI/CD supply chain
-> **Last updated:** 2026-07-28
+> **Last updated:** 2026-08-05
 
 This is a living risk register. Its purpose is not to list tools, but to name the
 risks store-it must cover — and make explicit **which control addresses which risk**
@@ -22,7 +22,7 @@ and **which risks nothing covers yet**. store-it is a public GitHub repository
 | R-03 | SQL injection | H | L | EF Core parameterized queries only; no string-built SQL | ✅ |
 | R-04 | Sensitive data in logs / error responses | M | M | Structured logs to stdout; domain exceptions mapped to sanitized responses (`DomainExceptionHandler`); no PII in test data (synthetic-only policy) | 🟡 |
 | R-05 | Secrets committed to the repo | H | M | Env-based config (12-factor); no secrets in repo; Trivy secret scan (independent detective control); PreToolUse guardrails deny agents secret-file access (best-effort / fail-open — see note) | 🟡 |
-| R-06 | Broken access control / no authn-authz | H | H | **Not yet addressed** — store-it has no user/auth concept. Deferred to ADR-004 (identity/auth). Until then the app is single-tenant/unauthenticated by design | ⚪ |
+| R-06 | Broken access control / no authn-authz | H | H | Single-owner BFF auth implemented: cookie session (OIDC via Microsoft/Google), ownership query filter (EF global filter on `OwnerId`), `RequireAuthorization` on all storages/items endpoints, CSRF double-submit protection (403 on failure), 401 for unauthenticated access, cross-user by-id returns 404 (no data leak). ADR-004 + SPEC-003. Fine-grained sharing still deferred. | ✅ |
 | R-07 | Denial of service (resource exhaustion) | M | L | No app-level rate limiting yet; owner concern at the ingress/hosting layer (ADR-005) | ⚪ |
 | R-08 | CORS / API surface misconfiguration | M | L | API surface is explicit (minimal APIs, typed contracts); revisit CORS with the first real client deployment | 🟡 |
 
@@ -57,7 +57,7 @@ store-it is built with AI agents (KAIFe L4). That adds a risk class most threat 
 Some concerns are the operator's, not the app's — store-it's job is to **not block** them:
 
 - **At-rest / in-transit encryption** — provided by the hosting/DB layer (ADR-005 pending).
-- **Auth & fine-grained authorization** — deferred to ADR-004; no user concept exists yet.
+- **Fine-grained authorization (sharing)** — single-owner auth is implemented (SPEC-003/ADR-004); multi-user sharing/delegation remains deferred.
 - **DoS / rate limiting / WAF** — expected at the ingress layer (ADR-005).
 - **Secret management / rotation** — env-injected at deploy time; the repo only guarantees no secret is committed.
 - **Guardrail hooks are best-effort, not absolute.** The PreToolUse hooks (R-05, R-20) are **fail-open** by design — a hook failure, an unmatched pattern, or a session that never loads them all permit the action. They lower risk; they do not guarantee it. The real backstops are the independent controls: Trivy secret scanning, human review (Gate G2), and least-privilege CI.
