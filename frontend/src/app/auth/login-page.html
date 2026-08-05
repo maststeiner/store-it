@@ -1,0 +1,12 @@
+<div class="login-page">
+  <h1>{{ 'auth.login.title' | translate }}</h1>
+  <p>{{ 'auth.login.subtitle' | translate }}</p>
+  <div class="login-actions">
+    <button class="btn btn-primary" type="button" (click)="auth.login('microsoft')">
+      {{ 'auth.login.microsoft' | translate }}
+    </button>
+    <button class="btn btn-secondary" type="button" (click)="auth.login('google')">
+      {{ 'auth.login.google' | translate }}
+    </button>
+  </div>
+</div>

@@ -74,7 +74,22 @@
     "Liter": "l",
     "Pack": "paquet"
   },
+  "auth": {
+    "login": {
+      "title": "Se connecter à store-it",
+      "subtitle": "Choisissez votre fournisseur d'identité pour continuer.",
+      "microsoft": "Se connecter avec Microsoft",
+      "google": "Se connecter avec Google"
+    },
+    "session": {
+      "signedInAs": "Connecté en tant que {{name}}",
+      "logout": "Se déconnecter"
+    }
+  },
   "errors": {
+    "auth": {
+      "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter."
+    },
     "generic": "Une erreur est survenue. Veuillez réessayer.",
     "storage": {
       "name": {

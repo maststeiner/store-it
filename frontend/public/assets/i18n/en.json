@@ -74,7 +74,22 @@
     "Liter": "l",
     "Pack": "pack"
   },
+  "auth": {
+    "login": {
+      "title": "Sign in to store-it",
+      "subtitle": "Choose your identity provider to continue.",
+      "microsoft": "Sign in with Microsoft",
+      "google": "Sign in with Google"
+    },
+    "session": {
+      "signedInAs": "Signed in as {{name}}",
+      "logout": "Sign out"
+    }
+  },
   "errors": {
+    "auth": {
+      "sessionExpired": "Your session has expired. Please sign in again."
+    },
     "generic": "Something went wrong. Please try again.",
     "storage": {
       "name": {

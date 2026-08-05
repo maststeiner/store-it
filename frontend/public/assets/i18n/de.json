@@ -74,7 +74,22 @@
     "Liter": "l",
     "Pack": "Packung"
   },
+  "auth": {
+    "login": {
+      "title": "Bei store-it anmelden",
+      "subtitle": "Identity-Provider auswählen, um fortzufahren.",
+      "microsoft": "Mit Microsoft anmelden",
+      "google": "Mit Google anmelden"
+    },
+    "session": {
+      "signedInAs": "Angemeldet als {{name}}",
+      "logout": "Abmelden"
+    }
+  },
   "errors": {
+    "auth": {
+      "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte erneut anmelden."
+    },
     "generic": "Etwas ist schiefgelaufen. Bitte erneut versuchen.",
     "storage": {
       "name": {
