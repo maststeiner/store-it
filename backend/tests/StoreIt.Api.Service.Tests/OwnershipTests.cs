@@ -15,10 +15,18 @@ public class OwnershipTests(ApiTestFixture factory) : IClassFixture<ApiTestFixtu
 {
     private static readonly DateOnly Today = ApiTestFixture.Today;
 
-    // Distinct subjects → distinct provisioned users → distinct owners.
-    private HttpClient AlfredsClient => factory.CreateClientAs("owner-alfred");
+    // Distinct subjects → distinct provisioned users → distinct owners. Cached (lazy):
+    // each client is created once per test class. Expression-bodied properties would
+    // re-create the client — and re-run the /auth/csrf priming + user provisioning — on
+    // every access, so two references to "AlfredsClient" would otherwise be two owners.
+    private HttpClient? _alfredsClient;
+    private HttpClient? _bettysClient;
 
-    private HttpClient BettysClient => factory.CreateClientAs("owner-betty");
+    private HttpClient AlfredsClient =>
+        _alfredsClient ??= factory.CreateClientAs("owner-alfred");
+
+    private HttpClient BettysClient =>
+        _bettysClient ??= factory.CreateClientAs("owner-betty");
 
     // --- Anonymous is rejected before it reaches a handler (fallback policy) ---
 
@@ -46,8 +54,30 @@ public class OwnershipTests(ApiTestFixture factory) : IClassFixture<ApiTestFixtu
         Assert.DoesNotContain(alfredsList, s => s.Id == bettysStorage.Id);
     }
 
-    // --- By-id writes on another user's storage 404 (no GET /storages/{id} in SPEC-001,
-    //     so exercise the cross-user path via PUT rename and DELETE) ---
+    // --- By-id reads on another user's storage 404 (IDOR guard) ---
+
+    [Fact]
+    public async Task GetById_OnAnotherUsersStorage_Returns404()
+    {
+        var bettysStorage = await BettysClient.CreateStorageAsync("Betty's Attic");
+
+        // Betty can read her own storage by id.
+        var bettysOwn = await BettysClient.GetStorageAsync(bettysStorage.Id);
+        Assert.Equal(bettysStorage.Id, bettysOwn.Id);
+
+        // Alfred requesting Betty's storage by id must see a 404 — the query filter makes
+        // it invisible, so its existence never leaks (no 403 distinguishing found-but-
+        // forbidden from not-found).
+        var alfredResponse = await AlfredsClient.GetAsync(
+            $"/api/v1/storages/{bettysStorage.Id}"
+        );
+        Assert.Equal(HttpStatusCode.NotFound, alfredResponse.StatusCode);
+        Assert.Equal("storage.notFound", await alfredResponse.ReadErrorCodeAsync());
+        await alfredResponse.AssertNoStorageDataAsync();
+    }
+
+    // --- By-id writes on another user's storage 404 (getStorage exists, but the query
+    //     filter also hides the resource from cross-user PUT rename and DELETE) ---
 
     [Fact]
     public async Task ByIdWrite_OnAnotherUsersStorage_Returns404()

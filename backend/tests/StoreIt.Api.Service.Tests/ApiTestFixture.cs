@@ -132,18 +132,26 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
         // The XSRF-TOKEN cookie is JS-readable (HttpOnly=false) and holds the request
         // token. Extract it from the Set-Cookie header and echo it as the CSRF header.
+        // Fail fast if it is missing: without the token every subsequent mutation would
+        // 403, and the failure would surface far from its cause. Assert the priming
+        // contract here so a regression in GET /auth/csrf points straight at the source.
         if (
-            csrfResponse.Headers.TryGetValues("Set-Cookie", out var setCookies)
-            && setCookies.FirstOrDefault(c => c.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal))
-                is { } xsrfCookieLine
+            !csrfResponse.Headers.TryGetValues("Set-Cookie", out var setCookies)
+            || setCookies.FirstOrDefault(c =>
+                c.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal)
+            )
+                is not { } xsrfCookieLine
         )
         {
-            // Cookie line format: "XSRF-TOKEN=<value>; path=/; ..."
-            var tokenValue = xsrfCookieLine
-                .Split(';')[0]
-                .Split('=', 2)[1];
-            client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", tokenValue);
+            throw new InvalidOperationException(
+                "CSRF priming failed: GET /auth/csrf did not set an XSRF-TOKEN cookie. "
+                    + "Mutation tests would then fail with unrelated 403s."
+            );
         }
+
+        // Cookie line format: "XSRF-TOKEN=<value>; path=/; ..."
+        var tokenValue = xsrfCookieLine.Split(';')[0].Split('=', 2)[1];
+        client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", tokenValue);
     }
 
     async Task IAsyncLifetime.DisposeAsync()

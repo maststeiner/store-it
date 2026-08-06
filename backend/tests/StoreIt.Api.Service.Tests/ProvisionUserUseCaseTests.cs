@@ -19,6 +19,9 @@ public sealed class ProvisionUserUseCaseTests
         private bool _throwOnNextSave;
         private User? _winnerAfterRace;
 
+        /// <summary>Number of successful <see cref="SaveChangesAsync"/> calls.</summary>
+        public int SaveCount { get; private set; }
+
         /// <summary>
         /// Configure the repo to throw <see cref="UserAlreadyExistsException"/> on the next
         /// <see cref="SaveChangesAsync"/> call, then return <paramref name="winner"/> on the
@@ -56,6 +59,7 @@ public sealed class ProvisionUserUseCaseTests
                 throw new UserAlreadyExistsException();
             }
 
+            SaveCount++;
             return Task.CompletedTask;
         }
     }
@@ -71,7 +75,7 @@ public sealed class ProvisionUserUseCaseTests
     // ──────────────────────────────── tests ──────────────────────────────────
 
     [Fact]
-    public async Task FirstLogin_CreatesUser()
+    public async Task ExecuteAsync_FirstLogin_CreatesUser()
     {
         var (useCase, _, _) = Build();
 
@@ -90,7 +94,7 @@ public sealed class ProvisionUserUseCaseTests
     }
 
     [Fact]
-    public async Task SecondLogin_ReusesUserAndRefreshesProfile()
+    public async Task ExecuteAsync_SecondLogin_ReusesUserAndRefreshesProfile()
     {
         var (useCase, repo, _) = Build();
 
@@ -101,6 +105,7 @@ public sealed class ProvisionUserUseCaseTests
             email: "alice@example.com",
             displayName: "Alice",
             cancellationToken: default);
+        var savesAfterFirst = repo.SaveCount;
 
         // Second login with updated profile fields
         var second = await useCase.ExecuteAsync(
@@ -113,10 +118,14 @@ public sealed class ProvisionUserUseCaseTests
         Assert.Equal(first.Id, second.Id);
         Assert.Equal("alice-new@example.com", second.Email);
         Assert.Equal("Alice Updated", second.DisplayName);
+        // The fake returns the stored instance, so equal fields alone cannot prove the
+        // update path ran. Assert the second login actually persisted (SaveChangesAsync
+        // called again) — that is what the "refresh profile" behaviour hinges on.
+        Assert.Equal(savesAfterFirst + 1, repo.SaveCount);
     }
 
     [Fact]
-    public async Task DifferentIssuers_ProduceSeparateUsers()
+    public async Task ExecuteAsync_DifferentIssuers_ProduceSeparateUsers()
     {
         var (useCase, _, _) = Build();
 
@@ -140,7 +149,7 @@ public sealed class ProvisionUserUseCaseTests
     }
 
     [Fact]
-    public async Task ConcurrentFirstLogin_WhenInsertRaces_ReturnsWinner()
+    public async Task ExecuteAsync_ConcurrentFirstLogin_WhenInsertRaces_ReturnsWinner()
     {
         var (useCase, repo, clock) = Build();
 
