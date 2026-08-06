@@ -47,7 +47,11 @@ public static class AuthenticationSetup
             {
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.Lax;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                // Relax to SameAsRequest in Development so the cookie is sent over
+                // http://localhost. In all other environments the cookie stays Secure.
+                options.Cookie.SecurePolicy = env.IsDevelopment()
+                    ? CookieSecurePolicy.SameAsRequest
+                    : CookieSecurePolicy.Always;
                 // It's an API, not an MVC app: never redirect to a login/denied page.
                 options.Events.OnRedirectToLogin = ReturnStatus(StatusCodes.Status401Unauthorized);
                 options.Events.OnRedirectToAccessDenied = ReturnStatus(
