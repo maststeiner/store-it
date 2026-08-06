@@ -66,4 +66,33 @@ describe('authInterceptor', () => {
     expect(req.request.headers.get('X-XSRF-TOKEN')).toBe('test-csrf-token');
     req.flush({ id: 's1', name: 'Pantry' });
   });
+
+  it('fetches_csrf_then_attaches_when_cookie_absent_on_post', async () => {
+    // No XSRF-TOKEN cookie yet (simulates a mutation issued before/without CSRF init).
+    expect(document.cookie.includes('XSRF-TOKEN=')).toBe(false);
+
+    let completed = false;
+    http
+      .post('/api/v1/storages', { name: 'Pantry' })
+      .subscribe({ next: () => (completed = true), error: () => undefined });
+
+    // The interceptor must first fetch a token via GET /auth/csrf. Flushing it plants
+    // the cookie the same way the real endpoint does (JS-readable XSRF-TOKEN cookie).
+    const csrfReq = ctrl.expectOne('/auth/csrf');
+    expect(csrfReq.request.method).toBe('GET');
+    document.cookie = 'XSRF-TOKEN=fetched-token; path=/';
+    csrfReq.flush(null);
+
+    // initCsrf resolves a promise; drain the microtask queue so switchMap fires the
+    // original POST before we assert on it.
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Then the original POST proceeds, now carrying the freshly-fetched token.
+    const postReq = ctrl.expectOne('/api/v1/storages');
+    expect(postReq.request.headers.get('X-XSRF-TOKEN')).toBe('fetched-token');
+    postReq.flush({ id: 's1', name: 'Pantry' });
+
+    expect(completed).toBe(true);
+  });
 });
