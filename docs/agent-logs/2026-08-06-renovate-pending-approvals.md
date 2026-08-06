@@ -13,8 +13,9 @@
 ## Task
 
 Explain why Renovate showed pending approvals without opening PRs, then make the
-behaviour explicit in `renovate.json`. Follow-up instruction during the run: run
-nightly instead of weekly.
+behaviour explicit in `renovate.json`. Follow-up instruction during the run: update
+nightly instead of weekly — which in Renovate terms means a nightly branch-creation
+window, since `schedule` does not set how often the hosted app runs.
 
 ## Findings (what was verified, not assumed)
 
@@ -67,7 +68,9 @@ invisible inherited config:
   control stays where it belongs: majors never automerge, and holds use `allowedVersions`
   — PR *creation* is not the control point.
 - `timezone: "Europe/Zurich"` — the cron windows are local now.
-- `schedule:weekly` → `schedule:daily` (cron `* 0-3 * * *`) — nightly, per the
+- `schedule:weekly` → `schedule:daily` (cron `* 0-3 * * *`) — a nightly **branch-creation
+  window** rather than a weekly one (`schedule` gates branch/PR creation, not how often
+  Renovate runs), per the
   orchestrator's follow-up. `prConcurrentLimit: 3` is unchanged: it caps how many Renovate
   PRs are open **at once** (aligned with the WIP limit), not how many updates a run
   processes.
@@ -87,12 +90,19 @@ does not have to reconstruct this.
 
 ## Open verification (deliberately stated, not glossed over)
 
-Whether this actually fixes it is only observable after Renovate's next nightly run:
+`schedule` does not control **when Renovate runs** — the hosted app runs on its own cadence
+(the evidence table shows bot activity at 2026-08-03 20:04 UTC, far outside the then-current
+Monday window). It controls **when Renovate may create or update branches and PRs**. So
+"nightly" here means a nightly *branch-creation window*, and the two expectations below have
+different timing:
 
-1. A **Dependency Dashboard** issue should appear in the repo.
-2. Updates previously stuck in "pending approval" should become branches/PRs — at most 3
-   open at a time, since `prConcurrentLimit` caps concurrent open PRs; the rest follow as
-   those merge.
+1. A **Dependency Dashboard** issue should appear at the next Renovate run, whenever that
+   is — creating it is not a branch operation and so is not gated by the window. If it has
+   not appeared within a day, the window is not the explanation and the Mend run log is.
+2. Updates previously stuck in "pending approval" should become branches/PRs during the
+   next run that falls **inside** the window (00:00–03:59 `Europe/Zurich`) — at most 3 open
+   at a time, since `prConcurrentLimit` caps concurrent open PRs; the rest follow as those
+   merge.
 
 If neither happens, the pending-approval state has a source outside everything reachable
 from GitHub (see the diagnosis — it is a hypothesis, not a finding), and the answer is in
@@ -109,6 +119,7 @@ required"). That page is not reachable from the agent sandbox.
 | 2 | Chose "state the intent explicitly" over "read the Mend log first" | Fixes the ambiguity in the repo regardless of what the app side is set to |
 | 3 | *"zusätzlich noch öfters laufen lassen, am besten täglich in der nacht"* | Weekly latency was too slow — schedule changed to `schedule:daily` mid-run, and the timezone pin makes "at night" mean local night |
 | 4 | CodeRabbit review on this PR raised 3 minor findings, **all valid, all fixed** | (a) The inherited-config check looked at `maststeiner/.github` instead of Renovate's actual default `{{parentOrg}}/renovate-config/org-inherited-config.json` — the 404 therefore proved nothing. Re-checked (also 404; and the account is a `User`, so `{{parentOrg}}` does not resolve), and the diagnosis is downgraded from finding to hypothesis. (b) `docs/SETUP.md` §4a still said "weekly" — updated, plus an open item for the missing dashboard. This one also exposed a process error: the PR's "docs updated" box was ticked on the claim that no doc mentioned Renovate, without grepping `docs/` for it. (c) `prConcurrentLimit` was described as capping updates per run; it caps concurrently open PRs — corrected in `renovate.json` and here. |
+| 5 | Second CodeRabbit pass: `schedule` was described as controlling *when Renovate runs* | Valid and fixed. `schedule` gates branch/PR creation only; the hosted app's run cadence is its own — which this log's own evidence already showed (bot activity 2026-08-03 20:04 UTC, outside the Monday window) without the wording being corrected. "Nightly" now consistently means a nightly branch-creation window in `renovate.json`, `docs/SETUP.md` and here, and the two open verifications are separated by timing: the dashboard is not window-gated, PR creation is. |
 
 ## Outcome
 
