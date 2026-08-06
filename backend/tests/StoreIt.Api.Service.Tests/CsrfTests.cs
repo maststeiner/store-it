@@ -27,24 +27,56 @@ public class CsrfTests(ApiTestFixture factory) : IClassFixture<ApiTestFixture>
     }
 
     /// <summary>
-    /// A POST with a syntactically valid X-XSRF-TOKEN that does NOT match the
-    /// antiforgery cookie must be rejected with 403 Forbidden.
+    /// A POST with a structurally-valid X-XSRF-TOKEN that belongs to a DIFFERENT
+    /// antiforgery session (different cookie) must be rejected with 403 Forbidden.
+    /// This exercises the true mismatch path — the token parses fine but does not match
+    /// this session's cookie — distinct from the missing-token test, which fails earlier
+    /// at token parsing. A well-formed foreign token is obtained from a second,
+    /// independent GET /auth/csrf.
     /// </summary>
     [Fact]
     public async Task Post_WithMismatchedCsrfToken_Returns403()
     {
-        // Obtain a real antiforgery cookie via /auth/csrf, then override the header
-        // with a different (mismatched) token value — simulating a CSRF attack where
-        // the attacker guesses/forges the header but cannot read the HttpOnly cookie.
-        var client = factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-Test-Subject", "csrf-test-mismatch");
+        // Session A: obtain its own antiforgery cookie via /auth/csrf, but keep A's own
+        // header token unset — we will attach a foreign one below.
+        var clientA = factory.CreateClient();
+        clientA.DefaultRequestHeaders.Add("X-Test-Subject", "csrf-test-mismatch-a");
+        await clientA.GetAsync("/auth/csrf");
 
-        // Prime only the cookies (call /auth/csrf) but supply a wrong header value.
-        await client.GetAsync("/auth/csrf");
-        client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", "not-the-real-token");
+        // Session B: a completely independent client → a different antiforgery cookie and
+        // thus a different-but-well-formed request token.
+        var clientB = factory.CreateClient();
+        clientB.DefaultRequestHeaders.Add("X-Test-Subject", "csrf-test-mismatch-b");
+        var foreignToken = await GetXsrfTokenAsync(clientB);
 
-        var response = await client.PostAsJsonAsync("/api/v1/storages", new { name = "Vault" });
+        // Attach B's valid token to A's request: it parses, but validates against A's
+        // cookie and mismatches → 403 (a true CSRF rejection, not a parse failure).
+        clientA.DefaultRequestHeaders.Add("X-XSRF-TOKEN", foreignToken);
+
+        var response = await clientA.PostAsJsonAsync("/api/v1/storages", new { name = "Vault" });
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    /// <summary>
+    /// Calls GET /auth/csrf on <paramref name="client"/> and returns the JS-readable
+    /// XSRF-TOKEN request token from the Set-Cookie header.
+    /// </summary>
+    private static async Task<string> GetXsrfTokenAsync(HttpClient client)
+    {
+        var response = await client.GetAsync("/auth/csrf");
+        response.EnsureSuccessStatusCode();
+
+        Assert.True(
+            response.Headers.TryGetValues("Set-Cookie", out var setCookies),
+            "GET /auth/csrf did not set any cookie."
+        );
+        var xsrfCookieLine = setCookies.FirstOrDefault(c =>
+            c.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal)
+        );
+        Assert.NotNull(xsrfCookieLine);
+
+        // Cookie line format: "XSRF-TOKEN=<value>; path=/; ..."
+        return xsrfCookieLine.Split(';')[0].Split('=', 2)[1];
     }
 }
