@@ -1,7 +1,16 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", "schedule:weekly"],
+  "extends": ["config:recommended", "schedule:daily"],
+  "description": [
+    "Repo config is the source of truth for Renovate's behaviour: the hosted Mend app also merges an org-level inherited config we cannot see from the repository, and repo config wins. The dashboard and approval keys below are therefore set explicitly rather than left to defaults, so the state is readable from this file alone.",
+    "dependencyDashboard: config:recommended already implies it via :dependencyDashboard, but no dashboard issue ever appeared in this repo — stating it makes a missing dashboard a real signal instead of an ambiguity.",
+    "dependencyDashboardApproval: false — updates must not wait for a checkbox tick. Human control over what lands is exercised through review (major updates never automerge, see packageRules) and through holds like allowedVersions, not by gating PR creation. Without a dashboard issue an approval gate is also unsatisfiable.",
+    "schedule:daily + timezone: nightly instead of weekly, so an update waits hours rather than up to a week. schedule:daily resolves to cron '* 0-3 * * *' and the previous schedule:weekly to '* 0-3 * * 1'; both are UTC unless a timezone is set, which had put the window at 02:00-06:00 local in summer. Europe/Zurich makes 'at night' mean night here. prConcurrentLimit still caps how much lands per run."
+  ],
+  "timezone": "Europe/Zurich",
   "baseBranches": ["develop"],
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": false,
   "prConcurrentLimit": 3,
   "labels": ["dependencies"],
   "packageRules": [
