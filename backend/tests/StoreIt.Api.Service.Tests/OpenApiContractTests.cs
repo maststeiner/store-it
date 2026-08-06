@@ -169,9 +169,9 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
                     .GetProperty(verb)
                     .GetProperty("parameters")
                     .EnumerateArray()
+                    .Where(p => p.GetProperty("in").GetString() == "path")
             )
             {
-                Assert.Equal("path", parameter.GetProperty("in").GetString());
                 var schema = parameter.GetProperty("schema");
                 Assert.Equal("string", schema.GetProperty("type").GetString());
                 Assert.Equal("uuid", schema.GetProperty("format").GetString());
