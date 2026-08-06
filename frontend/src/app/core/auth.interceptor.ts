@@ -1,7 +1,7 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { Observable, catchError, from, switchMap, throwError } from 'rxjs';
 
 import { AuthService } from './auth.service';
 
@@ -20,7 +20,20 @@ function readXsrfToken(): string | null {
 }
 
 /**
+ * Attaches the `X-XSRF-TOKEN` header to a request from the current cookie value.
+ * Returns the request unchanged when no token cookie is present.
+ */
+function withXsrfHeader<T>(req: HttpRequest<T>): HttpRequest<T> {
+  const token = readXsrfToken();
+  return token ? req.clone({ setHeaders: { 'X-XSRF-TOKEN': token } }) : req;
+}
+
+/**
  * - Attaches `X-XSRF-TOKEN` to mutating requests (POST/PUT/DELETE/PATCH).
+ *   If the XSRF-TOKEN cookie is missing (e.g. the app issued a mutation before the
+ *   startup `GET /auth/csrf` completed, or that call failed), it fetches a token first
+ *   (awaiting `AuthService.initCsrf()`) and then attaches the freshly-set cookie value —
+ *   so an early or post-failure mutation is not silently sent without CSRF protection.
  * - On 401 from any URL except `/auth/me`: clears the AuthService user signal
  *   and navigates to /login, then rethrows the error.
  */
@@ -28,26 +41,28 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  // Attach XSRF token for mutating requests.
-  let outReq = req;
-  if (MUTATING_METHODS.has(req.method)) {
-    const token = readXsrfToken();
-    if (token) {
-      outReq = req.clone({ setHeaders: { 'X-XSRF-TOKEN': token } });
+  const onError = (error: unknown): Observable<never> => {
+    if (
+      error instanceof HttpErrorResponse &&
+      error.status === 401 &&
+      !req.url.includes('/auth/me')
+    ) {
+      auth.user.set(null);
+      void router.navigateByUrl('/login');
     }
+    return throwError(() => error);
+  };
+
+  const isMutating = MUTATING_METHODS.has(req.method);
+
+  // For a mutation with no token cookie yet, fetch one first, then attach and proceed.
+  // Never recurse: the /auth/csrf GET itself is not a mutating request.
+  if (isMutating && readXsrfToken() === null) {
+    return from(auth.initCsrf()).pipe(
+      switchMap(() => next(withXsrfHeader(req)).pipe(catchError(onError))),
+    );
   }
 
-  return next(outReq).pipe(
-    catchError((error: unknown) => {
-      if (
-        error instanceof HttpErrorResponse &&
-        error.status === 401 &&
-        !req.url.includes('/auth/me')
-      ) {
-        auth.user.set(null);
-        void router.navigateByUrl('/login');
-      }
-      return throwError(() => error);
-    }),
-  );
+  const outReq = isMutating ? withXsrfHeader(req) : req;
+  return next(outReq).pipe(catchError(onError));
 };
