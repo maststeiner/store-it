@@ -55,9 +55,10 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 
 ## 4a. Renovate (dependency updates)
 
-- [x] `renovate.json` on `main`: weekly, PRs target `develop` only, prConcurrentLimit 3 (aligned with WIP limit).
+- [x] `renovate.json` on `main`: nightly (`schedule:daily` → cron `* 0-3 * * *`, timezone `Europe/Zurich`; was weekly until 2026-08-06), PRs target `develop` only, prConcurrentLimit 3 — max. 3 Renovate PRs open at once, aligned with the WIP limit.
 - [x] Automerge policy: minor/patch auto-merge after green gates (documented G3 exception); major → human review (label `major-update`).
-- [x] **[platform]** Renovate GitHub App installed (2026-07-14) — dependency dashboard + update PRs against develop.
+- [x] **[platform]** Renovate GitHub App installed (2026-07-14) — update PRs against develop.
+- [ ] **Dependency dashboard: never appeared** despite `config:recommended` implying it. `renovate.json` now states `dependencyDashboard: true` and `dependencyDashboardApproval: false` (2026-08-06) — verify after the next nightly run that the dashboard issue exists. If it still does not, check the run log at `developer.mend.io/github/maststeiner/store-it` (permissions / app-side config).
 - [x] Platform auto-merge enabled (repo setting) — Renovate can use GitHub auto-merge.
 
 ## 5. AI review & tooling **[platform]**
