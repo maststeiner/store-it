@@ -31,9 +31,7 @@ public static class AuthEndpoints
                     };
                     if (scheme is null)
                     {
-                        return Results.BadRequest(
-                            new { errorCode = "auth.provider.unsupported" }
-                        );
+                        return ProviderProblem("auth.provider.unsupported");
                     }
 
                     // Guard against challenging a scheme that was never registered.
@@ -46,9 +44,7 @@ public static class AuthEndpoints
                         : "Authentication:Google:ClientId";
                     if (string.IsNullOrEmpty(config[clientIdKey]))
                     {
-                        return Results.BadRequest(
-                            new { errorCode = "auth.provider.unconfigured" }
-                        );
+                        return ProviderProblem("auth.provider.unconfigured");
                     }
 
                     return Results.Challenge(
@@ -124,6 +120,18 @@ public static class AuthEndpoints
 
         return app;
     }
+
+    /// <summary>
+    /// A 400 ProblemDetails carrying a locale-neutral <paramref name="errorCode"/> (arc42
+    /// §8). Matches the app's ProblemDetails/error-code style so the response body conforms
+    /// to the endpoint's published <c>.ProducesProblem(400)</c> schema (clients translate).
+    /// </summary>
+    private static ProblemHttpResult ProviderProblem(string errorCode) =>
+        TypedResults.Problem(
+            statusCode: StatusCodes.Status400BadRequest,
+            title: errorCode,
+            extensions: new Dictionary<string, object?> { ["errorCode"] = errorCode }
+        );
 
     /// <summary>
     /// Open-redirect guard: only accept an app-local path (a single leading slash),
