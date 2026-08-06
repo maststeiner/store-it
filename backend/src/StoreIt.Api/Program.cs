@@ -35,6 +35,8 @@ builder.Services.AddOpenApi(
         options.AddSchemaTransformer<NumericSchemaTransformer>();
         options.AddSchemaTransformer<EnumSchemaTransformer>();
         options.AddOperationTransformer<RouteIdFormatTransformer>();
+        // SPEC-003: publish the BFF session security scheme + CSRF header contract.
+        options.AddDocumentTransformer<SecuritySchemeTransformer>();
     }
 );
 
