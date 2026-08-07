@@ -74,7 +74,7 @@ describe('AuthService', () => {
     expect(service.loadError()).toBe(true);
   });
 
-  it('logout_clears_and_redirects_even_on_error', async () => {
+  it('logout_Success_ClearsUserAndRedirectsToLogin', async () => {
     // Put the user in a signed-in state first.
     const loadPromise = service.loadMe();
     ctrl.expectOne('/auth/me').flush({ displayName: 'Bob', email: 'bob@example.com' });
@@ -85,12 +85,35 @@ describe('AuthService', () => {
     const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
 
     const logoutPromise = service.logout();
+    ctrl.expectOne('/auth/logout').flush(null, { status: 204, statusText: 'No Content' });
+    await logoutPromise;
+
+    expect(service.user()).toBeNull();
+    expect(navigateSpy).toHaveBeenCalledWith('/login');
+  });
+
+  it('logout_ServerError_KeepsSessionAndSurfacesError', async () => {
+    // Put the user in a signed-in state first.
+    const loadPromise = service.loadMe();
+    ctrl.expectOne('/auth/me').flush({ displayName: 'Bob', email: 'bob@example.com' });
+    await loadPromise;
+    expect(service.user()).not.toBeNull();
+
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    let caughtError: unknown;
+    const logoutPromise = service.logout().catch((e: unknown) => (caughtError = e));
     ctrl
       .expectOne('/auth/logout')
       .flush('error', { status: 500, statusText: 'Internal Server Error' });
     await logoutPromise;
 
-    expect(service.user()).toBeNull();
-    expect(navigateSpy).toHaveBeenCalledWith('/login');
+    // Session must NOT be cleared — the server session may still be active.
+    expect(service.user()).not.toBeNull();
+    // Must NOT redirect — the user is still signed in server-side.
+    expect(navigateSpy).not.toHaveBeenCalled();
+    // The error must be surfaced to the caller.
+    expect(caughtError).toBeDefined();
   });
 });

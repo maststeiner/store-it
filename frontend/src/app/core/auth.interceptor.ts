@@ -57,9 +57,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // For a mutation with no token cookie yet, fetch one first, then attach and proceed.
   // Never recurse: the /auth/csrf GET itself is not a mutating request.
+  // If the cookie is still absent after initCsrf() (e.g. /auth/csrf itself failed), do
+  // NOT send the mutation tokenless — abort with an error so the caller can handle it.
   if (isMutating && readXsrfToken() === null) {
     return from(auth.initCsrf()).pipe(
-      switchMap(() => next(withXsrfHeader(req)).pipe(catchError(onError))),
+      switchMap(() => {
+        if (readXsrfToken() === null) {
+          return throwError(
+            () => new Error('CSRF token unavailable: /auth/csrf did not set the XSRF-TOKEN cookie'),
+          );
+        }
+        return next(withXsrfHeader(req)).pipe(catchError(onError));
+      }),
     );
   }
 

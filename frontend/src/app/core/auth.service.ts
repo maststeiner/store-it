@@ -61,16 +61,14 @@ export class AuthService {
 
   /**
    * POSTs to /auth/logout, then clears the user signal and redirects to /login.
-   * Errors are swallowed — state is always cleared on completion.
+   * Only clears state and navigates on a successful response — if the server returns
+   * an error the session may still be active, so we do NOT clear state or redirect
+   * (a stale local clear would desync the UI from the real server session).
+   * The error is rethrown so the caller can surface it.
    */
   async logout(): Promise<void> {
-    try {
-      await firstValueFrom(this.http.post('/auth/logout', null, { responseType: 'text' }));
-    } catch {
-      // Intentionally ignored — clear session regardless.
-    } finally {
-      this.user.set(null);
-      void this.router.navigateByUrl('/login');
-    }
+    await firstValueFrom(this.http.post('/auth/logout', null, { responseType: 'text' }));
+    this.user.set(null);
+    void this.router.navigateByUrl('/login');
   }
 }
