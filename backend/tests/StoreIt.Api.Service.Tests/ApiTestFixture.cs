@@ -52,10 +52,7 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         // (the "Test" scheme below authenticates), but the host must still boot.
         foreach (var provider in new[] { "Microsoft", "Google" })
         {
-            builder.UseSetting(
-                $"Authentication:{provider}:Authority",
-                "https://login.test.local"
-            );
+            builder.UseSetting($"Authentication:{provider}:Authority", "https://login.test.local");
             builder.UseSetting($"Authentication:{provider}:ClientId", "test-client-id");
             builder.UseSetting($"Authentication:{provider}:ClientSecret", "test-client-secret");
             builder.UseSetting(
@@ -137,9 +134,7 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         // contract here so a regression in GET /auth/csrf points straight at the source.
         if (
             !csrfResponse.Headers.TryGetValues("Set-Cookie", out var setCookies)
-            || setCookies.FirstOrDefault(c =>
-                c.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal)
-            )
+            || setCookies.FirstOrDefault(c => c.StartsWith("XSRF-TOKEN=", StringComparison.Ordinal))
                 is not { } xsrfCookieLine
         )
         {

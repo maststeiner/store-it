@@ -6,7 +6,8 @@ namespace StoreIt.Application;
 /// Raised by <see cref="IUserRepository"/> when a concurrent first-login insert races to
 /// a unique-key violation on (Issuer, Subject). Application stays free of EF/Npgsql types.
 /// </summary>
-public sealed class UserAlreadyExistsException() : Exception("A user with this issuer/subject already exists.");
+public sealed class UserAlreadyExistsException()
+    : Exception("A user with this issuer/subject already exists.");
 
 /// <summary>
 /// Find-or-create a user account keyed by (issuer, subject) and refresh mutable profile
@@ -21,7 +22,8 @@ public sealed class ProvisionUserUseCase(IUserRepository repository, TimeProvide
         string subject,
         string? email,
         string? displayName,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         var existing = await repository.GetBySubjectAsync(issuer, subject, cancellationToken);
         if (existing is not null)
@@ -40,9 +42,11 @@ public sealed class ProvisionUserUseCase(IUserRepository repository, TimeProvide
         catch (UserAlreadyExistsException)
         {
             // A concurrent first-login won the race; reload the winner and refresh its profile.
-            var winner = await repository.GetBySubjectAsync(issuer, subject, cancellationToken)
+            var winner =
+                await repository.GetBySubjectAsync(issuer, subject, cancellationToken)
                 ?? throw new InvalidOperationException(
-                    "UserAlreadyExistsException was raised but the user cannot be found afterwards.");
+                    "UserAlreadyExistsException was raised but the user cannot be found afterwards."
+                );
             winner.UpdateProfile(email, displayName);
             await repository.SaveChangesAsync(cancellationToken);
             return winner;

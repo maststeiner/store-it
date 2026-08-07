@@ -34,7 +34,11 @@ public sealed class ProvisionUserUseCaseTests
             _winnerAfterRace = winner;
         }
 
-        public Task<User?> GetBySubjectAsync(string issuer, string subject, CancellationToken cancellationToken)
+        public Task<User?> GetBySubjectAsync(
+            string issuer,
+            string subject,
+            CancellationToken cancellationToken
+        )
         {
             // If a race winner is queued (i.e., the exception has already been thrown and we are
             // in the catch-block reload), return the winner and clear the queue.
@@ -64,7 +68,11 @@ public sealed class ProvisionUserUseCaseTests
         }
     }
 
-    private static (ProvisionUserUseCase useCase, FakeUserRepository repo, FakeTimeProvider clock) Build()
+    private static (
+        ProvisionUserUseCase useCase,
+        FakeUserRepository repo,
+        FakeTimeProvider clock
+    ) Build()
     {
         var repo = new FakeUserRepository();
         var clock = new FakeTimeProvider();
@@ -84,7 +92,8 @@ public sealed class ProvisionUserUseCaseTests
             subject: "sub-001",
             email: "alice@example.com",
             displayName: "Alice",
-            cancellationToken: default);
+            cancellationToken: default
+        );
 
         Assert.NotEqual(Guid.Empty, user.Id);
         Assert.Equal("https://idp.example.com", user.Issuer);
@@ -104,7 +113,8 @@ public sealed class ProvisionUserUseCaseTests
             subject: "sub-001",
             email: "alice@example.com",
             displayName: "Alice",
-            cancellationToken: default);
+            cancellationToken: default
+        );
         var savesAfterFirst = repo.SaveCount;
 
         // Second login with updated profile fields
@@ -113,7 +123,8 @@ public sealed class ProvisionUserUseCaseTests
             subject: "sub-001",
             email: "alice-new@example.com",
             displayName: "Alice Updated",
-            cancellationToken: default);
+            cancellationToken: default
+        );
 
         Assert.Equal(first.Id, second.Id);
         Assert.Equal("alice-new@example.com", second.Email);
@@ -134,14 +145,16 @@ public sealed class ProvisionUserUseCaseTests
             subject: "sub-001",
             email: "alice@idp-a.com",
             displayName: "Alice A",
-            cancellationToken: default);
+            cancellationToken: default
+        );
 
         var user2 = await useCase.ExecuteAsync(
             issuer: "https://idp-b.example.com",
             subject: "sub-001",
             email: "alice@idp-b.com",
             displayName: "Alice B",
-            cancellationToken: default);
+            cancellationToken: default
+        );
 
         Assert.NotEqual(user1.Id, user2.Id);
         Assert.Equal("https://idp-a.example.com", user1.Issuer);
@@ -161,7 +174,8 @@ public sealed class ProvisionUserUseCaseTests
             subject: "sub-001",
             email: "alice@example.com",
             displayName: "Alice",
-            createdAt: clock.GetUtcNow());
+            createdAt: clock.GetUtcNow()
+        );
 
         // Configure the repo: throw on save (simulating the unique-key violation),
         // then return `winner` on the subsequent GetBySubjectAsync.
@@ -173,7 +187,8 @@ public sealed class ProvisionUserUseCaseTests
             subject: "sub-001",
             email: "alice-updated@example.com",
             displayName: "Alice Updated",
-            cancellationToken: default);
+            cancellationToken: default
+        );
 
         // The returned user must be the winner's record.
         Assert.Equal(winner.Id, result.Id);

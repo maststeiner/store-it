@@ -49,6 +49,7 @@ app.UseExceptionHandler();
 // below opt out explicitly with .AllowAnonymous().
 app.UseAuthentication();
 app.UseAuthorization();
+
 // SPEC-003 (Task 8a): CSRF middleware after auth so it can access the user context.
 // Mutation endpoints validate the double-submit token pair via an endpoint filter
 // (see StorageEndpoints); the middleware itself is placed here for correctness but

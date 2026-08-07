@@ -1,6 +1,6 @@
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Configuration;
@@ -26,8 +26,8 @@ public static class AuthEndpoints
                     var scheme = provider.ToLowerInvariant() switch
                     {
                         "microsoft" => AuthenticationSetup.MicrosoftScheme,
-                        "google"    => AuthenticationSetup.GoogleScheme,
-                        _           => null,
+                        "google" => AuthenticationSetup.GoogleScheme,
+                        _ => null,
                     };
                     if (scheme is null)
                     {
@@ -40,9 +40,10 @@ public static class AuthEndpoints
                     // IsProviderConfigured predicate so both gates stay in sync.
                     // providerName is always non-null here: the scheme-null branch above
                     // returns early, so the _ arm is unreachable.
-                    var providerName = scheme == AuthenticationSetup.MicrosoftScheme
-                        ? AuthenticationSetup.MicrosoftScheme
-                        : AuthenticationSetup.GoogleScheme;
+                    var providerName =
+                        scheme == AuthenticationSetup.MicrosoftScheme
+                            ? AuthenticationSetup.MicrosoftScheme
+                            : AuthenticationSetup.GoogleScheme;
                     if (!AuthenticationSetup.IsProviderConfigured(config, providerName))
                     {
                         return ProviderProblem("auth.provider.unconfigured");
@@ -74,7 +75,10 @@ public static class AuthEndpoints
                         return TypedResults.Problem(
                             statusCode: StatusCodes.Status403Forbidden,
                             title: "csrf.invalid",
-                            extensions: new Dictionary<string, object?> { ["errorCode"] = "csrf.invalid" }
+                            extensions: new Dictionary<string, object?>
+                            {
+                                ["errorCode"] = "csrf.invalid",
+                            }
                         );
                     }
 
@@ -125,8 +129,7 @@ public static class AuthEndpoints
                     return TypedResults.Ok(
                         new UserProfileResponse(
                             user.FindFirstValue(CurrentUser.LocalIdClaim),
-                            user.FindFirstValue(ClaimTypes.Email)
-                                ?? user.FindFirstValue("email"),
+                            user.FindFirstValue(ClaimTypes.Email) ?? user.FindFirstValue("email"),
                             user.FindFirstValue("name") ?? user.FindFirstValue(ClaimTypes.Name)
                         )
                     );
