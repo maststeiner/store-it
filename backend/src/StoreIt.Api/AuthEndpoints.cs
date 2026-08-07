@@ -17,129 +17,130 @@ public static class AuthEndpoints
     {
         var auth = app.MapGroup("/auth").WithTags("Auth").AllowAnonymous();
 
-        auth.MapGet(
-                "/login/{provider}",
-                (string provider, string? returnUrl, HttpContext http, IConfiguration config) =>
-                {
-                    // Allowlist the provider to a fixed scheme BEFORE challenge — the raw
-                    // path segment never reaches the auth system (400 for anything else).
-                    var scheme = provider.ToLowerInvariant() switch
-                    {
-                        "microsoft" => AuthenticationSetup.MicrosoftScheme,
-                        "google" => AuthenticationSetup.GoogleScheme,
-                        _ => null,
-                    };
-                    if (scheme is null)
-                    {
-                        return ProviderProblem("auth.provider.unsupported");
-                    }
-
-                    // Guard against challenging a scheme that was never registered.
-                    // AuthenticationSetup skips OIDC providers whose ClientId or Authority is
-                    // empty; ChallengeAsync on a missing scheme would throw. Use the same
-                    // IsProviderConfigured predicate so both gates stay in sync.
-                    // providerName is always non-null here: the scheme-null branch above
-                    // returns early, so the _ arm is unreachable.
-                    var providerName =
-                        scheme == AuthenticationSetup.MicrosoftScheme
-                            ? AuthenticationSetup.MicrosoftScheme
-                            : AuthenticationSetup.GoogleScheme;
-                    if (!AuthenticationSetup.IsProviderConfigured(config, providerName))
-                    {
-                        return ProviderProblem("auth.provider.unconfigured");
-                    }
-
-                    return Results.Challenge(
-                        new AuthenticationProperties { RedirectUri = SafeReturnUrl(returnUrl) },
-                        [scheme]
-                    );
-                }
-            )
+        auth.MapGet("/login/{provider}", HandleLogin)
             .WithName("login")
             .Produces(StatusCodes.Status302Found)
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
-        auth.MapPost(
-                "/logout",
-                async Task<Results<NoContent, ProblemHttpResult>> (
-                    HttpContext http,
-                    IAntiforgery antiforgery
-                ) =>
-                {
-                    try
-                    {
-                        await antiforgery.ValidateRequestAsync(http);
-                    }
-                    catch (AntiforgeryValidationException)
-                    {
-                        return TypedResults.Problem(
-                            statusCode: StatusCodes.Status403Forbidden,
-                            title: "csrf.invalid",
-                            extensions: new Dictionary<string, object?>
-                            {
-                                ["errorCode"] = "csrf.invalid",
-                            }
-                        );
-                    }
-
-                    await http.SignOutAsync(AuthenticationSetup.CookieScheme);
-                    return TypedResults.NoContent();
-                }
-            )
+        auth.MapPost("/logout", HandleLogout)
             .WithName("logout")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
-        auth.MapGet(
-                "/csrf",
-                (IAntiforgery antiforgery, HttpContext http, IWebHostEnvironment env) =>
-                {
-                    // Generate and store the antiforgery token pair: the HttpOnly cookie
-                    // holds the server-side token; we additionally set a JS-readable
-                    // XSRF-TOKEN cookie so the SPA can read and echo it as X-XSRF-TOKEN.
-                    // Secure is relaxed in Development so the cookie is sent over
-                    // http://localhost (mirrors the session-cookie SecurePolicy gate).
-                    var tokens = antiforgery.GetAndStoreTokens(http);
-                    http.Response.Cookies.Append(
-                        "XSRF-TOKEN",
-                        tokens.RequestToken!,
-                        new CookieOptions
-                        {
-                            HttpOnly = false,
-                            SameSite = SameSiteMode.Lax,
-                            Secure = !env.IsDevelopment(),
-                        }
-                    );
-                    return Results.NoContent();
-                }
-            )
-            .WithName("csrf")
-            .Produces(StatusCodes.Status204NoContent);
+        auth.MapGet("/csrf", HandleCsrf).WithName("csrf").Produces(StatusCodes.Status204NoContent);
 
-        auth.MapGet(
-                "/me",
-                Results<Ok<UserProfileResponse>, UnauthorizedHttpResult> (HttpContext http) =>
-                {
-                    var user = http.User;
-                    if (user.Identity?.IsAuthenticated != true)
-                    {
-                        return TypedResults.Unauthorized();
-                    }
-
-                    return TypedResults.Ok(
-                        new UserProfileResponse(
-                            user.FindFirstValue(CurrentUser.LocalIdClaim),
-                            user.FindFirstValue(ClaimTypes.Email) ?? user.FindFirstValue("email"),
-                            user.FindFirstValue("name") ?? user.FindFirstValue(ClaimTypes.Name)
-                        )
-                    );
-                }
-            )
+        auth.MapGet("/me", HandleMe)
             .WithName("me")
             .Produces<UserProfileResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         return app;
+    }
+
+    private static IResult HandleLogin(string provider, string? returnUrl, IConfiguration config)
+    {
+        // Allowlist the provider to a fixed scheme BEFORE challenge — the raw
+        // path segment never reaches the auth system (400 for anything else).
+        var scheme = provider.ToLowerInvariant() switch
+        {
+            "microsoft" => AuthenticationSetup.MicrosoftScheme,
+            "google" => AuthenticationSetup.GoogleScheme,
+            _ => null,
+        };
+        if (scheme is null)
+        {
+            return ProviderProblem("auth.provider.unsupported");
+        }
+
+        // Guard against challenging a scheme that was never registered.
+        // AuthenticationSetup skips OIDC providers whose ClientId or Authority is
+        // empty; ChallengeAsync on a missing scheme would throw. Use the same
+        // IsProviderConfigured predicate so both gates stay in sync.
+        // providerName is always non-null here: the scheme-null branch above
+        // returns early, so the _ arm is unreachable.
+        var providerName =
+            scheme == AuthenticationSetup.MicrosoftScheme
+                ? AuthenticationSetup.MicrosoftScheme
+                : AuthenticationSetup.GoogleScheme;
+        if (!AuthenticationSetup.IsProviderConfigured(config, providerName))
+        {
+            return ProviderProblem("auth.provider.unconfigured");
+        }
+
+        return Results.Challenge(
+            new AuthenticationProperties { RedirectUri = SafeReturnUrl(returnUrl) },
+            [scheme]
+        );
+    }
+
+    private static async Task<Results<NoContent, ProblemHttpResult>> HandleLogout(
+        HttpContext http,
+        IAntiforgery antiforgery
+    )
+    {
+        try
+        {
+            await antiforgery.ValidateRequestAsync(http);
+        }
+        catch (AntiforgeryValidationException)
+        {
+            return TypedResults.Problem(
+                statusCode: StatusCodes.Status403Forbidden,
+                title: "csrf.invalid",
+                extensions: new Dictionary<string, object?> { ["errorCode"] = "csrf.invalid" }
+            );
+        }
+
+        await http.SignOutAsync(AuthenticationSetup.CookieScheme);
+        return TypedResults.NoContent();
+    }
+
+    private static IResult HandleCsrf(
+        IAntiforgery antiforgery,
+        HttpContext http,
+        IWebHostEnvironment env
+    )
+    {
+        // Generate and store the antiforgery token pair: the HttpOnly cookie
+        // holds the server-side token; we additionally set a JS-readable
+        // XSRF-TOKEN cookie so the SPA can read and echo it as X-XSRF-TOKEN.
+        // Secure is relaxed in Development so the cookie is sent over
+        // http://localhost (mirrors the session-cookie SecurePolicy gate).
+        var tokens = antiforgery.GetAndStoreTokens(http);
+#pragma warning disable S3330 // HttpOnly is intentionally false: this is the JS-readable XSRF-TOKEN cookie
+#pragma warning disable S2092 // Secure is conditional: relaxed in Development for localhost
+        http.Response.Cookies.Append(
+            "XSRF-TOKEN",
+            tokens.RequestToken!,
+            new CookieOptions
+            {
+                HttpOnly = false,
+                SameSite = SameSiteMode.Lax,
+                Secure = !env.IsDevelopment(),
+            }
+        );
+#pragma warning restore S2092
+#pragma warning restore S3330
+        return Results.NoContent();
+    }
+
+    private static Results<Ok<UserProfileResponse>, UnauthorizedHttpResult> HandleMe(
+        HttpContext http
+    )
+    {
+        var user = http.User;
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        return TypedResults.Ok(
+            new UserProfileResponse(
+                user.FindFirstValue(CurrentUser.LocalIdClaim),
+                user.FindFirstValue(ClaimTypes.Email) ?? user.FindFirstValue("email"),
+                user.FindFirstValue("name") ?? user.FindFirstValue(ClaimTypes.Name)
+            )
+        );
     }
 
     /// <summary>
@@ -158,13 +159,16 @@ public static class AuthEndpoints
     /// Open-redirect guard: only accept an app-local path (a single leading slash),
     /// never a scheme-relative or backslash-smuggled absolute URL. Anything else → "/".
     /// </summary>
-    internal static string SafeReturnUrl(string? returnUrl) =>
-        !string.IsNullOrEmpty(returnUrl)
-        && returnUrl.StartsWith('/')
-        && !returnUrl.StartsWith("//", StringComparison.Ordinal)
-        && !returnUrl.StartsWith("/\\", StringComparison.Ordinal)
-            ? returnUrl
-            : "/";
+    internal static string SafeReturnUrl(string? returnUrl)
+    {
+        if (string.IsNullOrEmpty(returnUrl) || !returnUrl.StartsWith('/'))
+            return "/";
+        if (returnUrl.StartsWith("//", StringComparison.Ordinal))
+            return "/";
+        if (returnUrl.StartsWith("/\\", StringComparison.Ordinal))
+            return "/";
+        return returnUrl;
+    }
 }
 
 /// <summary>The authenticated session profile returned by <c>GET /auth/me</c>.</summary>

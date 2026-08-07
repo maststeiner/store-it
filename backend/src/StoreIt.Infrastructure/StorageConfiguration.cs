@@ -19,8 +19,6 @@ public sealed class StorageConfiguration : IEntityTypeConfiguration<Storage>
         builder.Property(s => s.Id).ValueGeneratedNever();
         builder.Property(s => s.Name).IsRequired().HasMaxLength(200);
 
-        // SPEC-003: every storage belongs to exactly one owner. FK → users(Id);
-        // deleting the owner cascades to their storages (and, transitively, items).
         builder.Property(s => s.OwnerId).IsRequired();
         builder
             .HasOne<User>()
