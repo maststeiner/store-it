@@ -55,8 +55,12 @@ public class User
     /// <summary>
     /// EC-02: DisplayName fallback chain — displayName → email → "user-&lt;sub≤8&gt;".
     /// </summary>
-    private static string ResolveDisplayName(string? displayName, string? email, string subject) =>
-        !string.IsNullOrWhiteSpace(displayName) ? displayName!
-        : !string.IsNullOrWhiteSpace(email) ? email!
-        : $"user-{subject[..Math.Min(8, subject.Length)]}";
+    private static string ResolveDisplayName(string? displayName, string? email, string subject)
+    {
+        if (!string.IsNullOrWhiteSpace(displayName))
+            return displayName;
+        if (!string.IsNullOrWhiteSpace(email))
+            return email;
+        return $"user-{subject[..Math.Min(8, subject.Length)]}";
+    }
 }
