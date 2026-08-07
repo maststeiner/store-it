@@ -481,6 +481,29 @@ public class ItemEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
         await response.AssertInvalidRouteIdAsync("itemId");
     }
 
+    // Both ids malformed: the response names one parameter, and which one is part of the
+    // contract (issue #69 — the same client error must answer the same way everywhere).
+    // The two-id endpoints report the storage id, the order the URL reads in.
+
+    [Fact]
+    public async Task UpdateItem_BothIdsMalformed_ReturnsBadRequestNamingTheStorageId()
+    {
+        var response = await _client.PutAsJsonAsync(
+            "/api/v1/storages/abc/items/def",
+            ItemBody(expiryDate: Today.AddDays(3))
+        );
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
+
+    [Fact]
+    public async Task DeleteItem_BothIdsMalformed_ReturnsBadRequestNamingTheStorageId()
+    {
+        var response = await _client.DeleteAsync("/api/v1/storages/abc/items/def");
+
+        await response.AssertInvalidRouteIdAsync("storageId");
+    }
+
     // --- AC-10: sorting ---
 
     [Fact]

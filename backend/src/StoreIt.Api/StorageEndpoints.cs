@@ -233,27 +233,16 @@ public static class StorageEndpoints
                 ) =>
                 {
                     if (
-                        !TryParseRouteId(
+                        !TryParseRouteIds(
                             storageId,
-                            nameof(storageId),
-                            out var parsedStorageId,
-                            out var storageIdProblem
-                        )
-                    )
-                    {
-                        return storageIdProblem;
-                    }
-
-                    if (
-                        !TryParseRouteId(
                             itemId,
-                            nameof(itemId),
+                            out var parsedStorageId,
                             out var parsedItemId,
-                            out var itemIdProblem
+                            out var problem
                         )
                     )
                     {
-                        return itemIdProblem;
+                        return problem;
                     }
 
                     // AC-08: amount 0 removes the item — both outcomes are 204
@@ -290,27 +279,16 @@ public static class StorageEndpoints
                 ) =>
                 {
                     if (
-                        !TryParseRouteId(
+                        !TryParseRouteIds(
                             storageId,
-                            nameof(storageId),
-                            out var parsedStorageId,
-                            out var storageIdProblem
-                        )
-                    )
-                    {
-                        return storageIdProblem;
-                    }
-
-                    if (
-                        !TryParseRouteId(
                             itemId,
-                            nameof(itemId),
+                            out var parsedStorageId,
                             out var parsedItemId,
-                            out var itemIdProblem
+                            out var problem
                         )
                     )
                     {
-                        return itemIdProblem;
+                        return problem;
                     }
 
                     await useCase.ExecuteAsync(parsedStorageId, parsedItemId, ct);
@@ -329,6 +307,25 @@ public static class StorageEndpoints
     /// endpoint (issue #69). Parsing explicitly answers 400 ProblemDetails API-wide and
     /// independently of the hosting environment. The raw value is never echoed back.
     /// </summary>
+    /// <summary>
+    /// Parses both route ids of a nested item endpoint. Storage is checked before item, so
+    /// when both are malformed the answer names <c>storageId</c> — the order the service
+    /// tests pin down, and the order the URL reads in.
+    /// </summary>
+    private static bool TryParseRouteIds(
+        string storageId,
+        string itemId,
+        out Guid parsedStorageId,
+        out Guid parsedItemId,
+        [NotNullWhen(false)] out ProblemHttpResult? problem
+    )
+    {
+        parsedItemId = Guid.Empty;
+
+        return TryParseRouteId(storageId, nameof(storageId), out parsedStorageId, out problem)
+            && TryParseRouteId(itemId, nameof(itemId), out parsedItemId, out problem);
+    }
+
     private static bool TryParseRouteId(
         string value,
         string parameterName,
