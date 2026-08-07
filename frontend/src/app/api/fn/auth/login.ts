@@ -8,22 +8,16 @@ import { StrictHttpResponse } from '../../strict-http-response';
 import { RequestBuilder } from '../../request-builder';
 
 
-export interface DeleteItem$Params {
-  storageId: string;
-  itemId: string;
-
-/**
- * Double-submit CSRF token. Obtain it from GET /auth/csrf (which sets the JS-readable XSRF-TOKEN cookie) and echo the value here.
- */
-  'X-XSRF-TOKEN': string;
+export interface Login$Params {
+  provider: string;
+  returnUrl?: string;
 }
 
-export function deleteItem(http: HttpClient, rootUrl: string, params: DeleteItem$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
-  const rb = new RequestBuilder(rootUrl, deleteItem.PATH, 'delete');
+export function login(http: HttpClient, rootUrl: string, params: Login$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+  const rb = new RequestBuilder(rootUrl, login.PATH, 'get');
   if (params) {
-    rb.path('storageId', params.storageId, {});
-    rb.path('itemId', params.itemId, {});
-    rb.header('X-XSRF-TOKEN', params['X-XSRF-TOKEN'], {});
+    rb.path('provider', params.provider, {});
+    rb.query('returnUrl', params.returnUrl, {});
   }
 
   return http.request(
@@ -36,4 +30,4 @@ export function deleteItem(http: HttpClient, rootUrl: string, params: DeleteItem
   );
 }
 
-deleteItem.PATH = '/api/v1/storages/{storageId}/items/{itemId}';
+login.PATH = '/auth/login/{provider}';

@@ -12,6 +12,11 @@ import { ItemRequest } from '../../models/item-request';
 export interface UpdateItem$Params {
   storageId: string;
   itemId: string;
+
+/**
+ * Double-submit CSRF token. Obtain it from GET /auth/csrf (which sets the JS-readable XSRF-TOKEN cookie) and echo the value here.
+ */
+  'X-XSRF-TOKEN': string;
       body: ItemRequest
 }
 
@@ -20,6 +25,7 @@ export function updateItem(http: HttpClient, rootUrl: string, params: UpdateItem
   if (params) {
     rb.path('storageId', params.storageId, {});
     rb.path('itemId', params.itemId, {});
+    rb.header('X-XSRF-TOKEN', params['X-XSRF-TOKEN'], {});
     rb.body(params.body, 'application/json');
   }
 

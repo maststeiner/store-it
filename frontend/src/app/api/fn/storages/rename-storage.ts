@@ -12,6 +12,11 @@ import { StorageResponse } from '../../models/storage-response';
 
 export interface RenameStorage$Params {
   storageId: string;
+
+/**
+ * Double-submit CSRF token. Obtain it from GET /auth/csrf (which sets the JS-readable XSRF-TOKEN cookie) and echo the value here.
+ */
+  'X-XSRF-TOKEN': string;
       body: StorageRequest
 }
 
@@ -19,6 +24,7 @@ export function renameStorage(http: HttpClient, rootUrl: string, params: RenameS
   const rb = new RequestBuilder(rootUrl, renameStorage.PATH, 'put');
   if (params) {
     rb.path('storageId', params.storageId, {});
+    rb.header('X-XSRF-TOKEN', params['X-XSRF-TOKEN'], {});
     rb.body(params.body, 'application/json');
   }
 

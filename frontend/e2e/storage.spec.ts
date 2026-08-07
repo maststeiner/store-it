@@ -4,6 +4,14 @@ import { expect, test } from '@playwright/test';
 // Each test creates its own uniquely-named storage so runs are independent
 // (no shared-state assumptions, no cleanup coupling).
 
+// Establish a real cookie session before each test using the dev-login shortcut
+// (Development-only, mapped by DevAuthEndpoints.cs). Without this the auth guard
+// redirects every /storages visit to /login and all assertions time out.
+test.beforeEach(async ({ page }) => {
+  const response = await page.request.post('/auth/dev-login');
+  expect(response.status()).toBe(204);
+});
+
 function uniqueName(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }

@@ -87,7 +87,7 @@ export class StorageDetailPage implements OnInit {
 
   protected addItem(): void {
     this.itemsApi
-      .addItem({ storageId: this.storageId, body: this.toRequest(this.form) })
+      .addItem({ 'X-XSRF-TOKEN': '', storageId: this.storageId, body: this.toRequest(this.form) })
       .subscribe({
         next: () => {
           this.form = emptyForm();
@@ -119,6 +119,7 @@ export class StorageDetailPage implements OnInit {
   protected saveItem(item: ItemResponse): void {
     this.itemsApi
       .updateItem({
+        'X-XSRF-TOKEN': '',
         storageId: this.storageId,
         itemId: item.id,
         body: this.toRequest(this.editModel),
@@ -134,13 +135,15 @@ export class StorageDetailPage implements OnInit {
   }
 
   protected deleteItem(item: ItemResponse): void {
-    this.itemsApi.deleteItem({ storageId: this.storageId, itemId: item.id }).subscribe({
-      next: () => {
-        this.loadItems();
-        this.loadStorage();
-      },
-      error: (error: unknown) => this.loadError.set(this.errors.messageFor(error)),
-    });
+    this.itemsApi
+      .deleteItem({ 'X-XSRF-TOKEN': '', storageId: this.storageId, itemId: item.id })
+      .subscribe({
+        next: () => {
+          this.loadItems();
+          this.loadStorage();
+        },
+        error: (error: unknown) => this.loadError.set(this.errors.messageFor(error)),
+      });
   }
 
   protected startRename(): void {
@@ -151,7 +154,11 @@ export class StorageDetailPage implements OnInit {
 
   protected saveRename(): void {
     this.storagesApi
-      .renameStorage({ storageId: this.storageId, body: { name: this.renameValue.trim() } })
+      .renameStorage({
+        'X-XSRF-TOKEN': '',
+        storageId: this.storageId,
+        body: { name: this.renameValue.trim() },
+      })
       .subscribe({
         next: () => {
           this.renaming.set(false);
@@ -162,7 +169,7 @@ export class StorageDetailPage implements OnInit {
   }
 
   protected confirmDelete(): void {
-    this.storagesApi.deleteStorage({ storageId: this.storageId }).subscribe({
+    this.storagesApi.deleteStorage({ 'X-XSRF-TOKEN': '', storageId: this.storageId }).subscribe({
       next: () => {
         this.deleteOpen.set(false);
         this.router.navigate(['/storages']);

@@ -11,6 +11,11 @@ import { ItemRequest } from '../../models/item-request';
 
 export interface AddItem$Params {
   storageId: string;
+
+/**
+ * Double-submit CSRF token. Obtain it from GET /auth/csrf (which sets the JS-readable XSRF-TOKEN cookie) and echo the value here.
+ */
+  'X-XSRF-TOKEN': string;
       body: ItemRequest
 }
 
@@ -18,6 +23,7 @@ export function addItem(http: HttpClient, rootUrl: string, params: AddItem$Param
   const rb = new RequestBuilder(rootUrl, addItem.PATH, 'post');
   if (params) {
     rb.path('storageId', params.storageId, {});
+    rb.header('X-XSRF-TOKEN', params['X-XSRF-TOKEN'], {});
     rb.body(params.body, 'application/json');
   }
 

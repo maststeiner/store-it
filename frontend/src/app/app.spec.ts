@@ -53,9 +53,9 @@ describe('App', () => {
 
 describe('App — signed-in session', () => {
   beforeEach(async () => {
-    const userSignal = signal<{ displayName: string | null; email: string | null } | null | undefined>(
-      { displayName: 'Alice Example', email: 'alice@example.com' },
-    );
+    const userSignal = signal<
+      { displayName: string | null; email: string | null } | null | undefined
+    >({ displayName: 'Alice Example', email: 'alice@example.com' });
 
     await TestBed.configureTestingModule({
       imports: [App],
