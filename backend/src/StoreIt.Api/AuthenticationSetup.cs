@@ -27,6 +27,16 @@ public static class AuthenticationSetup
     /// <summary>OIDC challenge scheme for Google.</summary>
     public const string GoogleScheme = "Google";
 
+    /// <summary>
+    /// Returns <see langword="true"/> when a provider section has both a non-empty
+    /// <c>ClientId</c> and a non-empty <c>Authority</c>.  Used both when registering
+    /// OIDC schemes (startup guard) and when handling <c>/auth/login/{provider}</c>
+    /// (runtime unconfigured check), so the two gates stay in sync.
+    /// </summary>
+    public static bool IsProviderConfigured(IConfiguration config, string providerName) =>
+        !string.IsNullOrEmpty(config[$"Authentication:{providerName}:ClientId"])
+        && !string.IsNullOrEmpty(config[$"Authentication:{providerName}:Authority"]);
+
     public static IServiceCollection AddStoreItAuthentication(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -59,12 +69,13 @@ public static class AuthenticationSetup
                 );
             });
 
-        // Register each OIDC provider only when its ClientId is present. An empty
-        // ClientId at startup causes AddOpenIdConnect to throw ArgumentException on
+        // Register each OIDC provider only when BOTH ClientId and Authority are present.
+        // A missing ClientId or Authority at startup causes AddOpenIdConnect to throw on
         // every request (including /health) — making app health depend on auth config.
         // With no provider registered the app still boots and serves all non-OIDC
-        // endpoints; /auth/login/{provider} returns 400 for unconfigured providers.
-        if (!string.IsNullOrEmpty(configuration["Authentication:Microsoft:ClientId"]))
+        // endpoints; /auth/login/{provider} uses the same IsProviderConfigured predicate
+        // and returns 400 for unconfigured providers.
+        if (IsProviderConfigured(configuration, MicrosoftScheme))
         {
             builder.AddOpenIdConnect(
                 MicrosoftScheme,
@@ -72,7 +83,7 @@ public static class AuthenticationSetup
             );
         }
 
-        if (!string.IsNullOrEmpty(configuration["Authentication:Google:ClientId"]))
+        if (IsProviderConfigured(configuration, GoogleScheme))
         {
             builder.AddOpenIdConnect(
                 GoogleScheme,

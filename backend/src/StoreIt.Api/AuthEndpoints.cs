@@ -35,14 +35,15 @@ public static class AuthEndpoints
                     }
 
                     // Guard against challenging a scheme that was never registered.
-                    // AuthenticationSetup skips OIDC providers with an empty ClientId, so
-                    // ChallengeAsync on a missing scheme would throw; return 400 instead.
-                    // clientIdKey is always non-null here: the scheme-null branch above
+                    // AuthenticationSetup skips OIDC providers whose ClientId or Authority is
+                    // empty; ChallengeAsync on a missing scheme would throw. Use the same
+                    // IsProviderConfigured predicate so both gates stay in sync.
+                    // providerName is always non-null here: the scheme-null branch above
                     // returns early, so the _ arm is unreachable.
-                    var clientIdKey = scheme == AuthenticationSetup.MicrosoftScheme
-                        ? "Authentication:Microsoft:ClientId"
-                        : "Authentication:Google:ClientId";
-                    if (string.IsNullOrEmpty(config[clientIdKey]))
+                    var providerName = scheme == AuthenticationSetup.MicrosoftScheme
+                        ? AuthenticationSetup.MicrosoftScheme
+                        : AuthenticationSetup.GoogleScheme;
+                    if (!AuthenticationSetup.IsProviderConfigured(config, providerName))
                     {
                         return ProviderProblem("auth.provider.unconfigured");
                     }
@@ -59,14 +60,31 @@ public static class AuthEndpoints
 
         auth.MapPost(
                 "/logout",
-                async Task<NoContent> (HttpContext http) =>
+                async Task<Results<NoContent, ProblemHttpResult>> (
+                    HttpContext http,
+                    IAntiforgery antiforgery
+                ) =>
                 {
+                    try
+                    {
+                        await antiforgery.ValidateRequestAsync(http);
+                    }
+                    catch (AntiforgeryValidationException)
+                    {
+                        return TypedResults.Problem(
+                            statusCode: StatusCodes.Status403Forbidden,
+                            title: "csrf.invalid",
+                            extensions: new Dictionary<string, object?> { ["errorCode"] = "csrf.invalid" }
+                        );
+                    }
+
                     await http.SignOutAsync(AuthenticationSetup.CookieScheme);
                     return TypedResults.NoContent();
                 }
             )
             .WithName("logout")
-            .Produces(StatusCodes.Status204NoContent);
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         auth.MapGet(
                 "/csrf",

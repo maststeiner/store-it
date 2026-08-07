@@ -12,12 +12,21 @@ namespace StoreIt.Infrastructure;
 /// </summary>
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<StoreItDbContext>
 {
+    private const string FallbackConnectionString =
+        "Host=localhost;Database=storeit;Username=storeit;Password=storeit";
+
     public StoreItDbContext CreateDbContext(string[] args)
     {
+        // Read the connection string from the environment (12-factor: env vars first).
+        // The ASP.NET Core convention maps "ConnectionStrings__storeit" → the "storeit"
+        // entry. Fall back to a labelled localhost default only when unset (e.g. a fresh
+        // dev clone before local secrets are configured, or CI without a live database).
+        var connectionString =
+            Environment.GetEnvironmentVariable("ConnectionStrings__storeit")
+            ?? FallbackConnectionString;
+
         var options = new DbContextOptionsBuilder<StoreItDbContext>()
-            // A placeholder connection string: migration scaffolding needs a configured
-            // provider, not a live database.
-            .UseNpgsql("Host=localhost;Database=storeit;Username=storeit;Password=storeit")
+            .UseNpgsql(connectionString)
             .Options;
 
         return new StoreItDbContext(options, NullCurrentUser.Instance);
