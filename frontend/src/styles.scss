@@ -656,7 +656,8 @@ h1 {
 
 @media (prefers-reduced-motion: reduce) {
   .storage-card,
-  .btn-primary {
+  .btn-primary,
+  .btn-provider {
     transition: none;
   }
 }
