@@ -100,9 +100,16 @@ different timing:
    is — creating it is not a branch operation and so is not gated by the window. If it has
    not appeared within a day, the window is not the explanation and the Mend run log is.
 2. Updates previously stuck in "pending approval" should become branches/PRs during the
-   next run that falls **inside** the window (00:00–03:59 `Europe/Zurich`) — at most 3 open
-   at a time, since `prConcurrentLimit` caps concurrent open PRs; the rest follow as those
-   merge.
+   next run that falls **inside** the window (00:00–03:59 `Europe/Zurich`) — normally at
+   most 3 open at a time, since `prConcurrentLimit` caps concurrent open PRs; the rest
+   follow as those merge.
+   **Exception, and it is the important one:** security updates are bound by none of this.
+   Renovate's `vulnerabilityAlerts` defaults are `schedule: []`,
+   `dependencyDashboardApproval: false` and `prCreation: 'immediate'`, and vulnerability-alert
+   branches are exempt from the concurrency limits in code (`prBlockedBy === 'RateLimited'
+   && !config.isVulnerabilityAlert`, plus the branch/commit limit checks). A vulnerability
+   fix therefore appears immediately — no window, no free slot, no approval needed — carrying
+   the `[SECURITY]` commit suffix. Verified against the upstream source, not assumed.
 
 If neither happens, the pending-approval state has a source outside everything reachable
 from GitHub (see the diagnosis — it is a hypothesis, not a finding), and the answer is in
@@ -120,6 +127,7 @@ required"). That page is not reachable from the agent sandbox.
 | 3 | *"zusätzlich noch öfters laufen lassen, am besten täglich in der nacht"* | Weekly latency was too slow — schedule changed to `schedule:daily` mid-run, and the timezone pin makes "at night" mean local night |
 | 4 | CodeRabbit review on this PR raised 3 minor findings, **all valid, all fixed** | (a) The inherited-config check looked at `maststeiner/.github` instead of Renovate's actual default `{{parentOrg}}/renovate-config/org-inherited-config.json` — the 404 therefore proved nothing. Re-checked (also 404; and the account is a `User`, so `{{parentOrg}}` does not resolve), and the diagnosis is downgraded from finding to hypothesis. (b) `docs/SETUP.md` §4a still said "weekly" — updated, plus an open item for the missing dashboard. This one also exposed a process error: the PR's "docs updated" box was ticked on the claim that no doc mentioned Renovate, without grepping `docs/` for it. (c) `prConcurrentLimit` was described as capping updates per run; it caps concurrently open PRs — corrected in `renovate.json` and here. |
 | 5 | Second CodeRabbit pass: `schedule` was described as controlling *when Renovate runs* | Valid and fixed. `schedule` gates branch/PR creation only; the hosted app's run cadence is its own — which this log's own evidence already showed (bot activity 2026-08-03 20:04 UTC, outside the Monday window) without the wording being corrected. "Nightly" now consistently means a nightly branch-creation window in `renovate.json`, `docs/SETUP.md` and here, and the two open verifications are separated by timing: the dashboard is not window-gated, PR creation is. |
+| 6 | Third CodeRabbit pass: `prConcurrentLimit` and the nightly window were stated as absolutes | Valid and fixed. Security updates are exempt from both: `vulnerabilityAlerts` defaults to `schedule: []`, `dependencyDashboardApproval: false`, `prCreation: 'immediate'`, and vulnerability-alert branches skip the concurrency limits in code. Documented in `renovate.json`, `docs/SETUP.md` and above — a genuinely useful property, since it means the nightly window never delays a security fix. |
 
 ## Outcome
 
