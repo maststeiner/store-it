@@ -63,4 +63,31 @@ public class AuthEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
+
+    // -------------------------------------------------------------------------
+    // SPEC-003 Task 18 — dev-login (Development-only E2E shortcut)
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// POST /auth/dev-login must return 204 and set a session cookie in
+    /// Development mode (the only environment used by WebApplicationFactory).
+    /// The resulting session must authorise GET /api/v1/storages → 200, which
+    /// proves the full provisioning + sub_local claim path is exercised.
+    /// </summary>
+    [Fact]
+    public async Task DevLogin_Development_Returns204AndSessionAuthorises()
+    {
+        // Use a plain client — no X-Test-* headers; dev-login establishes the session itself.
+        var client = factory.CreateClient();
+
+        // Act — establish the session.
+        var loginResponse = await client.PostAsync("/auth/dev-login", null);
+
+        Assert.Equal(HttpStatusCode.NoContent, loginResponse.StatusCode);
+
+        // The session cookie must have been issued.  HttpClient's CookieContainer
+        // stores it automatically, so the next request carries it.
+        var storagesResponse = await client.GetAsync("/api/v1/storages");
+        Assert.Equal(HttpStatusCode.OK, storagesResponse.StatusCode);
+    }
 }

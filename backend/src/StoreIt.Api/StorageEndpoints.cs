@@ -394,8 +394,7 @@ public static class StorageEndpoints
         var method = ctx.HttpContext.Request.Method;
         if (!SafeMethods.Contains(method))
         {
-            var antiforgery =
-                ctx.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
+            var antiforgery = ctx.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
             try
             {
                 await antiforgery.ValidateRequestAsync(ctx.HttpContext);

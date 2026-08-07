@@ -22,11 +22,9 @@ public class OwnershipTests(ApiTestFixture factory) : IClassFixture<ApiTestFixtu
     private HttpClient? _alfredsClient;
     private HttpClient? _bettysClient;
 
-    private HttpClient AlfredsClient =>
-        _alfredsClient ??= factory.CreateClientAs("owner-alfred");
+    private HttpClient AlfredsClient => _alfredsClient ??= factory.CreateClientAs("owner-alfred");
 
-    private HttpClient BettysClient =>
-        _bettysClient ??= factory.CreateClientAs("owner-betty");
+    private HttpClient BettysClient => _bettysClient ??= factory.CreateClientAs("owner-betty");
 
     // --- Anonymous is rejected before it reaches a handler (fallback policy) ---
 
@@ -68,9 +66,7 @@ public class OwnershipTests(ApiTestFixture factory) : IClassFixture<ApiTestFixtu
         // Alfred requesting Betty's storage by id must see a 404 — the query filter makes
         // it invisible, so its existence never leaks (no 403 distinguishing found-but-
         // forbidden from not-found).
-        var alfredResponse = await AlfredsClient.GetAsync(
-            $"/api/v1/storages/{bettysStorage.Id}"
-        );
+        var alfredResponse = await AlfredsClient.GetAsync($"/api/v1/storages/{bettysStorage.Id}");
         Assert.Equal(HttpStatusCode.NotFound, alfredResponse.StatusCode);
         Assert.Equal("storage.notFound", await alfredResponse.ReadErrorCodeAsync());
         await alfredResponse.AssertNoStorageDataAsync();

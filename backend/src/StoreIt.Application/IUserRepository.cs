@@ -7,7 +7,11 @@ namespace StoreIt.Application;
 /// </summary>
 public interface IUserRepository
 {
-    Task<User?> GetBySubjectAsync(string issuer, string subject, CancellationToken cancellationToken);
+    Task<User?> GetBySubjectAsync(
+        string issuer,
+        string subject,
+        CancellationToken cancellationToken
+    );
 
     void Add(User user);
 

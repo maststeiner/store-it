@@ -14,7 +14,13 @@ public class UserTests
     [Fact]
     public void Create_WithAllFields_SetsFieldsAndGeneratesId()
     {
-        var user = User.Create("https://issuer.example", "sub-123", "alice@example.com", "Alice", AnyDate);
+        var user = User.Create(
+            "https://issuer.example",
+            "sub-123",
+            "alice@example.com",
+            "Alice",
+            AnyDate
+        );
 
         Assert.NotEqual(Guid.Empty, user.Id);
         Assert.Equal("https://issuer.example", user.Issuer);
@@ -46,7 +52,13 @@ public class UserTests
     public void Create_WithNoName_FallsBackToEmail()
     {
         // EC-02: no displayName, has email → email used as display name
-        var user = User.Create("https://issuer.example", "sub-123", "alice@example.com", null, AnyDate);
+        var user = User.Create(
+            "https://issuer.example",
+            "sub-123",
+            "alice@example.com",
+            null,
+            AnyDate
+        );
 
         Assert.Equal("alice@example.com", user.DisplayName);
     }
@@ -55,7 +67,13 @@ public class UserTests
     public void Create_WithNameAndEmail_UsesDisplayName()
     {
         // displayName takes precedence over email
-        var user = User.Create("https://issuer.example", "sub-123", "alice@example.com", "Alice", AnyDate);
+        var user = User.Create(
+            "https://issuer.example",
+            "sub-123",
+            "alice@example.com",
+            "Alice",
+            AnyDate
+        );
 
         Assert.Equal("Alice", user.DisplayName);
     }
@@ -107,7 +125,13 @@ public class UserTests
     [Fact]
     public void UpdateProfile_WithNewEmailAndDisplayName_UpdatesBothFields()
     {
-        var user = User.Create("https://issuer.example", "sub-123", "alice@example.com", "Alice", AnyDate);
+        var user = User.Create(
+            "https://issuer.example",
+            "sub-123",
+            "alice@example.com",
+            "Alice",
+            AnyDate
+        );
 
         user.UpdateProfile("bob@example.com", "Bob");
 
@@ -118,7 +142,13 @@ public class UserTests
     [Fact]
     public void UpdateProfile_WithNullName_FallsBackToEmail()
     {
-        var user = User.Create("https://issuer.example", "sub-123", "alice@example.com", "Alice", AnyDate);
+        var user = User.Create(
+            "https://issuer.example",
+            "sub-123",
+            "alice@example.com",
+            "Alice",
+            AnyDate
+        );
 
         user.UpdateProfile("newemail@example.com", null);
 
@@ -128,7 +158,13 @@ public class UserTests
     [Fact]
     public void UpdateProfile_WithNoEmailOrName_FallsBackToSubjectPrefix()
     {
-        var user = User.Create("https://issuer.example", "sub-123456789", "alice@example.com", "Alice", AnyDate);
+        var user = User.Create(
+            "https://issuer.example",
+            "sub-123456789",
+            "alice@example.com",
+            "Alice",
+            AnyDate
+        );
 
         user.UpdateProfile(null, null);
 

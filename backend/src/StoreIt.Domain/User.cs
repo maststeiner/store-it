@@ -14,7 +14,13 @@ public class User
 
     private User() { } // EF Core
 
-    private User(string issuer, string subject, string? email, string? displayName, DateTimeOffset createdAt)
+    private User(
+        string issuer,
+        string subject,
+        string? email,
+        string? displayName,
+        DateTimeOffset createdAt
+    )
     {
         if (string.IsNullOrWhiteSpace(issuer))
             throw new DomainValidationException("user.issuer.empty", "Issuer must not be empty.");
@@ -51,6 +57,6 @@ public class User
     /// </summary>
     private static string ResolveDisplayName(string? displayName, string? email, string subject) =>
         !string.IsNullOrWhiteSpace(displayName) ? displayName!
-        : !string.IsNullOrWhiteSpace(email)     ? email!
+        : !string.IsNullOrWhiteSpace(email) ? email!
         : $"user-{subject[..Math.Min(8, subject.Length)]}";
 }

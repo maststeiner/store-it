@@ -34,11 +34,7 @@ public static class DevAuthEndpoints
         // registered separately so the production MapAuthEndpoints() is untouched.
         app.MapPost(
                 "/auth/dev-login",
-                async (
-                    ProvisionUserUseCase provision,
-                    HttpContext http,
-                    CancellationToken ct
-                ) =>
+                async (ProvisionUserUseCase provision, HttpContext http, CancellationToken ct) =>
                 {
                     // 1. Provision (find-or-create) the synthetic user — same call as OnTokenValidated.
                     var user = await provision.ExecuteAsync(

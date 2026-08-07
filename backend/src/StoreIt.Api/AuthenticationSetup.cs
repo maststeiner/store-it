@@ -1,12 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using StoreIt.Application;
-using CookieRedirectContext = Microsoft.AspNetCore.Authentication.RedirectContext<
-    Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions
->;
+using CookieRedirectContext = Microsoft.AspNetCore.Authentication.RedirectContext<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>;
 
 namespace StoreIt.Api;
 
@@ -43,7 +41,8 @@ public static class AuthenticationSetup
         IWebHostEnvironment env
     )
     {
-        var builder = services.AddAuthentication(options =>
+        var builder = services
+            .AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieScheme;
                 // Route bare ChallengeAsync() to the cookie scheme so the
@@ -53,21 +52,26 @@ public static class AuthenticationSetup
                 // is unaffected by this default.
                 options.DefaultChallengeScheme = CookieScheme;
             })
-            .AddCookie(CookieScheme, options =>
-            {
-                options.Cookie.HttpOnly = true;
-                options.Cookie.SameSite = SameSiteMode.Lax;
-                // Relax to SameAsRequest in Development so the cookie is sent over
-                // http://localhost. In all other environments the cookie stays Secure.
-                options.Cookie.SecurePolicy = env.IsDevelopment()
-                    ? CookieSecurePolicy.SameAsRequest
-                    : CookieSecurePolicy.Always;
-                // It's an API, not an MVC app: never redirect to a login/denied page.
-                options.Events.OnRedirectToLogin = ReturnStatus(StatusCodes.Status401Unauthorized);
-                options.Events.OnRedirectToAccessDenied = ReturnStatus(
-                    StatusCodes.Status403Forbidden
-                );
-            });
+            .AddCookie(
+                CookieScheme,
+                options =>
+                {
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    // Relax to SameAsRequest in Development so the cookie is sent over
+                    // http://localhost. In all other environments the cookie stays Secure.
+                    options.Cookie.SecurePolicy = env.IsDevelopment()
+                        ? CookieSecurePolicy.SameAsRequest
+                        : CookieSecurePolicy.Always;
+                    // It's an API, not an MVC app: never redirect to a login/denied page.
+                    options.Events.OnRedirectToLogin = ReturnStatus(
+                        StatusCodes.Status401Unauthorized
+                    );
+                    options.Events.OnRedirectToAccessDenied = ReturnStatus(
+                        StatusCodes.Status403Forbidden
+                    );
+                }
+            );
 
         // Register each OIDC provider only when BOTH ClientId and Authority are present.
         // A missing ClientId or Authority at startup causes AddOpenIdConnect to throw on
@@ -79,7 +83,12 @@ public static class AuthenticationSetup
         {
             builder.AddOpenIdConnect(
                 MicrosoftScheme,
-                options => ConfigureOidc(options, configuration.GetSection("Authentication:Microsoft"), env)
+                options =>
+                    ConfigureOidc(
+                        options,
+                        configuration.GetSection("Authentication:Microsoft"),
+                        env
+                    )
             );
         }
 
@@ -87,7 +96,8 @@ public static class AuthenticationSetup
         {
             builder.AddOpenIdConnect(
                 GoogleScheme,
-                options => ConfigureOidc(options, configuration.GetSection("Authentication:Google"), env)
+                options =>
+                    ConfigureOidc(options, configuration.GetSection("Authentication:Google"), env)
             );
         }
 
@@ -103,7 +113,11 @@ public static class AuthenticationSetup
         return services;
     }
 
-    private static void ConfigureOidc(OpenIdConnectOptions options, IConfigurationSection config, IWebHostEnvironment env)
+    private static void ConfigureOidc(
+        OpenIdConnectOptions options,
+        IConfigurationSection config,
+        IWebHostEnvironment env
+    )
     {
         // The session lives in the cookie; OIDC only handles the challenge/callback.
         options.SignInScheme = CookieScheme;
