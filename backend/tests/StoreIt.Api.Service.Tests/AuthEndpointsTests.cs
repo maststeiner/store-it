@@ -63,7 +63,6 @@ public class AuthEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
-
 }
 
 /// <summary>
