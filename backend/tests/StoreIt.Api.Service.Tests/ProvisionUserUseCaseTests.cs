@@ -149,11 +149,13 @@ public sealed class ProvisionUserUseCaseTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ConcurrentFirstLogin_WhenInsertRaces_ReturnsWinner()
+    public async Task ExecuteAsync_ConcurrentFirstLogin_WhenInsertRaces_ReturnsWinnerWithUpdatedProfile()
     {
         var (useCase, repo, clock) = Build();
 
-        // Create the "winner" that the other concurrent request already persisted.
+        // Create the "winner" that the other concurrent request already persisted with its
+        // original profile. The retry call will supply DIFFERENT values — the use case must
+        // apply UpdateProfile on the recovered winner and persist the refreshed data.
         var winner = User.Create(
             issuer: "https://idp.example.com",
             subject: "sub-001",
@@ -165,13 +167,21 @@ public sealed class ProvisionUserUseCaseTests
         // then return `winner` on the subsequent GetBySubjectAsync.
         repo.SimulateRaceWith(winner);
 
+        // Retry with a changed profile (e.g. the IdP updated the user's display name).
         var result = await useCase.ExecuteAsync(
             issuer: "https://idp.example.com",
             subject: "sub-001",
-            email: "alice@example.com",
-            displayName: "Alice",
+            email: "alice-updated@example.com",
+            displayName: "Alice Updated",
             cancellationToken: default);
 
+        // The returned user must be the winner's record.
         Assert.Equal(winner.Id, result.Id);
+        // The profile must reflect the values from THIS call, not the winner's original data.
+        Assert.Equal("alice-updated@example.com", result.Email);
+        Assert.Equal("Alice Updated", result.DisplayName);
+        // The updated profile must have been persisted (SaveChangesAsync called once for the
+        // profile update after the race recovery — the first save attempt threw instead).
+        Assert.Equal(1, repo.SaveCount);
     }
 }

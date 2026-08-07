@@ -44,12 +44,23 @@ public class AuthEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
     }
 
     [Fact]
-    public async Task Health_IsAnonymous()
+    public async Task Health_Anonymous_ReturnsOk()
     {
         var client = factory.CreateClient();
 
         var response = await client.GetAsync("/health");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Logout_WithoutCsrfToken_Returns403()
+    {
+        // A client with no CSRF priming: no antiforgery cookie and no X-XSRF-TOKEN header.
+        var client = factory.CreateClient();
+
+        var response = await client.PostAsync("/auth/logout", null);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 }
