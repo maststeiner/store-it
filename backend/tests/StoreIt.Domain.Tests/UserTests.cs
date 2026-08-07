@@ -105,7 +105,7 @@ public class UserTests
     // --- UpdateProfile ---
 
     [Fact]
-    public void UpdateProfile_ChangesEmailAndName()
+    public void UpdateProfile_WithNewEmailAndDisplayName_UpdatesBothFields()
     {
         var user = User.Create("https://issuer.example", "sub-123", "alice@example.com", "Alice", AnyDate);
 

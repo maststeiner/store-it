@@ -43,7 +43,7 @@ public class OwnershipTests(ApiTestFixture factory) : IClassFixture<ApiTestFixtu
     // --- Reads are scoped to the caller (query filter) ---
 
     [Fact]
-    public async Task List_ReturnsOnlyOwnStorages()
+    public async Task List_AnotherUserHasStorages_ReturnsOnlyOwn()
     {
         var alfredsStorage = await AlfredsClient.CreateStorageAsync("Alfred's Pantry");
         var bettysStorage = await BettysClient.CreateStorageAsync("Betty's Freezer");
