@@ -38,9 +38,7 @@ describe('authInterceptor', () => {
     auth.user.set({ displayName: 'Alice', email: 'alice@example.com' });
 
     http.get('/api/v1/storages').subscribe({ error: () => undefined });
-    ctrl
-      .expectOne('/api/v1/storages')
-      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    ctrl.expectOne('/api/v1/storages').flush(null, { status: 401, statusText: 'Unauthorized' });
 
     expect(auth.user()).toBeNull();
     expect(router.navigateByUrl).toHaveBeenCalledWith('/login');

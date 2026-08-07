@@ -10,12 +10,18 @@ import { RequestBuilder } from '../../request-builder';
 
 export interface DeleteStorage$Params {
   storageId: string;
+
+/**
+ * Double-submit CSRF token. Obtain it from GET /auth/csrf (which sets the JS-readable XSRF-TOKEN cookie) and echo the value here.
+ */
+  'X-XSRF-TOKEN': string;
 }
 
 export function deleteStorage(http: HttpClient, rootUrl: string, params: DeleteStorage$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
   const rb = new RequestBuilder(rootUrl, deleteStorage.PATH, 'delete');
   if (params) {
     rb.path('storageId', params.storageId, {});
+    rb.header('X-XSRF-TOKEN', params['X-XSRF-TOKEN'], {});
   }
 
   return http.request(

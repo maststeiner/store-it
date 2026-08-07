@@ -2,7 +2,12 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, provideRouter } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  Router,
+  RouterStateSnapshot,
+  provideRouter,
+} from '@angular/router';
 
 import { AuthService, AuthUser } from './auth.service';
 import { authGuard } from './auth.guard';
@@ -32,9 +37,7 @@ describe('authGuard', () => {
       ],
     });
 
-    const result = await TestBed.runInInjectionContext(() =>
-      authGuard(fakeRoute(), fakeState()),
-    );
+    const result = await TestBed.runInInjectionContext(() => authGuard(fakeRoute(), fakeState()));
 
     expect(result).toBe(true);
     expect(loadMe).not.toHaveBeenCalled();
@@ -53,9 +56,7 @@ describe('authGuard', () => {
       ],
     });
 
-    const result = await TestBed.runInInjectionContext(() =>
-      authGuard(fakeRoute(), fakeState()),
-    );
+    const result = await TestBed.runInInjectionContext(() => authGuard(fakeRoute(), fakeState()));
 
     const router = TestBed.inject(Router);
     expect(result).toEqual(router.parseUrl('/login'));
@@ -77,9 +78,7 @@ describe('authGuard', () => {
       ],
     });
 
-    const result = await TestBed.runInInjectionContext(() =>
-      authGuard(fakeRoute(), fakeState()),
-    );
+    const result = await TestBed.runInInjectionContext(() => authGuard(fakeRoute(), fakeState()));
 
     const router = TestBed.inject(Router);
     expect(loadMe).toHaveBeenCalledOnce();
@@ -102,9 +101,7 @@ describe('authGuard', () => {
       ],
     });
 
-    const result = await TestBed.runInInjectionContext(() =>
-      authGuard(fakeRoute(), fakeState()),
-    );
+    const result = await TestBed.runInInjectionContext(() => authGuard(fakeRoute(), fakeState()));
 
     expect(loadMe).toHaveBeenCalledOnce();
     expect(result).toBe(true);

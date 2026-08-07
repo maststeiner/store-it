@@ -54,14 +54,16 @@ export class StorageListPage implements OnInit {
   }
 
   protected create(): void {
-    this.storagesApi.createStorage({ body: { name: this.createName.trim() } }).subscribe({
-      next: () => {
-        this.createOpen.set(false);
-        this.createName = '';
-        this.load();
-      },
-      error: (error: unknown) => this.createError.set(this.errors.messageFor(error)),
-    });
+    this.storagesApi
+      .createStorage({ 'X-XSRF-TOKEN': '', body: { name: this.createName.trim() } })
+      .subscribe({
+        next: () => {
+          this.createOpen.set(false);
+          this.createName = '';
+          this.load();
+        },
+        error: (error: unknown) => this.createError.set(this.errors.messageFor(error)),
+      });
   }
 
   protected startEdit(storage: StorageResponse, event: Event): void {
@@ -78,7 +80,11 @@ export class StorageListPage implements OnInit {
 
   protected saveEdit(storage: StorageResponse): void {
     this.storagesApi
-      .renameStorage({ storageId: storage.id, body: { name: this.editName.trim() } })
+      .renameStorage({
+        'X-XSRF-TOKEN': '',
+        storageId: storage.id,
+        body: { name: this.editName.trim() },
+      })
       .subscribe({
         next: () => {
           this.editId.set(null);
@@ -98,7 +104,7 @@ export class StorageListPage implements OnInit {
     if (!target) {
       return;
     }
-    this.storagesApi.deleteStorage({ storageId: target.id }).subscribe({
+    this.storagesApi.deleteStorage({ 'X-XSRF-TOKEN': '', storageId: target.id }).subscribe({
       next: () => {
         this.deleteTarget.set(null);
         this.load();

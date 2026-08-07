@@ -8,3 +8,4 @@ export type { ProblemDetails } from './models/problem-details';
 export type { StorageRequest } from './models/storage-request';
 export type { StorageResponse } from './models/storage-response';
 export type { Unit } from './models/unit';
+export type { UserProfileResponse } from './models/user-profile-response';
