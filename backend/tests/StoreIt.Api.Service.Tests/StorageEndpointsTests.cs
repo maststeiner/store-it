@@ -46,9 +46,9 @@ public class StorageEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
     [Fact]
     public async Task GetStorages_StorageWithMixedItems_ReturnsCorrectStatusCounts()
     {
-        // AC-01a: expiredCount = items with expiry date in the past;
-        // expiringSoonCount = expiry date within the next 3 days incl. today;
-        // items without expiry date count toward neither.
+        // AC-01a: expiredCount counts the items whose expiry date lies in the past, and
+        // expiringSoonCount those expiring within the next three days including today.
+        // Items without an expiry date count toward neither.
         var created = await _client.CreateStorageAsync("StatusCountsPantry");
         await _client.AddItemAsync(
             created.Id,
