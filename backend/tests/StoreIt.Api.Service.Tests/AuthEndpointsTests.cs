@@ -64,20 +64,31 @@ public class AuthEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    // -------------------------------------------------------------------------
-    // SPEC-003 Task 18 — dev-login (Development-only E2E shortcut)
-    // -------------------------------------------------------------------------
+}
 
+/// <summary>
+/// Service tests for POST /auth/dev-login (SPEC-003 Task 18).
+///
+/// Uses <see cref="DevLoginFixture"/> — a real-auth Development fixture — because
+/// dev-login is mapped ONLY when <c>app.Environment.IsDevelopment()</c> and must
+/// sign in via the real cookie scheme.  The <see cref="ApiTestFixture"/> replaces
+/// auth with a "Test" scheme and does NOT boot in Development, making it unsuitable
+/// for this endpoint.
+/// </summary>
+public class DevLoginTests(DevLoginFixture factory) : IClassFixture<DevLoginFixture>
+{
     /// <summary>
     /// POST /auth/dev-login must return 204 and set a session cookie in
-    /// Development mode (the only environment used by WebApplicationFactory).
-    /// The resulting session must authorise GET /api/v1/storages → 200, which
-    /// proves the full provisioning + sub_local claim path is exercised.
+    /// Development mode.  The resulting session must authorise
+    /// GET /api/v1/storages → 200, proving the full provisioning + sub_local
+    /// claim path works end-to-end.
     /// </summary>
     [Fact]
     public async Task DevLogin_Development_Returns204AndSessionAuthorises()
     {
-        // Use a plain client — no X-Test-* headers; dev-login establishes the session itself.
+        // Plain client — no X-Test-* headers; dev-login establishes the session itself.
+        // WebApplicationFactory's default client uses a CookieContainer so the session
+        // cookie set by dev-login is carried on the next request automatically.
         var client = factory.CreateClient();
 
         // Act — establish the session.
