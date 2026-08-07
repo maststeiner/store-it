@@ -12,8 +12,12 @@ namespace StoreIt.Infrastructure;
 /// </summary>
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<StoreItDbContext>
 {
+    // No credential here by design (avoids a hard-coded secret): `dotnet ef migrations add`
+    // only reads the model shape and never connects. Commands that DO connect (e.g.
+    // `database update`) require the full connection string — incl. its password — via the
+    // `ConnectionStrings__storeit` environment variable (12-factor), read below.
     private const string FallbackConnectionString =
-        "Host=localhost;Database=storeit;Username=storeit;Password=storeit";
+        "Host=localhost;Database=storeit;Username=storeit";
 
     public StoreItDbContext CreateDbContext(string[] args)
     {
