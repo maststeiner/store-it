@@ -19,24 +19,32 @@ public static class StorageEndpoints
     /// (SPEC-002).
     /// Route ids bind as strings and are parsed explicitly (see
     /// <see cref="TryParseRouteId"/>) so a malformed id answers 400 API-wide.
-    /// The two route groups are mapped by one method each: the per-endpoint id
-    /// guards add up, and one method for all nine endpoints exceeded the
-    /// cognitive-complexity budget (SonarCloud S3776).
+    /// One mapping method per endpoint: the per-endpoint id guards add up
+    /// (cognitive complexity, S3776) and the declarative chains are long
+    /// (method length, S138), so grouping several endpoints per method hits one
+    /// budget or the other. This shape keeps both flat as endpoints are added.
     /// </summary>
     public static IEndpointRouteBuilder MapStorageEndpointsV1(this IEndpointRouteBuilder app)
     {
         var storages = app.MapGroup("/api/v1/storages").WithTags("Storages");
 
-        MapStorageRoutes(storages);
-        MapItemRoutes(storages);
+        MapGetStorages(storages);
+        MapGetStorage(storages);
+        MapCreateStorage(storages);
+        MapRenameStorage(storages);
+        MapDeleteStorage(storages);
+
+        var items = storages.MapGroup("/{storageId}/items").WithTags("Items");
+
+        MapGetItems(items);
+        MapAddItem(items);
+        MapUpdateItem(items);
+        MapDeleteItem(items);
 
         return app;
     }
 
-    /// <summary>
-    /// Collection and single-storage routes under /api/v1/storages.
-    /// </summary>
-    private static void MapStorageRoutes(RouteGroupBuilder storages)
+    private static void MapGetStorages(RouteGroupBuilder storages)
     {
         storages
             .MapGet(
@@ -47,7 +55,10 @@ public static class StorageEndpoints
                 ) => TypedResults.Ok((await useCase.ExecuteAsync(ct)).Select(StorageResponse.From))
             )
             .WithName("getStorages");
+    }
 
+    private static void MapGetStorage(RouteGroupBuilder storages)
+    {
         storages
             .MapGet(
                 "/{storageId}",
@@ -70,7 +81,10 @@ public static class StorageEndpoints
             .WithName("getStorage")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
+    }
 
+    private static void MapCreateStorage(RouteGroupBuilder storages)
+    {
         storages
             .MapPost(
                 "/",
@@ -89,7 +103,10 @@ public static class StorageEndpoints
             )
             .WithName("createStorage")
             .ProducesProblem(StatusCodes.Status400BadRequest);
+    }
 
+    private static void MapRenameStorage(RouteGroupBuilder storages)
+    {
         storages
             .MapPut(
                 "/{storageId}",
@@ -113,7 +130,10 @@ public static class StorageEndpoints
             .WithName("renameStorage")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
+    }
 
+    private static void MapDeleteStorage(RouteGroupBuilder storages)
+    {
         storages
             .MapDelete(
                 "/{storageId}",
@@ -137,13 +157,8 @@ public static class StorageEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
-    /// <summary>
-    /// Item routes nested under a storage: /api/v1/storages/{storageId}/items.
-    /// </summary>
-    private static void MapItemRoutes(RouteGroupBuilder storages)
+    private static void MapGetItems(RouteGroupBuilder items)
     {
-        var items = storages.MapGroup("/{storageId}/items").WithTags("Items");
-
         items
             .MapGet(
                 "/",
@@ -166,7 +181,10 @@ public static class StorageEndpoints
             .WithName("getItems")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
+    }
 
+    private static void MapAddItem(RouteGroupBuilder items)
+    {
         items
             .MapPost(
                 "/",
@@ -199,7 +217,10 @@ public static class StorageEndpoints
             .WithName("addItem")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
+    }
 
+    private static void MapUpdateItem(RouteGroupBuilder items)
+    {
         items
             .MapPut(
                 "/{itemId}",
@@ -254,7 +275,10 @@ public static class StorageEndpoints
             .WithName("updateItem")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
+    }
 
+    private static void MapDeleteItem(RouteGroupBuilder items)
+    {
         items
             .MapDelete(
                 "/{itemId}",

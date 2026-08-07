@@ -1,5 +1,6 @@
 # EditorConfig is binding for humans and agents alike (see docs/guidelines/coding-guidelines.md)
-# TODO: add language-specific rules once the stack is chosen (see docs/SETUP.md)
+# TODO: add language-specific formatting rules once the stack is chosen (see docs/SETUP.md).
+# C# analyzer severities live at the bottom of this file.
 
 root = true
 
@@ -15,3 +16,42 @@ indent_size = 2
 
 [*.md]
 trim_trailing_whitespace = false
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SonarAnalyzer.CSharp — complexity rules enforced at build time (issue #74)
+#
+# Why these lines exist at all: adding the SonarAnalyzer package is NOT enough.
+# Measured on this repo (2026-08-07, analyzer 10.31.0.145097):
+#   · Some Sonar rules ship enabled and report as warnings (e.g. S1144, S125).
+#   · The complexity rules below are NOT enabled by default — S3776 stayed silent
+#     on a method with cognitive complexity 18 until an explicit severity was set.
+#   · `CodeAnalysisTreatWarningsAsErrors` (backend/Directory.Build.props) only
+#     escalates CA-prefixed rules, so a Sonar warning would never fail the build.
+# Hence: severity = error, per rule, here.
+#
+# Selection is measured, not guessed — each rule below fires zero times on the
+# current code, so this change enforces the status quo instead of grandfathering
+# debt. S3776 and S107 are known to be active in SonarCloud's own profile (both
+# have appeared there as real findings), so for them Gate 1 now catches what
+# Gate 3 would have caught after the push.
+#
+# S138 (method line count) is enforced here too, by decision 2026-08-07. It did
+# fire on the two route-group methods (143 and 90 lines), so StorageEndpoints now
+# maps one endpoint per method. Note that SonarCloud's C# profile does not appear
+# to include S138 — it never reported those methods — so it must be activated in
+# the quality profile as well, or Gate 1 and Gate 3 disagree in the other
+# direction. See docs/SETUP.md §3.
+#
+# To enforce another rule: add it here, run `dotnet build` and fix what it finds.
+# ─────────────────────────────────────────────────────────────────────────────
+[*.cs]
+dotnet_diagnostic.S3776.severity = error   # cognitive complexity > 15
+dotnet_diagnostic.S1541.severity = error   # cyclomatic complexity
+dotnet_diagnostic.S107.severity = error    # too many parameters (> 7)
+dotnet_diagnostic.S134.severity = error     # control flow nested too deeply
+dotnet_diagnostic.S1067.severity = error   # expression with too many operators
+dotnet_diagnostic.S104.severity = error     # too many lines in a file
+dotnet_diagnostic.S1479.severity = error   # switch with too many cases
+dotnet_diagnostic.S1448.severity = error   # class with too many methods
+dotnet_diagnostic.S2436.severity = error   # too many generic parameters
+dotnet_diagnostic.S138.severity = error     # too many lines in a method (> 80)

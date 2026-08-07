@@ -11,8 +11,10 @@ public class LayeringTests
 {
     private const string ApiNamespace = "StoreIt.Api";
     private const string ApplicationNamespace = "StoreIt.Application";
-    private const string DomainNamespace = "StoreIt.Domain";
     private const string InfrastructureNamespace = "StoreIt.Infrastructure";
+
+    // No DomainNamespace constant: the two Domain rules below reach that assembly through
+    // typeof(Domain.ExpiryRules), which the compiler checks, rather than by name.
 
     [Fact]
     [Trait("Category", "ArchitectureTests")]
