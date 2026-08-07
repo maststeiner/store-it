@@ -95,4 +95,30 @@ describe('authInterceptor', () => {
 
     expect(completed).toBe(true);
   });
+
+  it('mutation_failedCsrfInit_notSentTokenless', async () => {
+    // No XSRF-TOKEN cookie and initCsrf() will fail (simulate /auth/csrf returning an error
+    // without setting the cookie). The interceptor must NOT forward the mutation tokenless.
+    expect(document.cookie.includes('XSRF-TOKEN=')).toBe(false);
+
+    let caughtError: unknown;
+    http
+      .post('/api/v1/storages', { name: 'Pantry' })
+      .subscribe({ error: (e: unknown) => (caughtError = e) });
+
+    // Flush /auth/csrf with an error — cookie remains absent.
+    const csrfReq = ctrl.expectOne('/auth/csrf');
+    csrfReq.flush('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
+
+    // Drain microtasks so the switchMap branch runs.
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // The mutation must NOT have been sent (no pending request for /api/v1/storages).
+    ctrl.expectNone('/api/v1/storages');
+
+    // The observable must have errored (caller receives the failure).
+    expect(caughtError).toBeInstanceOf(Error);
+    expect((caughtError as Error).message).toContain('CSRF token unavailable');
+  });
 });
