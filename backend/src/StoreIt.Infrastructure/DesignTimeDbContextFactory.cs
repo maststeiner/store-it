@@ -12,22 +12,19 @@ namespace StoreIt.Infrastructure;
 /// </summary>
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<StoreItDbContext>
 {
-    // No credential here by design (avoids a hard-coded secret): `dotnet ef migrations add`
-    // only reads the model shape and never connects. Commands that DO connect (e.g.
-    // `database update`) require the full connection string — incl. its password — via the
-    // `ConnectionStrings__storeit` environment variable (12-factor), read below.
-    private const string FallbackConnectionString =
-        "Host=localhost;Database=storeit;Username=storeit";
-
     public StoreItDbContext CreateDbContext(string[] args)
     {
-        // Read the connection string from the environment (12-factor: env vars first).
-        // The ASP.NET Core convention maps "ConnectionStrings__storeit" → the "storeit"
-        // entry. Fall back to a labelled localhost default only when unset (e.g. a fresh
-        // dev clone before local secrets are configured, or CI without a live database).
+        // 12-factor: connection string must come from the environment.
+        // `dotnet ef migrations add` only reads the model shape and never connects, so the
+        // variable may be absent for that command. Commands that DO connect (e.g.
+        // `database update`) require the full connection string — incl. its password — via
+        // the `ConnectionStrings__storeit` environment variable (set it in your shell or
+        // CI secrets before running EF commands that target a real database).
         var connectionString =
             Environment.GetEnvironmentVariable("ConnectionStrings__storeit")
-            ?? FallbackConnectionString;
+            ?? throw new InvalidOperationException(
+                "Set ConnectionStrings__storeit for design-time EF operations."
+            );
 
         var options = new DbContextOptionsBuilder<StoreItDbContext>()
             .UseNpgsql(connectionString)
