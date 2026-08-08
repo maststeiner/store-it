@@ -162,7 +162,7 @@ public sealed class ProvisionUserUseCaseTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ConcurrentFirstLogin_WhenInsertRaces_ReturnsWinnerWithUpdatedProfile()
+    public async Task ExecuteAsync_InsertRace_ReturnsWinnerWithUpdatedProfile()
     {
         var (useCase, repo, clock) = Build();
 
