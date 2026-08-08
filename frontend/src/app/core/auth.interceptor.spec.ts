@@ -94,6 +94,24 @@ describe('authInterceptor', () => {
     expect(completed).toBe(true);
   });
 
+  it('overwrites_placeholder_xsrf_header_with_cookie_token', () => {
+    // Regression guard: generated-client calls pass 'X-XSRF-TOKEN: ""' as a required param.
+    // The interceptor must replace that placeholder with the real cookie value so the server
+    // receives the correct token and does not reject the request.
+    document.cookie = 'XSRF-TOKEN=real-token; path=/';
+
+    // Simulate a generated-client POST that already carries the placeholder header.
+    http
+      .post('/api/v1/storages', { name: 'Pantry' }, { headers: { 'X-XSRF-TOKEN': '' } })
+      .subscribe({ error: () => undefined });
+
+    const req = ctrl.expectOne('/api/v1/storages');
+    // Angular's setHeaders uses HttpHeaders.set(), which replaces any existing value —
+    // so the real cookie token must appear, NOT the empty placeholder.
+    expect(req.request.headers.get('X-XSRF-TOKEN')).toBe('real-token');
+    req.flush({ id: 's1', name: 'Pantry' });
+  });
+
   it('mutation_failedCsrfInit_notSentTokenless', async () => {
     // No XSRF-TOKEN cookie and initCsrf() will fail (simulate /auth/csrf returning an error
     // without setting the cookie). The interceptor must NOT forward the mutation tokenless.
