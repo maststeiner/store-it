@@ -301,13 +301,6 @@ public static class StorageEndpoints
     }
 
     /// <summary>
-    /// Parses a GUID route value. Ids bind as strings instead of carrying the
-    /// <c>:guid</c> route constraint: with the constraint a malformed id left the route
-    /// unmatched and surfaced as 404, so the same client error answered differently per
-    /// endpoint (issue #69). Parsing explicitly answers 400 ProblemDetails API-wide and
-    /// independently of the hosting environment. The raw value is never echoed back.
-    /// </summary>
-    /// <summary>
     /// Parses both route ids of a nested item endpoint. Storage is checked before item, so
     /// when both are malformed the answer names <c>storageId</c> — the order the service
     /// tests pin down, and the order the URL reads in.
@@ -326,6 +319,13 @@ public static class StorageEndpoints
             && TryParseRouteId(itemId, nameof(itemId), out parsedItemId, out problem);
     }
 
+    /// <summary>
+    /// Parses a GUID route value. Ids bind as strings instead of carrying the
+    /// <c>:guid</c> route constraint: with the constraint a malformed id left the route
+    /// unmatched and surfaced as 404, so the same client error answered differently per
+    /// endpoint (issue #69). Parsing explicitly answers 400 ProblemDetails API-wide and
+    /// independently of the hosting environment. The raw value is never echoed back.
+    /// </summary>
     private static bool TryParseRouteId(
         string value,
         string parameterName,
