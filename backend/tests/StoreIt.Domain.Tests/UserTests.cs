@@ -120,6 +120,32 @@ public class UserTests
         Assert.Equal("user.subject.empty", exception.ErrorCode);
     }
 
+    // --- DisplayName length guard ---
+
+    [Fact]
+    public void Create_WithOverlongDisplayName_FallsBackToSubjectPrefix()
+    {
+        // A displayName exceeding MaxDisplayNameLength must not reach the DB column.
+        var tooLong = new string('A', User.MaxDisplayNameLength + 1);
+
+        var user = User.Create("https://issuer.example", "sub-123456789", null, tooLong, AnyDate);
+
+        Assert.True(user.DisplayName.Length <= User.MaxDisplayNameLength);
+        Assert.Equal("user-sub-1234", user.DisplayName);
+    }
+
+    [Fact]
+    public void Create_WithOverlongEmail_FallsBackToSubjectPrefix()
+    {
+        // An email exceeding MaxDisplayNameLength must not reach the DB column either.
+        var tooLong = new string('a', User.MaxDisplayNameLength + 1) + "@example.com";
+
+        var user = User.Create("https://issuer.example", "sub-123456789", tooLong, null, AnyDate);
+
+        Assert.True(user.DisplayName.Length <= User.MaxDisplayNameLength);
+        Assert.Equal("user-sub-1234", user.DisplayName);
+    }
+
     // --- UpdateProfile ---
 
     [Fact]

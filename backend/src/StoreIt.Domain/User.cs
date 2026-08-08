@@ -5,6 +5,13 @@ namespace StoreIt.Domain;
 /// </summary>
 public class User
 {
+    /// <summary>
+    /// Maximum length of <see cref="DisplayName"/> — must match the persisted varchar(200) column.
+    /// When the resolved candidate (displayName or email) exceeds this limit, the subject-prefix
+    /// form is used instead, which is always short.
+    /// </summary>
+    public const int MaxDisplayNameLength = 200;
+
     public Guid Id { get; private set; }
     public string Issuer { get; private set; } = null!;
     public string Subject { get; private set; } = null!;
@@ -54,12 +61,15 @@ public class User
 
     /// <summary>
     /// EC-02: DisplayName fallback chain — displayName → email → "user-&lt;sub≤8&gt;".
+    /// Each candidate is accepted only when it is non-empty and fits within
+    /// <see cref="MaxDisplayNameLength"/>. A too-long value is skipped; the subject-prefix
+    /// fallback is always within the limit.
     /// </summary>
     private static string ResolveDisplayName(string? displayName, string? email, string subject)
     {
-        if (!string.IsNullOrWhiteSpace(displayName))
+        if (!string.IsNullOrWhiteSpace(displayName) && displayName.Length <= MaxDisplayNameLength)
             return displayName;
-        if (!string.IsNullOrWhiteSpace(email))
+        if (!string.IsNullOrWhiteSpace(email) && email.Length <= MaxDisplayNameLength)
             return email;
         return $"user-{subject[..Math.Min(8, subject.Length)]}";
     }
