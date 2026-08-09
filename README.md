@@ -69,5 +69,6 @@ Sign-in needs real OIDC credentials in `.env`, with the redirect URI registered 
 provider (`http://localhost:8080/auth/callback/google`). Without them the stack still
 starts and serves the app; only signing in is unavailable.
 
-`compose.yaml` is untouched by all this: it still starts PostgreSQL alone for the native
-workflow above.
+`compose.yaml` stays the separate, native workflow: it starts PostgreSQL alone for
+`./scripts/dev.sh`, and the container stack neither uses nor interferes with it — different
+compose project, different volume.

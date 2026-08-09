@@ -42,15 +42,27 @@ port="${port:-8080}"
 
 # `up --detach` returns once the containers are created; the web container may still be
 # coming up. Wait for it to actually answer, so "stack is up" is not a lie.
+retries="${STOREIT_WAIT_RETRIES:-60}"
+ready=false
 echo -n "waiting for http://127.0.0.1:${port} "
-for _ in $(seq 1 60); do
+for _ in $(seq 1 "$retries"); do
   if curl --silent --fail --max-time 2 "http://127.0.0.1:${port}/" > /dev/null 2>&1; then
+    ready=true
     echo "— ready"
     break
   fi
   echo -n "."
   sleep 2
 done
+
+if [[ "$ready" != true ]]; then
+  echo
+  echo "error: the stack did not answer on http://127.0.0.1:${port} in time." >&2
+  echo "       the containers may still be running but unusable — inspect them with:" >&2
+  echo "         ${compose[*]} -p $STACK_PROJECT -f $STACK_FILE ps" >&2
+  echo "         ${compose[*]} -p $STACK_PROJECT -f $STACK_FILE logs" >&2
+  exit 1
+fi
 
 echo
 echo "stack is up → http://localhost:${port}"

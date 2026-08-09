@@ -35,9 +35,12 @@ shipped as a latent bug otherwise.
 1. **`postgres:18` rejects the old volume mount.** Mounting at
    `/var/lib/postgresql/data` makes the container exit 1: since 18 these images keep the
    cluster in a version-specific subdirectory and expect a single mount at
-   `/var/lib/postgresql`. Fixed here — **and the repository's existing `compose.yaml` has
-   the same mount**, which is reported separately rather than changed under this spec
-   (AC-15 keeps that file out of scope).
+   `/var/lib/postgresql`. Fixed here — **and the repository's existing `compose.yaml` had
+   the same mount**, so the native dev database had been failing to start since the
+   postgres 18 bump. Initially reported rather than changed, because AC-15 keeps that file
+   out of scope; Marcel then asked for the fix to ride along in this PR, so it did.
+   Verified afterwards: the dev database starts, a row written before a restart is still
+   there after it, and the cluster now lives under `/var/lib/postgresql/18`.
 2. **`localhost` is ambiguous inside the container.** The web health check failed with
    "connection refused" against `http://localhost:8080` while nginx was serving perfectly:
    `localhost` resolved to `::1`, nginx listens on IPv4. Health checks now address
@@ -80,7 +83,7 @@ shipped as a latent bug otherwise.
 | AC-12 | README section | states it is a local testing tool, not a deployment artifact |
 | AC-13 | `./scripts/stack-down.sh` with an unrelated image tagged as a canary | containers, volume, network and exactly the 3 stack images removed; canary untouched |
 | AC-14 | Engine detection | docker path verified; **podman not installed in the agent sandbox** |
-| AC-15 | `compose.yaml` untouched | unchanged in the diff |
+| AC-15 | `compose.yaml` still starts Postgres alone | satisfied: the file gains no service. Its volume mount was repaired on Marcel's instruction, which is what makes "starts Postgres alone" true again — it had not started at all |
 | Backend build | `dotnet build -c Release` | succeeds; one pre-existing S125 warning in `StorageUseCases.cs` from `develop`, not from this change |
 | Backend tests | `dotnet test -c Release` | 150/150 pass |
 | OpenAPI contract | build-time generation with no database | unchanged, still generated |
@@ -105,6 +108,5 @@ run on Marcel's machine is the real test.
 - **Result:** ready for review
 - **Deviations from spec:** none. AC-08 verified only for docker, stated above rather than
   claimed.
-- **Follow-up, not done here:** `compose.yaml` carries the same `postgres:18` volume mount
-  that fails, so the native dev database is affected too. Out of scope by AC-15 — worth its
-  own small fix.
+- **Follow-up:** none outstanding. The `compose.yaml` mount — first recorded here as a
+  separate concern — was fixed in this PR after Marcel asked for it, and verified.
