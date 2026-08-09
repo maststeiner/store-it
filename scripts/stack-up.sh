@@ -16,6 +16,7 @@ cd "$repo_root"
 
 detect_engine
 echo "container engine: $engine"
+require_compose_spec_support
 
 if [[ ! -f .env ]]; then
   echo "error: .env is missing." >&2
