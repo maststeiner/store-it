@@ -31,16 +31,28 @@ fi
 
 # Build explicitly rather than relying on `up --build`: podman-compose does not always
 # support the flag, and a separate step makes a build failure obvious.
-"${compose[@]}" -f "$STACK_FILE" build "${build_args[@]}"
+"${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" build "${build_args[@]}"
 
 # `up` runs the migration service to completion first — that ordering lives in
 # compose.stack.yaml, not here, so a plain `compose up` behaves identically.
-"${compose[@]}" -f "$STACK_FILE" up --detach
+"${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" up --detach
 
 port="$(grep -E '^STOREIT_WEB_PORT=' .env | cut -d= -f2 || true)"
 port="${port:-8080}"
 
+# `up --detach` returns once the containers are created; the web container may still be
+# coming up. Wait for it to actually answer, so "stack is up" is not a lie.
+echo -n "waiting for http://127.0.0.1:${port} "
+for _ in $(seq 1 60); do
+  if curl --silent --fail --max-time 2 "http://127.0.0.1:${port}/" > /dev/null 2>&1; then
+    echo "— ready"
+    break
+  fi
+  echo -n "."
+  sleep 2
+done
+
 echo
 echo "stack is up → http://localhost:${port}"
-echo "  logs:  ${compose[*]} -f $STACK_FILE logs -f"
+echo "  logs:  ${compose[*]} -p $STACK_PROJECT -f $STACK_FILE logs -f"
 echo "  down:  ./scripts/stack-down.sh"

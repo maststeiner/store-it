@@ -25,7 +25,7 @@ else
   down_args+=(--volumes)
 fi
 
-"${compose[@]}" -f "$STACK_FILE" down "${down_args[@]}"
+"${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" down "${down_args[@]}"
 
 # Compose names built images "<project>_<service>" or "<project>-<service>" depending on
 # the implementation, so try both spellings and stay quiet about the ones that are not

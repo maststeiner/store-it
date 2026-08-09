@@ -52,10 +52,12 @@ services:
       context: ./backend
       target: runtime
     environment:
-      # Production keeps the dev-login shortcut unmapped and the session cookie Secure;
-      # that works over http://localhost because browsers treat it as a trustworthy
-      # origin (SPEC-004 option A). Override to Development only knowingly.
-      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      # Fixed, deliberately NOT read from .env: in Development the API maps
+      # POST /auth/dev-login, which issues a session without any credential. Making that
+      # a one-line change in an untracked file is too easy a way to silently drop the
+      # security contract this stack is supposed to mirror. Need Development? Use the
+      # native workflow (scripts/dev.sh) — that is what it is for.
+      ASPNETCORE_ENVIRONMENT: Production
       ConnectionStrings__storeit: Host=postgres;Port=5432;Database=${POSTGRES_DB:-storeit};Username=${POSTGRES_USER:-storeit};Password=${POSTGRES_PASSWORD}
       # Empty values are fine: AuthenticationSetup registers a provider only when its
       # ClientId and Authority are both set, so the stack starts without credentials and
