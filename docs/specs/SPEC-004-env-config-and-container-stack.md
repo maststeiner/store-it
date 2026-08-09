@@ -25,13 +25,13 @@ Recorded so the spec is judged against reality, not a blank slate.
 | CI already runs the full stack from environment config | job `1b · End-to-end (full stack)` sets `ConnectionStrings__storeit` and starts API + `ng serve` |
 | OIDC settings are already configuration-driven and optional | `AuthenticationSetup` registers a provider only when both `ClientId` and `Authority` are non-empty (`Authentication__Google__ClientId`, … map by .NET's default env-var binding) |
 | Postgres already runs in a container, podman-aware | `compose.yaml`, image `docker.io/library/postgres:18-alpine` (fully-qualified — required by podman), loopback-only port binding |
-| No secret is committed | `appsettings.json` carries empty `ClientId`/`ClientSecret` placeholders only |
+| No **OIDC** secret is committed | `appsettings.json` carries empty `ClientId`/`ClientSecret` placeholders only. Note the exception: `compose.yaml` does commit `POSTGRES_PASSWORD: storeit` for the local dev database — a real credential, though loopback-bound and worthless outside a laptop |
 
 | Missing | Consequence |
 |---|---|
 | **No Dockerfile exists anywhere in the repo** | Backend and frontend can only run natively today |
 | Nothing routes `/api` and `/auth` in a container network | The frontend relies on `frontend/proxy.conf.json` → `http://localhost:5000`, a dev-server-only mechanism |
-| Migrations are applied by hand or by CI | No admin-process step inside a stack |
+| Migrations are applied by `scripts/dev.sh`, by CI, or by hand | `dev.sh` already runs `dotnet ef database update`; what is missing is the equivalent **inside a container stack**, not automated migration as such |
 | No documented inventory of the environment contract | Variables are discoverable only by reading code |
 | Missing config fails **late** | `AddInfrastructure` throws when the DbContext is first created — i.e. on the first request, not at startup |
 
@@ -68,6 +68,48 @@ These answer individual questions; they are **not** a freeze of the whole spec.
    rot unnoticed until someone runs it.
 8. **Two scripts** (2026-08-09): one brings the stack up, one tears it down *and* cleans up
    the images. Podman first, matching the existing `scripts/dev.sh`.
+
+---
+
+## Amendments (post-freeze)
+
+Corrections found by the automated review after the G1 freeze. None change scope or any
+acceptance criterion; they fix statements that were wrong or under-specified when frozen.
+
+| # | Date | Change |
+|---|------|--------|
+| A1 | 2026-08-09 | "No secret is committed" was false: `compose.yaml` commits `POSTGRES_PASSWORD`. Narrowed to OIDC secrets, with the exception named. |
+| A2 | 2026-08-09 | "Migrations are applied by hand or by CI" was wrong: `scripts/dev.sh` already applies them. The gap is a migration step *inside a container stack*. |
+| A3 | 2026-08-09 | Startup order, restart policy and the environment contract were described in prose only; they are now stated precisely (see below), because they are the parts an implementation can silently get wrong. |
+| A4 | 2026-08-09 | Option B was still listed as an alternative although option A had been chosen and the technical constraints forbid the new code B would need. Reduced to a note. |
+| A5 | 2026-08-09 | Added EC-11 (dual-stack loopback), found by running the stack: `localhost` resolved to `::1` inside the container and the health check failed with "connection refused" while the service was fine. |
+
+### A3 — the parts that must be exact
+
+**Startup order.** `postgres` must pass its health check; then `migrate` must run **to
+completion with exit code 0**; only then does `backend` start, and `web` waits for
+`backend` to be healthy. The ordering is expressed with compose `depends_on` conditions
+(`service_healthy`, `service_completed_successfully`), not in the scripts, so a plain
+`compose up` inherits the same guarantees.
+
+**Failure is terminal, not a loop.** No service carries a restart policy that would retry a
+configuration error: a failed migration or a missing connection string stops the stack with
+a non-zero result instead of restart-looping.
+
+**Environment contract.** `.env.example` lists every variable with its classification:
+
+| Variable | Required | Secret | Default |
+|---|---|---|---|
+| `POSTGRES_DB`, `POSTGRES_USER` | no | no | `storeit` |
+| `POSTGRES_PASSWORD` | **yes** | local-only credential | none — absent must fail loudly |
+| `STOREIT_WEB_PORT` | no | no | `8080` (unprivileged, so rootless podman works) |
+| `ASPNETCORE_ENVIRONMENT` | no | no | `Production` |
+| `Authentication__{Google,Microsoft}__ClientId`/`ClientSecret`/`Authority` | no | **yes** | empty; sign-in is then unavailable while the stack still runs (AC-10) |
+
+**The one-command contract.** `./scripts/stack-up.sh` (or `docker compose -f
+compose.stack.yaml up`, or the same with `podman compose`) serves the application at
+`http://localhost:${STOREIT_WEB_PORT}`; `./scripts/stack-down.sh` removes containers,
+volumes and the images this stack built.
 
 ---
 
@@ -158,6 +200,12 @@ the E2E suite keeps its native, `Development`, `dev-login` setup, and the stack 
 - **EC-06 — Rootless podman**: ports below 1024 are unavailable; SELinux hosts need `:z`
   on bind mounts.
 - **EC-07 — Apple Silicon**: images must resolve for `arm64`, or the stack is x86-only.
+- **EC-11 — Dual-stack loopback.** `localhost` may resolve to `::1` before `127.0.0.1`. A
+  service bound to IPv4 only is then unreachable under a name that looks correct. Observed
+  in practice while building this: the web container's health check failed with "connection
+  refused" against `http://localhost:8080` although nginx was serving fine. Health checks
+  must therefore address `127.0.0.1` explicitly, and the documented entry URL must state the
+  IPv4 fallback.
 - **EC-08 — The teardown script deletes images.** It must remove only what this stack built,
   never unrelated local images — a destructive script that over-reaches is worse than none.
 
@@ -171,8 +219,12 @@ the stack is a local testing tool:
 | Option | What it means | Cost |
 |---|---|---|
 | **A — `Production` over `http://localhost`** | Stack runs with `ASPNETCORE_ENVIRONMENT=Production`, so `dev-login` is **not** mapped and cookies are `Secure`. Works because browsers treat `http://localhost` as trustworthy. `RequireHttpsMetadata=true` is unproblematic — provider metadata is fetched from Google/Microsoft over HTTPS anyway. | None beyond care; fails if the stack is ever opened on a non-localhost hostname |
-| **B — `Production` with TLS in nginx** | Self-signed / mkcert certificate in the stack, `https://localhost`. Closest to production, no reliance on the localhost exception. | Certificate handling in compose, plus forwarded-header configuration in `Program.cs` (new code, EC-02) |
 | **C — `Development`** | Relaxed cookie and metadata policy, simplest to get working. | **Exposes `POST /auth/dev-login`**, which SPEC-003 marks "never reachable in Staging or Production" — acceptable for a laptop, not for anything shared |
+
+Option B (TLS terminating in nginx) was dropped rather than left standing: it would need
+forwarded-header handling in `Program.cs`, which the technical constraints of this spec
+rule out. It remains the right move when the images are aimed at a real deployment
+(ADR-005 / #17), and would be its own spec.
 
 **Chosen: A.** It honours the "real OIDC, no dev shortcut" decision, needs no new
 application code, and keeps the stack honest about being a localhost tool. B is the right
