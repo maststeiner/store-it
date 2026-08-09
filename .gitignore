@@ -34,3 +34,8 @@ StrykerOutput/
 frontend/playwright-report/
 frontend/test-results/
 frontend/.playwright/
+
+# Container stack (SPEC-004): .env holds real OIDC client secrets — never commit it.
+# The committed template is .env.example.
+.env
+!.env.example
