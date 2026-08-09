@@ -82,6 +82,42 @@ provider — and it must carry the same port as `STOREIT_WEB_PORT`, e.g.
 `http://localhost:8080/auth/callback/google` for the default. Without credentials the
 stack still starts and serves the app; only signing in is unavailable.
 
+### Enabling sign-in
+
+Until a provider has both a `ClientId` and an `Authority`, `/auth/login/{provider}` answers
+`400 auth.provider.unconfigured` — an OIDC scheme is registered only for a fully configured
+provider, so an empty `.env` can never break `/health`.
+
+**The redirect URI follows the address bar, not the configuration.** Open the app at
+`http://localhost:8080` and the callback is `http://localhost:8080/auth/callback/google`;
+open it at `http://127.0.0.1:8080` and it is `http://127.0.0.1:8080/…`. Register the host
+you actually type — or register both.
+
+- **Google** — [Cloud console](https://console.cloud.google.com/apis/credentials) → *Create
+  credentials* → *OAuth client ID* → **Web application**. Authorised redirect URI:
+  `http://localhost:8080/auth/callback/google` (Google accepts `http` for loopback hosts).
+  Put the id and secret in `Authentication__Google__ClientId` / `__ClientSecret`; the
+  authority is already in `.env.example`.
+- **Microsoft** — Entra ID → *App registrations* → *New registration*, redirect URI platform
+  **Web**: `http://localhost:8080/auth/callback/microsoft`. Secret under *Certificates &
+  secrets*. The authority has to be **tenant-specific**:
+  `https://login.microsoftonline.com/<tenant-id-or-domain>/v2.0`. `common` and
+  `organizations` publish the literal issuer
+  `https://login.microsoftonline.com/{tenantid}/v2.0`, and nothing here resolves that
+  template — token validation would fail.
+
+Configuration is read when the container starts, so re-run `./scripts/stack-up.sh` after
+editing `.env`. To see what the app really sends — the `redirect_uri` below is exactly what
+the provider must have on file:
+
+```bash
+curl -si http://localhost:8080/auth/login/google | grep -i '^location'
+```
+
+One browser caveat: the session and the OIDC correlation cookies are `Secure`, so signing in
+needs a browser that treats `http://localhost` as a secure context. Chrome, Edge and Firefox
+do; Safari is stricter — if sign-in fails there with no visible error, try another browser.
+
 `compose.yaml` stays the separate, native workflow: it starts PostgreSQL alone for
 `./scripts/dev.sh`, and the container stack neither uses nor interferes with it — different
 compose project, different volume.

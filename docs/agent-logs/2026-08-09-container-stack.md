@@ -106,7 +106,8 @@ because on macOS that is the usual reason `/var/run/docker.sock` is missing.
 | AC-06 | `compose ps` | postgres healthy → backend healthy → web healthy |
 | AC-07 | Through the web origin: `/` → **200**, `/health` → **200**, `/api/v1/storages` → **401** | routing works and secure-by-default survives the proxy |
 | AC-08 | Fully-qualified image names, unprivileged ports, engine detection in the scripts | **partially verified — see below** |
-| AC-10 | Stack started with empty OIDC values | starts and serves; only sign-in unavailable |
+| AC-10 | Stack started with empty OIDC values | starts and serves; only sign-in unavailable — `GET /auth/login/google` → **400 `auth.provider.unconfigured`** |
+| EC-03 | Sign-in wiring probed with dummy client ids for both providers | `/auth/login/{provider}` → **302** to the provider's authorize endpoint, `response_type=code`, PKCE `S256`, `scope=openid profile email`. The `redirect_uri` mirrors the browser's Host: `http://localhost:8080/auth/callback/…` via localhost, `http://127.0.0.1:8080/…` via the IP — so the registered URI has to match the host that is typed. Recorded in the README, because it is the failure nobody guesses |
 | AC-11 | `compose config` | `host_ip: 127.0.0.1` |
 | AC-12 | README section | states it is a local testing tool, not a deployment artifact |
 | AC-13 | `./scripts/stack-down.sh` with an unrelated image tagged as a canary | containers, volume, network and exactly the 3 stack images removed; canary untouched |
