@@ -7,7 +7,21 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 12-factor: config strictly from the environment — no committed fallback.
 // The connection string is resolved lazily in AddInfrastructure (required at
-// runtime, not during build-time OpenAPI generation).
+// runtime, not during build-time OpenAPI generation). Checking it here turns that
+// laziness into an immediate, visible failure instead of one on the first request
+// (SPEC-004 AC-02) — before anything is started that could keep the process alive.
+if (
+    !StartupConfigurationCheck.TryValidate(
+        builder.Configuration,
+        builder.Environment,
+        out var configurationError
+    )
+)
+{
+    await Console.Error.WriteLineAsync(configurationError);
+    return 1;
+}
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
 
@@ -72,3 +86,7 @@ if (app.Environment.IsDevelopment())
 }
 
 await app.RunAsync();
+
+// Explicit success code: the entry point returns int since a configuration error above
+// exits with 1, and every path has to say what it means.
+return 0;

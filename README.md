@@ -43,3 +43,31 @@ See `CLAUDE.md` for orchestration rules and `docs/SETUP.md` for the setup checkl
 Starts PostgreSQL (Podman), applies migrations, and launches the backend API
 (http://localhost:5000) and the Angular frontend (http://localhost:4200).
 Ctrl+C tears everything down. Prerequisites: `podman`, .NET 10 SDK, Node 22.
+
+### …or everything in containers
+
+Needs only `podman` (or Docker) — no .NET SDK, no Node:
+
+```bash
+cp .env.example .env      # fill in at least POSTGRES_PASSWORD
+./scripts/stack-up.sh     # → http://localhost:8080
+./scripts/stack-down.sh   # stops it and removes the images it built
+```
+
+The stack builds both images, applies migrations in a one-shot service, then starts the
+API and an nginx that serves the built frontend and proxies `/api` and `/auth` — so
+everything is one origin, exactly as the cookie session expects. Configuration comes from
+`.env` only; see `.env.example` for every variable, and
+[SPEC-004](docs/specs/SPEC-004-env-config-and-container-stack.md) for the reasoning.
+
+> **This stack is a local testing tool, not a deployment artifact.** It binds to
+> `127.0.0.1` only, serves plain HTTP, and relies on the browser trusting `localhost` for
+> the `Secure` session cookie. Do not expose it on another interface and do not treat it as
+> a template for hosting — that decision belongs to ADR-005 (#17).
+
+Sign-in needs real OIDC credentials in `.env`, with the redirect URI registered at the
+provider (`http://localhost:8080/auth/callback/google`). Without them the stack still
+starts and serves the app; only signing in is unavailable.
+
+`compose.yaml` is untouched by all this: it still starts PostgreSQL alone for the native
+workflow above.

@@ -1,0 +1,89 @@
+# SPEC-004 — the full local stack: database, migrations, API, web.
+#
+# This is a LOCAL TESTING TOOL, not a deployment artifact (SPEC-004 decision 5). It binds
+# to 127.0.0.1 only: on any other interface the Secure session cookie stops working and
+# the OIDC credentials from .env would be exposed on the network (AC-11).
+#
+#   ./scripts/stack-up.sh      → http://localhost:${STOREIT_WEB_PORT:-8080}
+#   ./scripts/stack-down.sh    → stops everything and removes what it built
+#
+# compose.yaml is deliberately left alone — it still starts Postgres by itself for the
+# native workflow (scripts/dev.sh), and this file does not interfere with it (AC-15).
+
+# Own project name → own network and volume namespace, so this stack cannot collide with
+# the Postgres started by compose.yaml.
+name: storeit-stack
+
+services:
+  postgres:
+    image: docker.io/library/postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-storeit}
+      POSTGRES_USER: ${POSTGRES_USER:-storeit}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    # Deliberately not published: nothing outside the stack needs it, and leaving 5432
+    # free avoids clashing with the dev database from compose.yaml (EC-05).
+    volumes:
+      # /var/lib/postgresql, NOT /var/lib/postgresql/data: since 18 these images keep the
+      # cluster in a version-specific subdirectory, and refuse to start when a volume is
+      # mounted at the old path. Verified by hitting exactly that error here.
+      - stack-pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-storeit} -d ${POSTGRES_DB:-storeit}']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # Admin process (12-factor): applies migrations and exits. Runs on every `up`, before
+  # the API — the API never migrates itself (AC-05).
+  migrate:
+    build:
+      context: ./backend
+      target: migrate
+    environment:
+      ConnectionStrings__storeit: Host=postgres;Port=5432;Database=${POSTGRES_DB:-storeit};Username=${POSTGRES_USER:-storeit};Password=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      # Production keeps the dev-login shortcut unmapped and the session cookie Secure;
+      # that works over http://localhost because browsers treat it as a trustworthy
+      # origin (SPEC-004 option A). Override to Development only knowingly.
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__storeit: Host=postgres;Port=5432;Database=${POSTGRES_DB:-storeit};Username=${POSTGRES_USER:-storeit};Password=${POSTGRES_PASSWORD}
+      # Empty values are fine: AuthenticationSetup registers a provider only when its
+      # ClientId and Authority are both set, so the stack starts without credentials and
+      # only sign-in is unavailable (AC-10).
+      Authentication__Google__ClientId: ${Authentication__Google__ClientId:-}
+      Authentication__Google__ClientSecret: ${Authentication__Google__ClientSecret:-}
+      Authentication__Google__Authority: ${Authentication__Google__Authority:-https://accounts.google.com}
+      Authentication__Microsoft__ClientId: ${Authentication__Microsoft__ClientId:-}
+      Authentication__Microsoft__ClientSecret: ${Authentication__Microsoft__ClientSecret:-}
+      Authentication__Microsoft__Authority: ${Authentication__Microsoft__Authority:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        # The guarantee lives here rather than in the scripts, so a plain `compose up`
+        # gets it too: a failed migration leaves the API unstarted (AC-05a).
+        condition: service_completed_successfully
+    # Not published either — the browser reaches the API through the web service, which
+    # is what keeps everything same-origin.
+
+  web:
+    build:
+      context: ./frontend
+    ports:
+      - '127.0.0.1:${STOREIT_WEB_PORT:-8080}:8080'
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  stack-pgdata:
