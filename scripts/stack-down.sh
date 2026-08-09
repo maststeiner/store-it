@@ -17,6 +17,7 @@ cd "$repo_root"
 
 detect_engine
 echo "container engine: $engine"
+require_compose_spec_support
 
 # Spelled out rather than accumulated into an array: macOS ships bash 3.2, where an empty
 # array expansion under `set -u` is an error. This one is never empty, but the shape should
