@@ -11,8 +11,7 @@
 
 As a **developer or operator** I want **the whole application configured from the
 environment and started with a single container-stack command** so that **I can bring up
-backend, frontend and database reproducibly on any machine, and let CI exercise that very
-same stack instead of a separately wired-up one**.
+backend, frontend and database reproducibly on any machine with one command**.
 
 ---
 
@@ -60,33 +59,25 @@ These answer individual questions; they are **not** a freeze of the whole spec.
 6. **The stack lives in its own compose file** (2026-08-09). `compose.yaml` keeps starting
    Postgres alone, so today's native workflow (`scripts/dev.sh`, `dotnet run`, `ng serve`)
    is untouched by this change.
-7. **CI switches over** (2026-08-09): job `1b · End-to-end (full stack)` runs the stack
-   instead of wiring up backend and `ng serve` by hand. This raises the stack from a
-   convenience to load-bearing infrastructure — if it breaks, the pipeline goes red.
+7. **CI stays exactly as it is** (2026-08-09, revised the same day). Job
+   `1b · End-to-end (full stack)` keeps starting backend and `ng serve` natively with
+   `dev-login`. Briefly considered and dropped: running the stack in CI would have forced
+   the login question (see the note below), and the point of this stack is a simple local
+   tool. Consequence accepted knowingly: **nothing in CI exercises the stack**, so it can
+   rot unnoticed until someone runs it.
 8. **Two scripts** (2026-08-09): one brings the stack up, one tears it down *and* cleans up
    the images. Podman first, matching the existing `scripts/dev.sh`.
 
 ---
 
-## Conflict surfaced by decision 7, and how it resolves
+## Why the E2E suite stays out of this
 
-Decision 2 (real OIDC, `Production`) and decision 7 (CI runs this stack) cannot both hold
-naively: the Playwright suite authenticates with `POST /auth/dev-login`, which `Program.cs`
-maps **only** when the environment is `Development`. In CI there is no OIDC provider to log
-into, so a `Production` stack would leave the E2E tests unable to authenticate.
-
-**Resolution — the environment is itself configuration** (which is the point of this spec):
-the stack reads `ASPNETCORE_ENVIRONMENT` from the environment like everything else.
-
-| Context | `ASPNETCORE_ENVIRONMENT` | Login path | Cookie policy |
-|---|---|---|---|
-| Local (developer laptop) | `Production` | real OIDC via env vars | `Secure`, relies on the localhost exception (option A) |
-| CI (job 1b) | `Development` | `dev-login`, as today | `SameAsRequest` |
-
-**The caveat, stated rather than hidden:** CI then exercises the stack in a *slightly*
-different configuration than a developer runs locally — different cookie policy, and the
-`dev-login` endpoint present. The container images, the routing, the migrations and the
-service wiring are identical; the authentication mode is not.
+The Playwright suite authenticates with `POST /auth/dev-login`, which `Program.cs` maps
+**only** in `Development`. The stack runs `Production` with real OIDC (decisions 2 and 4), so
+those tests could not authenticate against it — there is no OIDC provider to log into in an
+automated run. Rather than weaken the tests or complicate the stack, the two stay separate:
+the E2E suite keeps its native, `Development`, `dev-login` setup, and the stack stays a
+`Production`-like local tool.
 
 ---
 
@@ -129,7 +120,7 @@ service wiring are identical; the authentication mode is not.
       and serve the app, and report the failure at login time — the existing behaviour of
       `AuthenticationSetup`, which must not regress.
 
-### Scripts, CI and coexistence
+### Scripts and coexistence
 
 - [ ] AC-13: WHEN a developer runs the start script THE system SHALL bring the whole stack
       up with one command, and WHEN they run the teardown script THE system SHALL stop the
@@ -137,10 +128,7 @@ service wiring are identical; the authentication mode is not.
       leftovers behind.
 - [ ] AC-14: WHEN either script runs THE system SHALL use `podman` where available and
       `docker` otherwise, and SHALL fail with a clear message if neither is installed.
-- [ ] AC-15: WHEN CI job `1b · End-to-end (full stack)` runs THE system SHALL start this
-      stack and run Playwright against it, replacing the hand-wired backend and `ng serve`
-      startup, and SHALL stay green.
-- [ ] AC-16: WHEN `docker compose up` / `podman compose up` is run against the existing
+- [ ] AC-15: WHEN `docker compose up` / `podman compose up` is run against the existing
       `compose.yaml` THE system SHALL still start Postgres alone, exactly as before — the
       native development workflow must not change.
 
@@ -164,13 +152,7 @@ service wiring are identical; the authentication mode is not.
 - **EC-06 — Rootless podman**: ports below 1024 are unavailable; SELinux hosts need `:z`
   on bind mounts.
 - **EC-07 — Apple Silicon**: images must resolve for `arm64`, or the stack is x86-only.
-- **EC-08 — CI has docker, the laptop has podman.** GitHub's runners ship Docker; the
-  scripts must not assume podman, and job 1b must work with whatever the runner provides
-  (AC-14).
-- **EC-09 — CI build time.** Job 1b currently starts a `dotnet run` in ~seconds. Building
-  two images per run is slower; layer caching and a `.dockerignore` decide whether the
-  pipeline stays tolerable.
-- **EC-10 — The teardown script deletes images.** It must remove only what this stack built,
+- **EC-08 — The teardown script deletes images.** It must remove only what this stack built,
   never unrelated local images — a destructive script that over-reaches is worse than none.
 
 ---
@@ -232,8 +214,6 @@ Two consequences that follow from A and are therefore binding:
       `scripts/` following the conventions of the existing `scripts/dev.sh` (bash,
       `set -euo pipefail`, repo-root resolution, podman first).
 - [ ] `compose.yaml` must not gain services (AC-16).
-- [ ] Job 1b is a required status check on `develop` and `main` — the CI switchover in
-      decision 7 touches a gate that currently protects every merge.
 
 ---
 
@@ -255,6 +235,9 @@ Two consequences that follow from A and are therefore binding:
 | AC-10 | ⬜ | ⬜ |
 | AC-11 | ⬜ | ⬜ |
 | AC-12 | ⬜ | ⬜ |
+| AC-13 | ⬜ | ⬜ |
+| AC-14 | ⬜ | ⬜ |
+| AC-15 | ⬜ | ⬜ |
 
 ---
 
