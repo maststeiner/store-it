@@ -1,9 +1,9 @@
 # Spec: Environment-driven configuration and a one-command container stack
 
-> **Status:** Draft — awaiting G1 freeze
+> **Status:** Frozen (Gate 1) — decided by Marcel Steiner, 2026-08-09
 > **Sprint:** 2026-S32
 > **Author:** Claude Opus 5 (developer agent), from Marcel Steiner's request
-> **Last updated:** 2026-08-08
+> **Last updated:** 2026-08-09
 
 ---
 
@@ -38,7 +38,7 @@ Recorded so the spec is judged against reality, not a blank slate.
 
 ---
 
-## Decisions taken at G1 (Marcel, 2026-08-08)
+## Decisions taken at G1 (Marcel, 2026-08-08 / 2026-08-09)
 
 1. **Frontend is served production-like**: built Angular assets served by nginx, which
    reverse-proxies `/api` and `/auth` to the backend. One entry URL, no CORS special case,
@@ -46,6 +46,14 @@ Recorded so the spec is judged against reality, not a blank slate.
 2. **Real OIDC via environment variables** — not the `dev-login` shortcut.
 3. **Migrations run as a separate one-shot service**, 12-factor admin process, mirroring
    what CI does.
+4. **Option A for the cookie/TLS question** (2026-08-09): the stack runs with
+   `ASPNETCORE_ENVIRONMENT=Production` over `http://localhost`, relying on the browser's
+   localhost exception for the `Secure` session cookie. No TLS, no forwarded-header work,
+   and `dev-login` stays unmapped.
+5. **The stack is for local testing only** (2026-08-09, Marcel: *"da es nur zum lokalen
+   testen gedacht ist"*). This is a scope decision, not a detail: it is why TLS, registry
+   publishing and non-localhost hostnames are out of scope, and why binding to loopback is a
+   requirement rather than a nicety.
 
 ---
 
@@ -95,7 +103,7 @@ Recorded so the spec is judged against reality, not a blank slate.
 - **EC-01 — Secure cookie over plain HTTP.** `AuthenticationSetup` sets
   `Cookie.SecurePolicy = Always` outside `Development`. A production-like stack on
   `http://localhost:<port>` therefore relies on browsers treating `localhost` as a
-  trustworthy origin. **This is the one decision still open — see below.**
+  trustworthy origin. **Resolved by decision 4 (option A) — see below.**
 - **EC-02 — OIDC redirect URI behind a reverse proxy.** The callback URL is derived from
   the incoming request. Behind nginx this only stays correct if the original `Host` is
   forwarded; the moment TLS terminates at nginx, the app also needs forwarded-header
@@ -111,9 +119,10 @@ Recorded so the spec is judged against reality, not a blank slate.
 
 ---
 
-## Open decision for the freeze (needs Marcel)
+## Resolved: the cookie/TLS question (was open at draft time)
 
-Choice 2 (real OIDC) collides with EC-01/EC-02. Pick one before implementation:
+Choice 2 (real OIDC) collided with EC-01/EC-02. **Option A was chosen**, on the grounds that
+the stack is a local testing tool:
 
 | Option | What it means | Cost |
 |---|---|---|
@@ -121,9 +130,17 @@ Choice 2 (real OIDC) collides with EC-01/EC-02. Pick one before implementation:
 | **B — `Production` with TLS in nginx** | Self-signed / mkcert certificate in the stack, `https://localhost`. Closest to production, no reliance on the localhost exception. | Certificate handling in compose, plus forwarded-header configuration in `Program.cs` (new code, EC-02) |
 | **C — `Development`** | Relaxed cookie and metadata policy, simplest to get working. | **Exposes `POST /auth/dev-login`**, which SPEC-003 marks "never reachable in Staging or Production" — acceptable for a laptop, not for anything shared |
 
-**Recommendation: A.** It honours the "real OIDC, no dev shortcut" decision, needs no new
+**Chosen: A.** It honours the "real OIDC, no dev shortcut" decision, needs no new
 application code, and keeps the stack honest about being a localhost tool. B is the right
 follow-up when the images are aimed at a real deployment (ADR-005 / #17).
+
+Two consequences that follow from A and are therefore binding:
+
+- [ ] AC-11: WHEN the stack is started THE system SHALL bind its published ports to
+      `127.0.0.1` only — on any other interface the `Secure` cookie stops working and real
+      OIDC credentials would be exposed on the network.
+- [ ] AC-12: WHEN the stack's documentation is read THE system SHALL state that it is a
+      local testing tool and not a deployment artifact, so nobody promotes it by accident.
 
 ---
 
@@ -173,6 +190,8 @@ follow-up when the images are aimed at a real deployment (ADR-005 / #17).
 | AC-08 | ⬜ | ⬜ |
 | AC-09 | ⬜ | ⬜ |
 | AC-10 | ⬜ | ⬜ |
+| AC-11 | ⬜ | ⬜ |
+| AC-12 | ⬜ | ⬜ |
 
 ---
 
@@ -180,6 +199,6 @@ follow-up when the images are aimed at a real deployment (ADR-005 / #17).
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | Marcel Steiner |
+| G1 · Spec Freeze | ✅ | 2026-08-09 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
