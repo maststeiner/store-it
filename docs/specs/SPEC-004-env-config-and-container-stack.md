@@ -1,6 +1,6 @@
 # Spec: Environment-driven configuration and a one-command container stack
 
-> **Status:** Frozen (Gate 1) — decided by Marcel Steiner, 2026-08-09
+> **Status:** Draft — not frozen; awaiting Marcel's review (changes requested 2026-08-09)
 > **Sprint:** 2026-S32
 > **Author:** Claude Opus 5 (developer agent), from Marcel Steiner's request
 > **Last updated:** 2026-08-09
@@ -38,7 +38,9 @@ Recorded so the spec is judged against reality, not a blank slate.
 
 ---
 
-## Decisions taken at G1 (Marcel, 2026-08-08 / 2026-08-09)
+## Decisions taken so far (Marcel, 2026-08-08 / 2026-08-09)
+
+These answer individual questions; they are **not** a freeze of the whole spec.
 
 1. **Frontend is served production-like**: built Angular assets served by nginx, which
    reverse-proxies `/api` and `/auth` to the backend. One entry URL, no CORS special case,
@@ -199,6 +201,6 @@ Two consequences that follow from A and are therefore binding:
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ✅ | 2026-08-09 | Marcel Steiner |
+| G1 · Spec Freeze | ⬜ | | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
