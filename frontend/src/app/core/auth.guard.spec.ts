@@ -4,8 +4,8 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   ActivatedRouteSnapshot,
-  Router,
   RouterStateSnapshot,
+  UrlTree,
   provideRouter,
 } from '@angular/router';
 
@@ -16,8 +16,8 @@ function fakeRoute(): ActivatedRouteSnapshot {
   return {} as ActivatedRouteSnapshot;
 }
 
-function fakeState(): RouterStateSnapshot {
-  return { url: '/storages' } as RouterStateSnapshot;
+function fakeState(url = '/storages'): RouterStateSnapshot {
+  return { url } as RouterStateSnapshot;
 }
 
 describe('authGuard', () => {
@@ -58,8 +58,7 @@ describe('authGuard', () => {
 
     const result = await TestBed.runInInjectionContext(() => authGuard(fakeRoute(), fakeState()));
 
-    const router = TestBed.inject(Router);
-    expect(result).toEqual(router.parseUrl('/login'));
+    expect((result as UrlTree).toString()).toBe('/login?returnUrl=%2Fstorages');
   });
 
   it('calls loadMe when user is undefined then redirects if still anonymous', async () => {
@@ -80,9 +79,28 @@ describe('authGuard', () => {
 
     const result = await TestBed.runInInjectionContext(() => authGuard(fakeRoute(), fakeState()));
 
-    const router = TestBed.inject(Router);
     expect(loadMe).toHaveBeenCalledOnce();
-    expect(result).toEqual(router.parseUrl('/login'));
+    expect((result as UrlTree).toString()).toBe('/login?returnUrl=%2Fstorages');
+  });
+
+  it('carries the attempted deep link as returnUrl', async () => {
+    const userSignal = signal<AuthUser | null | undefined>(null);
+    const loadMe = vi.fn().mockResolvedValue(undefined);
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([{ path: 'login', children: [] }]),
+        { provide: AuthService, useValue: { user: userSignal, loadMe } },
+      ],
+    });
+
+    const result = await TestBed.runInInjectionContext(() =>
+      authGuard(fakeRoute(), fakeState('/storages/7/items')),
+    );
+
+    expect((result as UrlTree).toString()).toBe('/login?returnUrl=%2Fstorages%2F7%2Fitems');
   });
 
   it('undefined_then_loadMe_populates_user_allows', async () => {
