@@ -83,6 +83,8 @@ acceptance criterion; they fix statements that were wrong or under-specified whe
 | A3 | 2026-08-09 | Startup order, restart policy and the environment contract were described in prose only; they are now stated precisely (see below), because they are the parts an implementation can silently get wrong. |
 | A4 | 2026-08-09 | Option B was still listed as an alternative although option A had been chosen and the technical constraints forbid the new code B would need. Reduced to a note. |
 | A5 | 2026-08-09 | Added EC-11 (dual-stack loopback), found by running the stack: `localhost` resolved to `::1` inside the container and the health check failed with "connection refused" while the service was fine. |
+| A6 | 2026-08-09 | **`ASPNETCORE_ENVIRONMENT` is no longer configurable for this stack.** Decision 4 requires `Production`, but the environment contract allowed an override — and in `Development` the API maps `POST /auth/dev-login`, which issues a session with no credential. A one-line change in an untracked `.env` was too easy a way to drop the security contract. The value is fixed in compose; a Development run is what `scripts/dev.sh` is for. |
+| A7 | 2026-08-09 | **Project isolation must be explicit, not implied by a separate file.** The stack declares `name: storeit-stack` and a `stack-pgdata` volume, but `name:` is not honoured by every compose implementation, so both scripts now pass `-p storeit-stack`. Verified: a teardown with a volume named like the dev database present leaves it untouched. |
 
 ### A3 — the parts that must be exact
 
@@ -255,24 +257,26 @@ Two consequences that follow from A and are therefore binding:
 
 ## Technical Constraints (from Architect Agent)
 
-<!-- To be confirmed by the architect persona after Gate 1 -->
 
-- [ ] Layering: no change. New artifacts are infrastructure files (Dockerfiles, nginx
-      config, compose), plus at most a startup-validation touch in the composition root for
-      AC-02.
-- [ ] Dependencies: no new NuGet or npm package expected; new base images only.
-- [ ] Image names must stay fully qualified (`docker.io/library/...`) — podman does not
+These were confirmed by the implementation (#83), which is why the boxes are ticked rather
+than left pending — the note about the architect persona applied to the draft.
+
+- [x] Layering: no change. New artifacts are infrastructure files (Dockerfiles, nginx
+      config, compose), plus a startup-validation touch in the composition root for AC-02.
+      Architecture tests pass.
+- [x] Dependencies: no NuGet or npm package added; new base images only.
+- [x] Image names stay fully qualified (`docker.io/library/...`) — podman does not
       assume a default registry (AC-08).
-- [ ] The build-time OpenAPI generation must keep working without a database — the lazy
+- [x] The build-time OpenAPI generation keeps working without a database — the lazy
       connection-string resolution exists for exactly that reason, so AC-02's fail-fast must
       not reintroduce a database requirement at build time.
-- [ ] ADR required: **no** for the stack itself; it must not pre-empt ADR-005 (#17).
-- [ ] New artifacts: `backend/Dockerfile`, `frontend/Dockerfile`, an nginx site config,
+- [x] ADR required: **no** for the stack itself; it must not pre-empt ADR-005 (#17).
+- [x] New artifacts: `backend/Dockerfile`, `frontend/Dockerfile`, an nginx site config,
       `compose.stack.yaml`, `.env.example`, `.dockerignore` files, and two scripts under
       `scripts/` following the conventions of the existing `scripts/dev.sh` (bash,
       `set -euo pipefail`, repo-root resolution, podman first).
-- [ ] `compose.yaml` must not gain services (AC-15).
-- [ ] The ordering is expressed in compose itself, not in a script: the backend depends on
+- [x] `compose.yaml` must not gain services (AC-15) — it is unchanged.
+- [x] The ordering is expressed in compose itself, not in a script: the backend depends on
       the migration service having *completed successfully*, and on Postgres being healthy —
       so `up` alone is sufficient and the guarantee survives someone starting the stack
       without the scripts.
