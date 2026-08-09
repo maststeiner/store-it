@@ -21,10 +21,6 @@ detect_engine() {
   fi
 }
 
-repo_root_from_script() {
-  cd "$(dirname "${BASH_SOURCE[1]}")/.." && pwd
-}
-
 # The compose project name — must match `name:` in compose.stack.yaml, because the
 # teardown finds this stack's containers, volumes and images through it.
 readonly STACK_PROJECT=storeit-stack
