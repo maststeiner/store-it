@@ -1,6 +1,6 @@
 # Spec: Environment-driven configuration and a one-command container stack
 
-> **Status:** Draft — not frozen; awaiting Marcel's review (changes requested 2026-08-09)
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-08-09
 > **Sprint:** 2026-S32
 > **Author:** Claude Opus 5 (developer agent), from Marcel Steiner's request
 > **Last updated:** 2026-08-09
@@ -256,6 +256,6 @@ Two consequences that follow from A and are therefore binding:
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | Marcel Steiner |
+| G1 · Spec Freeze | ✅ | 2026-08-09 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
