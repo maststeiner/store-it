@@ -62,6 +62,16 @@ everything is one origin, exactly as the cookie session expects. Configuration c
 `.env` only; see `.env.example` for every variable, and
 [SPEC-004](docs/specs/SPEC-004-env-config-and-container-stack.md) for the reasoning.
 
+**Which engine runs it.** Podman first, Docker as fallback — and the scripts require the
+engine's *daemon* to answer, not merely its CLI to exist, because `docker compose version`
+succeeds happily while nothing is running. The fallback is never silent: when podman is
+installed but skipped, the script prints the reason (VM not started, no compose provider)
+and the command that fixes it. Pin the choice to turn that fallback into an error:
+
+```bash
+STOREIT_ENGINE=podman ./scripts/stack-up.sh    # or =docker
+```
+
 > **This stack is a local testing tool, not a deployment artifact.** It binds to
 > `127.0.0.1` only, serves plain HTTP, and relies on the browser trusting `localhost` for
 > the `Secure` session cookie. Do not expose it on another interface and do not treat it as
