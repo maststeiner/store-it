@@ -54,6 +54,34 @@ shipped as a latent bug otherwise.
    in under a second**, with a one-line message instead of a stack trace, which is what
    AC-09 actually asked for.
 
+## What the first run on Marcel's machine found
+
+The sandbox has docker and no podman, so engine *selection* had never actually been
+exercised. Marcel's first run — podman is the engine he wants — produced
+`container engine: docker`, followed by a raw
+`failed to connect to the docker API at unix:///var/run/docker.sock`. Three defects behind
+one symptom:
+
+1. **Detection asked the wrong question.** `docker compose version` is a client-side
+   plugin: it answers while no daemon is running at all. So an engine was chosen that could
+   not build anything, and the failure surfaced as an API error out of the middle of the
+   build. Detection now asks for a fact only a live server can supply
+   (`docker info --format '{{.ServerVersion}}'`, `podman info …`), and an engine whose
+   daemon is silent is skipped rather than selected.
+2. **The fallback was silent.** Podman first, docker as fallback is the intended behaviour
+   (AC-14) — but the script only ever printed the winner, never why podman lost. Now it
+   names the reason (not installed / VM not started / no compose provider) and the command
+   that fixes it, and `STOREIT_ENGINE=podman|docker` pins the engine so the fallback
+   becomes an error instead.
+3. **The Compose v1 guard would have refused podman-compose.** It matched `*version 1.*`,
+   and `podman-compose` is itself at 1.x — a different implementation, not Docker Compose
+   v1. The very setup the guard was meant to protect would have been rejected by it. The
+   match now names docker-compose explicitly.
+
+The error text for a stopped daemon also names the socket it can see
+(`~/.docker/run/docker.sock`, Colima, Rancher Desktop) and the `docker context` command,
+because on macOS that is the usual reason `/var/run/docker.sock` is missing.
+
 ## Design notes worth keeping
 
 - **Why the check is not a hosted service.** Build-time OpenAPI generation legitimately has
@@ -82,7 +110,7 @@ shipped as a latent bug otherwise.
 | AC-11 | `compose config` | `host_ip: 127.0.0.1` |
 | AC-12 | README section | states it is a local testing tool, not a deployment artifact |
 | AC-13 | `./scripts/stack-down.sh` with an unrelated image tagged as a canary | containers, volume, network and exactly the 3 stack images removed; canary untouched |
-| AC-14 | Engine detection | docker path verified; **podman not installed in the agent sandbox** |
+| AC-14 | Engine detection, all branches (podman stubbed: missing / not answering / no compose provider; docker: unreachable daemon, bad `STOREIT_ENGINE`, both dead) | selection, fallback note and every error path verified; **the real podman binary is still not installed in the agent sandbox** |
 | AC-15 | `compose.yaml` still starts Postgres alone | satisfied: the file gains no service. Its volume mount was repaired on Marcel's instruction, which is what makes "starts Postgres alone" true again — it had not started at all |
 | Backend build | `dotnet build -c Release` | succeeds; one pre-existing S125 warning in `StorageUseCases.cs` from `develop`, not from this change |
 | Backend tests | `dotnet test -c Release` | 150/150 pass |
@@ -91,7 +119,10 @@ shipped as a latent bug otherwise.
 **AC-08 is the honest gap.** Podman is not available in this sandbox, so the podman path is
 *designed* for (fully-qualified images, unprivileged ports, engine detection, no
 compose features known to be podman-hostile) but was exercised only through docker. First
-run on Marcel's machine is the real test.
+run on Marcel's machine is the real test — and it already paid off: it produced the three
+selection defects above, two of which no docker-only run could ever have shown. The
+selection *logic* is now covered on every branch through stubbed podman binaries, but
+running the stack itself under a real podman remains unverified from here.
 
 ## Human Interventions
 
@@ -102,6 +133,8 @@ run on Marcel's machine is the real test.
 | 3 | *"bevor du das nächste mal die spec einfrierst, immer zuerst explizit nachfragen"* | I had flipped G1 to frozen after an answer to one open question. Reverted, asked, and recorded as a standing rule. |
 | 4 | *"e2e so lassen, das es einfach ist und kein login benötigt"* | Reversed the CI switchover before anything was built |
 | 5 | Automated review raised 12 findings on the spec | Ten valid → spec amended (A1–A5); one false positive rebutted with evidence; one partially addressed |
+| 6 | Automated review of the implementation, two rounds | Five findings: doc drift after the `compose.yaml` fix, a start script that reported success after a failed readiness loop, `cp` clobbering `.env`, hard-coded ports in the docs, `curl` assumed present. All fixed and answered on the PR. |
+| 7 | *"es muss mit podman laufen"* / *"es soll aber auch auf docker laufen, zuerst einfach podman prüfen. docker als fallback"* | Marcel's first real run picked docker and then failed. Confirmed the intended order and made the fallback loud instead of silent; see the section above. |
 
 ## Outcome
 
@@ -110,3 +143,7 @@ run on Marcel's machine is the real test.
   claimed.
 - **Follow-up:** none outstanding. The `compose.yaml` mount — first recorded here as a
   separate concern — was fixed in this PR after Marcel asked for it, and verified.
+- **Re-verified after the engine-detection change:** `./scripts/stack-up.sh` from a
+  torn-down state built all three images, ran migrations to completion, and answered
+  `/` → 200, `/health` → 200, `/api/v1/storages` → 401; `./scripts/stack-down.sh` removed
+  the containers, the volume, the network and exactly the three stack images.
