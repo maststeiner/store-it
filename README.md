@@ -46,11 +46,13 @@ Ctrl+C tears everything down. Prerequisites: `podman`, .NET 10 SDK, Node 22.
 
 ### …or everything in containers
 
-Needs only `podman` (or Docker) — no .NET SDK, no Node:
+Needs only `podman` (or Docker) — no .NET SDK, no Node. `curl` or `wget` is used to
+confirm the stack answers before the script reports success; without either it starts the
+stack and says it could not verify.
 
 ```bash
-cp .env.example .env      # fill in at least POSTGRES_PASSWORD
-./scripts/stack-up.sh     # → http://localhost:8080
+cp -n .env.example .env   # -n: never clobber an existing .env — it holds your secrets
+./scripts/stack-up.sh     # → http://localhost:$STOREIT_WEB_PORT (8080 by default)
 ./scripts/stack-down.sh   # stops it and removes the images it built
 ```
 
@@ -66,8 +68,9 @@ everything is one origin, exactly as the cookie session expects. Configuration c
 > a template for hosting — that decision belongs to ADR-005 (#17).
 
 Sign-in needs real OIDC credentials in `.env`, with the redirect URI registered at the
-provider (`http://localhost:8080/auth/callback/google`). Without them the stack still
-starts and serves the app; only signing in is unavailable.
+provider — and it must carry the same port as `STOREIT_WEB_PORT`, e.g.
+`http://localhost:8080/auth/callback/google` for the default. Without credentials the
+stack still starts and serves the app; only signing in is unavailable.
 
 `compose.yaml` stays the separate, native workflow: it starts PostgreSQL alone for
 `./scripts/dev.sh`, and the container stack neither uses nor interferes with it — different

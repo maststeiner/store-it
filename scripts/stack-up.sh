@@ -42,11 +42,25 @@ port="${port:-8080}"
 
 # `up --detach` returns once the containers are created; the web container may still be
 # coming up. Wait for it to actually answer, so "stack is up" is not a lie.
+# Probe with whatever is available. Without either tool the stack may still be perfectly
+# fine, so refusing to start would be wrong — but so would claiming it is up. Say which.
+if command -v curl > /dev/null 2>&1; then
+  probe() { curl --silent --fail --max-time 2 "$1" > /dev/null 2>&1; }
+elif command -v wget > /dev/null 2>&1; then
+  probe() { wget --quiet --spider --timeout=2 "$1" > /dev/null 2>&1; }
+else
+  echo
+  echo "note: neither curl nor wget found, so readiness was not verified."
+  echo "stack started → http://localhost:${port} (check it yourself)"
+  echo "  logs:  ${compose[*]} -p $STACK_PROJECT -f $STACK_FILE logs -f"
+  exit 0
+fi
+
 retries="${STOREIT_WAIT_RETRIES:-60}"
 ready=false
 echo -n "waiting for http://127.0.0.1:${port} "
 for _ in $(seq 1 "$retries"); do
-  if curl --silent --fail --max-time 2 "http://127.0.0.1:${port}/" > /dev/null 2>&1; then
+  if probe "http://127.0.0.1:${port}/"; then
     ready=true
     echo "— ready"
     break
