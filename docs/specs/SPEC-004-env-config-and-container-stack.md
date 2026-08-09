@@ -11,8 +11,8 @@
 
 As a **developer or operator** I want **the whole application configured from the
 environment and started with a single container-stack command** so that **I can bring up
-backend, frontend and database reproducibly on any machine — and later deploy the same
-images instead of a differently-built artifact**.
+backend, frontend and database reproducibly on any machine, and let CI exercise that very
+same stack instead of a separately wired-up one**.
 
 ---
 
@@ -52,10 +52,41 @@ These answer individual questions; they are **not** a freeze of the whole spec.
    `ASPNETCORE_ENVIRONMENT=Production` over `http://localhost`, relying on the browser's
    localhost exception for the `Secure` session cookie. No TLS, no forwarded-header work,
    and `dev-login` stays unmapped.
-5. **The stack is for local testing only** (2026-08-09, Marcel: *"da es nur zum lokalen
-   testen gedacht ist"*). This is a scope decision, not a detail: it is why TLS, registry
-   publishing and non-localhost hostnames are out of scope, and why binding to loopback is a
-   requirement rather than a nicety.
+5. **The stack is a testing tool, not a deployment artifact** (2026-08-09, Marcel: *"da es
+   nur zum lokalen testen gedacht ist"*). This is why TLS, registry publishing and
+   non-localhost hostnames are out of scope, and why loopback-only binding is a requirement
+   (AC-11) rather than a nicety. The deployment ambition was removed from the user story —
+   it contradicted this decision.
+6. **The stack lives in its own compose file** (2026-08-09). `compose.yaml` keeps starting
+   Postgres alone, so today's native workflow (`scripts/dev.sh`, `dotnet run`, `ng serve`)
+   is untouched by this change.
+7. **CI switches over** (2026-08-09): job `1b · End-to-end (full stack)` runs the stack
+   instead of wiring up backend and `ng serve` by hand. This raises the stack from a
+   convenience to load-bearing infrastructure — if it breaks, the pipeline goes red.
+8. **Two scripts** (2026-08-09): one brings the stack up, one tears it down *and* cleans up
+   the images. Podman first, matching the existing `scripts/dev.sh`.
+
+---
+
+## Conflict surfaced by decision 7, and how it resolves
+
+Decision 2 (real OIDC, `Production`) and decision 7 (CI runs this stack) cannot both hold
+naively: the Playwright suite authenticates with `POST /auth/dev-login`, which `Program.cs`
+maps **only** when the environment is `Development`. In CI there is no OIDC provider to log
+into, so a `Production` stack would leave the E2E tests unable to authenticate.
+
+**Resolution — the environment is itself configuration** (which is the point of this spec):
+the stack reads `ASPNETCORE_ENVIRONMENT` from the environment like everything else.
+
+| Context | `ASPNETCORE_ENVIRONMENT` | Login path | Cookie policy |
+|---|---|---|---|
+| Local (developer laptop) | `Production` | real OIDC via env vars | `Secure`, relies on the localhost exception (option A) |
+| CI (job 1b) | `Development` | `dev-login`, as today | `SameAsRequest` |
+
+**The caveat, stated rather than hidden:** CI then exercises the stack in a *slightly*
+different configuration than a developer runs locally — different cookie policy, and the
+`dev-login` endpoint present. The container images, the routing, the migrations and the
+service wiring are identical; the authentication mode is not.
 
 ---
 
@@ -98,6 +129,21 @@ These answer individual questions; they are **not** a freeze of the whole spec.
       and serve the app, and report the failure at login time — the existing behaviour of
       `AuthenticationSetup`, which must not regress.
 
+### Scripts, CI and coexistence
+
+- [ ] AC-13: WHEN a developer runs the start script THE system SHALL bring the whole stack
+      up with one command, and WHEN they run the teardown script THE system SHALL stop the
+      stack, remove its containers and volumes, and remove the images it built — leaving no
+      leftovers behind.
+- [ ] AC-14: WHEN either script runs THE system SHALL use `podman` where available and
+      `docker` otherwise, and SHALL fail with a clear message if neither is installed.
+- [ ] AC-15: WHEN CI job `1b · End-to-end (full stack)` runs THE system SHALL start this
+      stack and run Playwright against it, replacing the hand-wired backend and `ng serve`
+      startup, and SHALL stay green.
+- [ ] AC-16: WHEN `docker compose up` / `podman compose up` is run against the existing
+      `compose.yaml` THE system SHALL still start Postgres alone, exactly as before — the
+      native development workflow must not change.
+
 ---
 
 ## Edge Cases
@@ -118,6 +164,14 @@ These answer individual questions; they are **not** a freeze of the whole spec.
 - **EC-06 — Rootless podman**: ports below 1024 are unavailable; SELinux hosts need `:z`
   on bind mounts.
 - **EC-07 — Apple Silicon**: images must resolve for `arm64`, or the stack is x86-only.
+- **EC-08 — CI has docker, the laptop has podman.** GitHub's runners ship Docker; the
+  scripts must not assume podman, and job 1b must work with whatever the runner provides
+  (AC-14).
+- **EC-09 — CI build time.** Job 1b currently starts a `dotnet run` in ~seconds. Building
+  two images per run is slower; layer caching and a `.dockerignore` decide whether the
+  pipeline stays tolerable.
+- **EC-10 — The teardown script deletes images.** It must remove only what this stack built,
+  never unrelated local images — a destructive script that over-reaches is worse than none.
 
 ---
 
@@ -148,8 +202,9 @@ Two consequences that follow from A and are therefore binding:
 
 ## Out of Scope
 
-- Kubernetes manifests and deployment (ADR-005, issue #17) — this stack is the local
-  runtime, not the hosting decision, though its images are meant to remain reusable.
+- Kubernetes manifests and deployment (ADR-005, issue #17). The stack is a testing tool;
+  whether its images are later reusable for hosting is explicitly **not** an argument this
+  spec makes, and no requirement here follows from it.
 - Publishing images to a registry, and image signing/provenance.
 - Secrets management beyond environment variables (no Vault, no sealed secrets).
 - Production TLS certificates and hostnames.
@@ -171,8 +226,14 @@ Two consequences that follow from A and are therefore binding:
 - [ ] The build-time OpenAPI generation must keep working without a database — the lazy
       connection-string resolution exists for exactly that reason, so AC-02's fail-fast must
       not reintroduce a database requirement at build time.
-- [ ] ADR required: **no** for the stack itself; it feeds, and must not pre-empt, ADR-005
-      (#17).
+- [ ] ADR required: **no** for the stack itself; it must not pre-empt ADR-005 (#17).
+- [ ] New artifacts: `backend/Dockerfile`, `frontend/Dockerfile`, an nginx site config,
+      `compose.stack.yaml`, `.env.example`, `.dockerignore` files, and two scripts under
+      `scripts/` following the conventions of the existing `scripts/dev.sh` (bash,
+      `set -euo pipefail`, repo-root resolution, podman first).
+- [ ] `compose.yaml` must not gain services (AC-16).
+- [ ] Job 1b is a required status check on `develop` and `main` — the CI switchover in
+      decision 7 touches a gate that currently protects every merge.
 
 ---
 
