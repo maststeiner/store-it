@@ -11,7 +11,12 @@ services:
       # bind to loopback only — do not expose the dev DB on all host interfaces
       - '127.0.0.1:5432:5432'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      # /var/lib/postgresql, NOT /var/lib/postgresql/data: since 18 these images keep the
+      # cluster in a version-specific subdirectory and refuse to start when a volume sits
+      # at the old path — this container exited 1 on every `up` until the mount moved.
+      # An existing pgdata volume from before is not readable at the new path; remove it
+      # (`docker volume rm store-it_pgdata`) and let migrations rebuild the local database.
+      - pgdata:/var/lib/postgresql
 
 volumes:
   pgdata:
