@@ -18,14 +18,15 @@ cd "$repo_root"
 detect_engine
 echo "container engine: $engine"
 
-down_args=(--remove-orphans)
+# Spelled out rather than accumulated into an array: macOS ships bash 3.2, where an empty
+# array expansion under `set -u` is an error. This one is never empty, but the shape should
+# not depend on that staying true.
 if [[ "${1:-}" == "--keep-data" ]]; then
   echo "keeping the database volume"
+  "${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" down --remove-orphans
 else
-  down_args+=(--volumes)
+  "${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" down --remove-orphans --volumes
 fi
-
-"${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" down "${down_args[@]}"
 
 # Compose names built images "<project>_<service>" or "<project>-<service>" depending on
 # the implementation, so try both spellings and stay quiet about the ones that are not

@@ -23,15 +23,17 @@ if [[ ! -f .env ]]; then
   exit 1
 fi
 
-build_args=()
-if [[ "${1:-}" == "--rebuild" ]]; then
-  build_args+=(--no-cache)
-  echo "rebuilding images from scratch…"
-fi
-
 # Build explicitly rather than relying on `up --build`: podman-compose does not always
 # support the flag, and a separate step makes a build failure obvious.
-"${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" build "${build_args[@]}"
+#
+# Two spelled-out branches instead of an args array: macOS ships bash 3.2, where expanding
+# an EMPTY array under `set -u` fails with "unbound variable". This script has to run there.
+if [[ "${1:-}" == "--rebuild" ]]; then
+  echo "rebuilding images from scratch…"
+  "${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" build --no-cache
+else
+  "${compose[@]}" -p "$STACK_PROJECT" -f "$STACK_FILE" build
+fi
 
 # `up` runs the migration service to completion first — that ordering lives in
 # compose.stack.yaml, not here, so a plain `compose up` behaves identically.
