@@ -105,13 +105,22 @@ a non-zero result instead of restart-looping.
 | `POSTGRES_DB`, `POSTGRES_USER` | no | no | `storeit` |
 | `POSTGRES_PASSWORD` | **yes** | local-only credential | none — absent must fail loudly |
 | `STOREIT_WEB_PORT` | no | no | `8080` (unprivileged, so rootless podman works) |
-| `ASPNETCORE_ENVIRONMENT` | no | no | `Production` |
+| `ASPNETCORE_ENVIRONMENT` | — | no | **fixed to `Production` in compose; deliberately not in `.env.example`** (A6) — in `Development` the API maps `/auth/dev-login`, which issues a session with no credential |
 | `Authentication__{Google,Microsoft}__ClientId`/`ClientSecret`/`Authority` | no | **yes** | empty; sign-in is then unavailable while the stack still runs (AC-10) |
 
-**The one-command contract.** `./scripts/stack-up.sh` (or `docker compose -f
-compose.stack.yaml up`, or the same with `podman compose`) serves the application at
+**The one-command contract.** `./scripts/stack-up.sh` serves the application at
 `http://localhost:${STOREIT_WEB_PORT}`; `./scripts/stack-down.sh` removes containers,
 volumes and the images this stack built.
+
+Running compose directly works too, but **the project name must be passed every time** —
+otherwise an implementation that ignores `name:` loses the isolation of A7 and a teardown
+can reach the dev database:
+
+```bash
+docker compose -p storeit-stack -f compose.stack.yaml up -d
+docker compose -p storeit-stack -f compose.stack.yaml down --volumes
+# …and identically with `podman compose`.
+```
 
 ---
 
