@@ -46,7 +46,8 @@ These answer individual questions; they are **not** a freeze of the whole spec.
    and the images can later feed ADR-005 (#17). No hot reload.
 2. **Real OIDC via environment variables** — not the `dev-login` shortcut.
 3. **Migrations run as a separate one-shot service**, 12-factor admin process, mirroring
-   what CI does.
+   what CI does — reaffirmed 2026-08-09: they run automatically as part of bringing the
+   stack up, never as a step inside the backend's own startup.
 4. **Option A for the cookie/TLS question** (2026-08-09): the stack runs with
    `ASPNETCORE_ENVIRONMENT=Production` over `http://localhost`, relying on the browser's
    localhost exception for the `Secure` session cookie. No TLS, no forwarded-header work,
@@ -100,8 +101,13 @@ the E2E suite keeps its native, `Development`, `dev-login` setup, and the stack 
 - [ ] AC-04: WHEN a developer runs one command in a clean checkout with a filled `.env`
       THE system SHALL start database, migrations, backend and frontend, and serve the
       working application on a single URL.
-- [ ] AC-05: WHEN the stack starts THE system SHALL apply database migrations in a
-      dedicated one-shot service that runs to completion **before** the backend starts.
+- [ ] AC-05: WHEN the stack is brought up THE system SHALL apply database migrations
+      **automatically, on every start**, in a dedicated one-shot service that runs to
+      completion before the backend starts. The backend SHALL NOT migrate on startup, and no
+      manual step SHALL be required.
+- [ ] AC-05a (Error): WHEN the migration service fails THE system SHALL NOT start the
+      backend, and the stack SHALL surface a non-zero result — a half-migrated database must
+      not be served.
 - [ ] AC-06: WHEN the backend is not yet healthy THE system SHALL keep dependent services
       waiting rather than starting them against a dead dependency (health checks, ordered
       startup).
@@ -213,7 +219,11 @@ Two consequences that follow from A and are therefore binding:
       `compose.stack.yaml`, `.env.example`, `.dockerignore` files, and two scripts under
       `scripts/` following the conventions of the existing `scripts/dev.sh` (bash,
       `set -euo pipefail`, repo-root resolution, podman first).
-- [ ] `compose.yaml` must not gain services (AC-16).
+- [ ] `compose.yaml` must not gain services (AC-15).
+- [ ] The ordering is expressed in compose itself, not in a script: the backend depends on
+      the migration service having *completed successfully*, and on Postgres being healthy —
+      so `up` alone is sufficient and the guarantee survives someone starting the stack
+      without the scripts.
 
 ---
 
@@ -228,6 +238,7 @@ Two consequences that follow from A and are therefore binding:
 | AC-03 | ⬜ | ⬜ |
 | AC-04 | ⬜ | ⬜ |
 | AC-05 | ⬜ | ⬜ |
+| AC-05a | ⬜ | ⬜ |
 | AC-06 | ⬜ | ⬜ |
 | AC-07 | ⬜ | ⬜ |
 | AC-08 | ⬜ | ⬜ |
