@@ -4,7 +4,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
-import { AuthService } from './auth.service';
+import { AuthService, appLocalPath } from './auth.service';
 
 @Component({ template: '' })
 class DummyComponent {}
@@ -115,5 +115,66 @@ describe('AuthService', () => {
     expect(navigateSpy).not.toHaveBeenCalled();
     // The error must be surfaced to the caller.
     expect(caughtError).toBeDefined();
+  });
+  describe('login', () => {
+    /**
+     * The challenge is a full-page navigation, so the target is asserted through the URL
+     * handed to location.assign rather than through the router.
+     */
+    function captureChallengeUrl(): { url: () => string } {
+      const assign = vi.fn();
+      vi.spyOn(window, 'location', 'get').mockReturnValue({
+        ...window.location,
+        assign,
+        pathname: '/login',
+      });
+      return { url: () => String(assign.mock.calls[0]?.[0]) };
+    }
+
+    it('sends the caller-supplied route as returnUrl', () => {
+      const captured = captureChallengeUrl();
+
+      service.login('microsoft', '/storages/7');
+
+      expect(captured.url()).toBe('/auth/login/microsoft?returnUrl=%2Fstorages%2F7');
+    });
+
+    it('falls back to the storage list when no route is supplied', () => {
+      const captured = captureChallengeUrl();
+
+      service.login('google');
+
+      expect(captured.url()).toBe('/auth/login/google?returnUrl=%2F');
+    });
+
+    it('refuses to return to the sign-in page', () => {
+      const captured = captureChallengeUrl();
+
+      service.login('microsoft', '/login');
+
+      expect(captured.url()).toBe('/auth/login/microsoft?returnUrl=%2F');
+    });
+  });
+
+  describe('appLocalPath', () => {
+    it.each([
+      ['/storages', '/storages'],
+      ['/storages/7?tab=items', '/storages/7?tab=items'],
+      ['/login', '/'],
+      ['/login?returnUrl=%2Fstorages', '/'],
+      ['/login/extra', '/'],
+      ['//evil.example.com', '/'],
+      ['/\\evil.example.com', '/'],
+      ['https://evil.example.com', '/'],
+      ['storages', '/'],
+      ['', '/'],
+    ])('maps %s to %s', (candidate, expected) => {
+      expect(appLocalPath(candidate)).toBe(expected);
+    });
+
+    it('maps absent values to the storage list', () => {
+      expect(appLocalPath(null)).toBe('/');
+      expect(appLocalPath(undefined)).toBe('/');
+    });
   });
 });
