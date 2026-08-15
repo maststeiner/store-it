@@ -82,6 +82,9 @@ if [[ "$ready" != true ]]; then
 fi
 
 echo
-echo "stack is up → http://localhost:${port}"
+# The probe above used 127.0.0.1, and that is what the port is published on. `localhost` is
+# named first because it is what the OIDC redirect URIs are registered for — but on a
+# dual-stack host it can resolve to ::1 and answer nothing, so name the address that works.
+echo "stack is up → http://localhost:${port}   (or http://127.0.0.1:${port})"
 echo "  logs:  ${compose[*]} -p $STACK_PROJECT -f $STACK_FILE logs -f"
-echo "  down:  ./scripts/stack-down.sh"
+echo "  down:  ./scripts/stack-down.sh          # deletes the database; --keep-data keeps it"

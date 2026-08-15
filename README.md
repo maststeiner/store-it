@@ -52,9 +52,17 @@ stack and says it could not verify.
 
 ```bash
 cp -n .env.example .env   # -n: never clobber an existing .env — it holds your secrets
+                          # then set POSTGRES_PASSWORD — the stack refuses to start without it
 ./scripts/stack-up.sh     # → http://localhost:$STOREIT_WEB_PORT (8080 by default)
-./scripts/stack-down.sh   # stops it and removes the images it built
+./scripts/stack-down.sh   # stops it, DELETES the database, removes the images it built
+./scripts/stack-down.sh --keep-data   # … the same, but keeps the database volume
 ```
+
+The default teardown is destructive on purpose — the stack is a testing tool, and a stale
+database is a worse surprise than an empty one. Use `--keep-data` when you want the data
+back on the next start. Should `localhost` show nothing while the stack reports itself up,
+try `http://127.0.0.1:$STOREIT_WEB_PORT`: the port is published on IPv4 only, and on a
+dual-stack host `localhost` can resolve to `::1`.
 
 The stack builds both images, applies migrations in a one-shot service, then starts the
 API and an nginx that serves the built frontend and proxies `/api` and `/auth` — so
@@ -69,8 +77,14 @@ installed but skipped, the script prints the reason (VM not started, no compose 
 and the command that fixes it. Pin the choice to turn that fallback into an error:
 
 ```bash
-STOREIT_ENGINE=podman ./scripts/stack-up.sh    # or =docker
+STOREIT_ENGINE=podman ./scripts/stack-up.sh      # or =docker
+STOREIT_ENGINE=podman ./scripts/stack-down.sh    # the same value — see below
 ```
+
+Both scripts detect the engine independently and nothing is persisted between them, so an
+unpinned teardown can pick a different engine than the start did — and then tear down
+nothing while the containers, the volume and the images stay behind on the other one. Pin
+both, or pin neither.
 
 > **This stack is a local testing tool, not a deployment artifact.** It binds to
 > `127.0.0.1` only, serves plain HTTP, and relies on the browser trusting `localhost` for
