@@ -124,11 +124,12 @@ fully localized in **de / en / fr / it**):
   buttons (Apple added later). No own password form.
 - **Route guard:** all app routes (storages/items) are protected; unauthenticated users
   are redirected to login. The SPA determines status via `GET /auth/me`.
-- **Session indicator:** header shows `DisplayName` / `Email` and a **Logout** button.
+- **Session indicator:** header shows `DisplayName` / `Email` and a **Logout** button
+  (presentation amended — see A1).
 - **401 handling:** an HTTP interceptor catches `401` (e.g. expired session) and
   redirects to login (EC-01).
-- **i18n:** all new strings (login, logout, "signed in as …", error messages) exist in
-  all four languages; no hard-coded user-facing strings.
+- **i18n:** all new strings (login, logout, the account-menu label, error messages) exist
+  in all four languages; no hard-coded user-facing strings.
 - **No token in the browser:** the SPA holds no access/ID tokens — only the BFF's
   HttpOnly session cookie (core of Approach A).
 
@@ -224,6 +225,16 @@ fully localized in **de / en / fr / it**):
 | EC-03 two providers → two users, no linking | | ⬜ |
 | EC-04 invalid code / state mismatch aborts | | ⬜ |
 | Global query filter isolates at repo level | | ⬜ |
+
+---
+
+## Amendments (post-freeze)
+
+Changes made after the G1 freeze. None change scope or any acceptance criterion.
+
+| # | Date | Change |
+|---|------|--------|
+| A1 | 2026-08-15 | **Session indicator presentation** ([#86](https://github.com/maststeiner/store-it/issues/86)): `DisplayName`, `Email` and the logout action now live in an account menu opened from an initials chip in the header, instead of standing side by side as a text label and a button. Same information, one control instead of two; the identity is reachable by click (not hover), so it stays available on touch and via keyboard. The i18n key `auth.session.signedInAs` was replaced by `auth.session.menu`, which labels the chip for assistive technology. |
 
 ---
 

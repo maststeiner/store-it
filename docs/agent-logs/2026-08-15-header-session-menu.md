@@ -54,6 +54,7 @@ Decision taken by the orchestrator after the discussion; implementation followed
 | Tab closes the menu and returns focus to the chip **without** `preventDefault` | The browser then continues its Tab traversal from the chip — where focus would have been had the menu never opened. Preventing the default would strand the user. |
 | `.session-chip` / `.session-menu` / `.session-identity` / `.session-menu-item` added to `styles.scss` | Closes the dead-class gap that caused the original complaint; reuses the existing tokens (`--panel-tint`, `--line`, `--radius`, `--accent`) and the pill shape of the language switcher. `.session-chip` also joins the `prefers-reduced-motion` block. |
 | i18n key `auth.session.signedInAs` → `auth.session.menu` in all four locales | The old key phrased a sentence that no longer appears; the new one is the chip's `aria-label` ("Kontomenü — angemeldet als …"), which is what carries the identity for assistive tech. |
+| SPEC-003 amended (new "Amendments (post-freeze)" section, A1) | Its "UI Requirements (web)" section described the session indicator as a text label plus a button, and listed `"signed in as …"` among the i18n strings. Both statements were made false by this change, so the frozen spec is annotated rather than silently left wrong. |
 
 Initials are derived, not translated: first + last word of the display name, falling back to the
 **local part** of the e-mail (the domain would only add noise), then to `?`.
