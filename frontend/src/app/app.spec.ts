@@ -13,7 +13,7 @@ const BASE_TRANSLATIONS = {
   languages: { de: 'DE', en: 'EN', fr: 'FR', it: 'IT' },
   header: { language: 'Language' },
   auth: {
-    session: { signedInAs: 'Signed in as {{name}}', logout: 'Sign out' },
+    session: { menu: 'Account menu — signed in as {{name}}', logout: 'Sign out' },
   },
 };
 
@@ -51,12 +51,13 @@ describe('App', () => {
   });
 });
 
-describe('App — signed-in session', () => {
-  beforeEach(async () => {
-    const userSignal = signal<
-      { displayName: string | null; email: string | null } | null | undefined
-    >({ displayName: 'Alice Example', email: 'alice@example.com' });
+describe('App — session menu', () => {
+  const logout = vi.fn();
 
+  async function configure(
+    user: { displayName: string | null; email: string | null } | null | undefined,
+  ): Promise<void> {
+    logout.mockClear();
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
@@ -66,26 +67,63 @@ describe('App — signed-in session', () => {
         {
           provide: AuthService,
           useValue: {
-            user: userSignal,
+            user: signal(user),
             initCsrf: vi.fn().mockResolvedValue(undefined),
-            logout: vi.fn(),
+            logout,
           },
         },
       ],
     }).compileComponents();
 
     TestBed.inject(TranslateService).setTranslation('en', BASE_TRANSLATIONS);
-  });
+  }
 
-  it('shows_display_name_and_logout_when_signed_in', async () => {
+  it('Header_WhenSignedIn_ShowsTheSessionChip', async () => {
+    await configure({ displayName: 'Alice Example', email: 'alice@example.com' });
+
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
 
     const element = fixture.nativeElement as HTMLElement;
-    expect(element.querySelector('.session-user')?.textContent).toContain('Alice Example');
-    expect(element.querySelector('.header-right button[type="button"]')?.textContent?.trim()).toBe(
-      'Sign out',
-    );
+    expect(element.querySelector('app-session-menu .session-chip')?.textContent?.trim()).toBe('AE');
+  });
+
+  it('Header_WhenSignedOut_ShowsNoSessionElement', async () => {
+    await configure(null);
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-session-menu')).toBeNull();
+  });
+
+  it('Header_WhileSessionStillUnknown_ShowsNoSessionElement', async () => {
+    await configure(undefined);
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-session-menu')).toBeNull();
+  });
+
+  it('SignOut_WhenChosenFromTheMenu_LogsTheUserOut', async () => {
+    await configure({ displayName: 'Alice Example', email: 'alice@example.com' });
+
+    const fixture = TestBed.createComponent(App);
+    const element = fixture.nativeElement as HTMLElement;
+    document.body.appendChild(element);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    (element.querySelector('.session-chip') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    (element.querySelector('[role="menuitem"]') as HTMLButtonElement).click();
+
+    expect(logout).toHaveBeenCalledTimes(1);
+    element.remove();
   });
 });

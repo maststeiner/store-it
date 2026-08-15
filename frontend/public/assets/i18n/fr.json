@@ -82,7 +82,7 @@
       "google": "Se connecter avec Google"
     },
     "session": {
-      "signedInAs": "Connecté en tant que {{name}}",
+      "menu": "Menu du compte — connecté en tant que {{name}}",
       "logout": "Se déconnecter"
     }
   },

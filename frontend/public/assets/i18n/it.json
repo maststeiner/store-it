@@ -82,7 +82,7 @@
       "google": "Accedi con Google"
     },
     "session": {
-      "signedInAs": "Accesso effettuato come {{name}}",
+      "menu": "Menu account — accesso effettuato come {{name}}",
       "logout": "Esci"
     }
   },

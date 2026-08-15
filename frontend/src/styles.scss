@@ -109,6 +109,85 @@ button:focus-visible,
   cursor: pointer;
 }
 
+/* ── Session chip + menu ────────────────────── */
+/* The chip is the menu's anchor, so the host establishes the containing block. */
+app-session-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.session-chip {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-tint);
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.session-chip:hover {
+  background: rgba(62, 156, 147, 0.18);
+}
+
+.session-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  min-width: 220px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 14px 34px rgba(22, 52, 58, 0.14);
+}
+
+.session-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.session-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.session-email {
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  overflow-wrap: anywhere;
+}
+
+.session-menu-item {
+  display: block;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.session-menu-item:hover {
+  background: var(--panel-tint);
+}
+
 main {
   max-width: 1060px;
   margin: 0 auto;
@@ -660,7 +739,8 @@ h1 {
 @media (prefers-reduced-motion: reduce) {
   .storage-card,
   .btn-primary,
-  .btn-provider {
+  .btn-provider,
+  .session-chip {
     transition: none;
   }
 }
