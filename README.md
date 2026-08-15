@@ -91,7 +91,8 @@ provider, so an empty `.env` can never break `/health`.
 **The redirect URI follows the address bar, not the configuration.** Open the app at
 `http://localhost:8080` and the callback is `http://localhost:8080/auth/callback/google`;
 open it at `http://127.0.0.1:8080` and it is `http://127.0.0.1:8080/…`. Register the host
-you actually type — or register both.
+you actually type — or register both. The URIs below assume the default port; with a custom
+`STOREIT_WEB_PORT`, register that one instead.
 
 - **Google** — [Cloud console](https://console.cloud.google.com/apis/credentials) → *Create
   credentials* → *OAuth client ID* → **Web application**. Authorised redirect URI:
@@ -111,7 +112,8 @@ editing `.env`. To see what the app really sends — the `redirect_uri` below is
 the provider must have on file:
 
 ```bash
-curl -si http://localhost:8080/auth/login/google | grep -i '^location'
+port="$(grep -E '^STOREIT_WEB_PORT=' .env | cut -d= -f2)"   # same lookup stack-up.sh does
+curl -si "http://localhost:${port:-8080}/auth/login/google" | grep -i '^location'
 ```
 
 One browser caveat: the session and the OIDC correlation cookies are `Secure`, so signing in

@@ -134,7 +134,7 @@ running the stack itself under a real podman remains unverified from here.
 | 3 | *"bevor du das nächste mal die spec einfrierst, immer zuerst explizit nachfragen"* | I had flipped G1 to frozen after an answer to one open question. Reverted, asked, and recorded as a standing rule. |
 | 4 | *"e2e so lassen, das es einfach ist und kein login benötigt"* | Reversed the CI switchover before anything was built |
 | 5 | Automated review raised 12 findings on the spec | Ten valid → spec amended (A1–A5); one false positive rebutted with evidence; one partially addressed |
-| 6 | Automated review of the implementation, two rounds | Five findings: doc drift after the `compose.yaml` fix, a start script that reported success after a failed readiness loop, `cp` clobbering `.env`, hard-coded ports in the docs, `curl` assumed present. All fixed and answered on the PR. |
+| 6 | Automated review of the implementation, three rounds | Six findings: doc drift after the `compose.yaml` fix, a start script that reported success after a failed readiness loop, `cp` clobbering `.env`, hard-coded ports in the docs, `curl` assumed present, and — after the OIDC section was added — a redirect-inspection command still pinned to 8080. All fixed and answered on the PR. |
 | 7 | *"es muss mit podman laufen"* / *"es soll aber auch auf docker laufen, zuerst einfach podman prüfen. docker als fallback"* | Marcel's first real run picked docker and then failed. Confirmed the intended order and made the fallback loud instead of silent; see the section above. |
 
 ## Outcome
