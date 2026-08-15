@@ -243,5 +243,12 @@ Changes made after the G1 freeze. None change scope or any acceptance criterion.
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
 | G1 · Spec Freeze | ✅ frozen | 2026-07-30 | Marcel Steiner |
-| G2 · Review | ⬜ | | |
-| G3 · DoD/Merge | ⬜ | | |
+| G2 · Review | ✅ | 2026-08-08 | Marcel Steiner |
+| G3 · DoD/Merge | ✅ merged to `develop` | 2026-08-08 | Marcel Steiner |
+
+Evidence: [PR #76](https://github.com/maststeiner/store-it/pull/76) — automated review by
+CodeRabbit (56 inline comments) plus a human review pass over 2026-08-06 … 2026-08-08
+(28 inline comments), CI run
+[31251325271](https://github.com/maststeiner/store-it/actions/runs/31251325271) fully green,
+merged by Marcel Steiner on 2026-08-08. Recorded retroactively on 2026-08-15 from the PR and
+CI history; the gate rows had been left empty at the time.

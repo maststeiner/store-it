@@ -138,5 +138,11 @@ Tests derived black-box from these ACs by the QA persona (never from the code).
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
 | G1 · Spec Freeze | ✅ frozen | 2026-07-13 | Marcel Steiner |
-| G2 · Review | ⬜ | | |
-| G3 · DoD/Merge | ⬜ | | |
+| G2 · Review | ✅ | 2026-07-21 | Marcel Steiner |
+| G3 · DoD/Merge | ✅ merged to `develop` | 2026-07-21 | Marcel Steiner |
+
+Evidence: [PR #5](https://github.com/maststeiner/store-it/pull/5) — automated review by
+CodeRabbit (29 inline comments) plus a human review pass (4 inline comments), CI run
+[29864654653](https://github.com/maststeiner/store-it/actions/runs/29864654653) fully green,
+merged by Marcel Steiner on 2026-07-21. Recorded retroactively on 2026-08-15 from the PR and
+CI history; the gate rows had been left empty at the time.

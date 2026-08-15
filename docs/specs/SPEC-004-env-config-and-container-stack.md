@@ -322,5 +322,13 @@ than left pending — the note about the architect persona applied to the draft.
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
 | G1 · Spec Freeze | ✅ | 2026-08-09 | Marcel Steiner |
-| G2 · Review | ⬜ | | |
-| G3 · DoD/Merge | ⬜ | | |
+| G2 · Review | ✅ | 2026-08-15 | Marcel Steiner |
+| G3 · DoD/Merge | ✅ merged to `develop` | 2026-08-15 | Marcel Steiner |
+
+Evidence: [PR #83](https://github.com/maststeiner/store-it/pull/83) — automated review by
+CodeRabbit over five rounds (22 inline comments) plus human review passes on 2026-08-09 and
+2026-08-15 (10 inline comments), CI run
+[31876478530](https://github.com/maststeiner/store-it/actions/runs/31876478530) fully green,
+merged by Marcel Steiner on 2026-08-15. Twelve review findings on the spec (ten valid → A1–A5)
+and twelve on the implementation were answered before the merge; see
+[`docs/agent-logs/2026-08-09-container-stack.md`](../agent-logs/2026-08-09-container-stack.md).
