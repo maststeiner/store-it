@@ -82,7 +82,7 @@
       "google": "Sign in with Google"
     },
     "session": {
-      "signedInAs": "Signed in as {{name}}",
+      "menu": "Account menu — signed in as {{name}}",
       "logout": "Sign out"
     }
   },
