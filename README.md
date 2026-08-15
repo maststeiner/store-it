@@ -46,9 +46,16 @@ Ctrl+C tears everything down. Prerequisites: `podman`, .NET 10 SDK, Node 22.
 
 ### …or everything in containers
 
-Needs only `podman` (or Docker) — no .NET SDK, no Node. `curl` or `wget` is used to
-confirm the stack answers before the script reports success; without either it starts the
-stack and says it could not verify.
+Needs only `podman` (or Docker) — no .NET SDK, no Node — with a **Compose v2** provider
+behind it. Docker Desktop ships one as the `docker compose` plugin; podman has none of its
+own and delegates, so either `podman compose` or `podman-compose` has to answer. Check
+yours with `docker compose version` / `podman compose version`. Docker Compose v1 is
+refused rather than used: it cannot express "migrations finish before the API starts",
+which this stack is built on. If the provider is missing the script says so and names the
+command that installs one.
+
+`curl` or `wget` is used to confirm the stack answers before the script reports success;
+without either it starts the stack and says it could not verify.
 
 ```bash
 cp -n .env.example .env   # -n: never clobber an existing .env — it holds your secrets
