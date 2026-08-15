@@ -59,6 +59,20 @@ describe('SessionMenu', () => {
     expect(el.querySelector('.session-chip')?.textContent?.trim()).toBe('BB');
   });
 
+  it('Initials_WhenNeitherNameNorEmailKnown_FallsBackToAPlaceholder', async () => {
+    const { el } = await render({ displayName: null, email: null });
+
+    expect(el.querySelector('.session-chip')?.textContent?.trim()).toBe('?');
+  });
+
+  it('Menu_WhenNoEmailKnown_OmitsTheEmailLine', async () => {
+    const { fixture, el } = await render({ displayName: 'Alice Example', email: null });
+    const menu = await openMenu(fixture, el);
+
+    expect(menu.querySelector('.session-name')?.textContent).toContain('Alice Example');
+    expect(menu.querySelector('.session-email')).toBeNull();
+  });
+
   it('Chip_WhenRendered_CarriesMenuButtonSemantics', async () => {
     const { fixture, el } = await render();
     const chip = el.querySelector('.session-chip') as HTMLButtonElement;
@@ -102,6 +116,32 @@ describe('SessionMenu', () => {
     expect(document.activeElement).toBe(el.querySelector('.session-chip'));
   });
 
+  it.each(['ArrowDown', 'ArrowUp', 'Home', 'End'])(
+    'Menu_When%sPressed_KeepsFocusOnAnItemAndSuppressesScrolling',
+    async (key) => {
+      const { fixture, el } = await render();
+      const menu = await openMenu(fixture, el);
+      const item = menu.querySelector('[role="menuitem"]') as HTMLElement;
+
+      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+      item.dispatchEvent(event);
+
+      expect(document.activeElement).toBe(item);
+      expect(event.defaultPrevented).toBe(true);
+    },
+  );
+
+  it('Menu_WhenAnUnrelatedKeyPressed_LeavesTheEventAlone', async () => {
+    const { fixture, el } = await render();
+    const menu = await openMenu(fixture, el);
+
+    const event = new KeyboardEvent('keydown', { key: 'a', bubbles: true, cancelable: true });
+    (menu.querySelector('[role="menuitem"]') as HTMLElement).dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(el.querySelector('.session-menu')).not.toBeNull();
+  });
+
   it('Menu_WhenTabPressed_ClosesAndReturnsFocusToTheChip', async () => {
     const { fixture, el } = await render();
     const menu = await openMenu(fixture, el);
@@ -138,15 +178,26 @@ describe('SessionMenu', () => {
     expect(el.querySelector('.session-menu')).toBeNull();
   });
 
-  it('Chip_WhenArrowDownPressed_OpensTheMenu', async () => {
+  it.each(['ArrowDown', 'ArrowUp'])('Chip_When%sPressed_OpensTheMenu', async (key) => {
     const { fixture, el } = await render();
     const chip = el.querySelector('.session-chip') as HTMLButtonElement;
 
-    chip.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    chip.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
     fixture.detectChanges();
     await fixture.whenStable();
 
     expect(el.querySelector('.session-menu')).not.toBeNull();
+  });
+
+  it('Escape_WhenTheMenuIsClosed_ChangesNothing', async () => {
+    const { fixture, el } = await render();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(el.querySelector('.session-menu')).toBeNull();
+    expect(el.querySelector('.session-chip')?.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('SignOut_WhenActivated_EmitsSignOutAndClosesTheMenu', async () => {
