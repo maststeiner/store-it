@@ -1,0 +1,20 @@
+import { coverageConfigDefaults, defineConfig } from 'vitest/config';
+
+// Runner config for the Angular unit-test builder (--runner-config).
+// Enforces the line-coverage gate at 70% — consistent with the backend
+// coverlet threshold. The run fails when coverage drops below it.
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: 'v8',
+      // lcov feeds SonarCloud (new-code coverage); text for the console gate
+      reporter: ['text', 'lcov'],
+      reportsDirectory: 'coverage',
+      // generated API client is not authored code — keep it out of coverage
+      exclude: [...coverageConfigDefaults.exclude, 'src/app/api/**'],
+      thresholds: {
+        lines: 70,
+      },
+    },
+  },
+});

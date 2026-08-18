@@ -1,9 +1,10 @@
 # Coding Guidelines
 
 > **Owner:** Marcel Steiner (Architecture Stewardship)
-> **Stack:** .NET (C#) backend · Angular (TypeScript) frontend
-> **Formatter:** `dotnet format` (backend) · Prettier + ESLint (frontend)
-> **Last updated:** 2026-07-09
+> **Stack:** .NET 10 LTS (C#) backend · Angular (TypeScript) frontend
+> **Formatter:** CSharpier (backend, `dotnet csharpier format .`) · Prettier + ESLint (frontend)
+> **Static analysis:** Roslyn analyzers, `latest-recommended`, enforced at build time (warnings = errors)
+> **Last updated:** 2026-07-29
 
 These guidelines are the primary reference for the Developer Agent and the Reviewer Agent.
 
@@ -14,7 +15,8 @@ These guidelines are the primary reference for the Developer Agent and the Revie
 - **Simplicity over cleverness:** The simplest code that satisfies the spec. No speculative abstractions.
 - **Naming:** Descriptive names; no abbreviations except established ones (e.g. `id`, `url`).
 - **No magic numbers:** Name constants explicitly.
-- **Run the project formatter** before every commit. `.editorconfig` is binding.
+- **Run the project formatter** before every commit (backend: `dotnet csharpier format .` · frontend: `npx prettier --write .`). `.editorconfig` is binding.
+- **Roslyn analyzer findings are build errors** — fix them, don't suppress. Suppressions require a justifying comment and reviewer approval (exception: CA1707 in test projects, mandated by the test naming convention).
 
 ## SOLID Principles
 
@@ -69,8 +71,41 @@ The backend targets Kubernetes and follows [the twelve factors](https://12factor
 - SQL only via parameterized queries / ORM.
 - No insecure deserialization.
 
-## TODO
+## Commit Conventions
 
-<!-- Customize per project -->
-- [ ] Define naming conventions for this project
-- [ ] Add further project-specific rules
+**Conventional Commits** (Angular style), enforced locally by the `commit-msg` git hook (`.githooks/commit-msg`; activate once per clone: `git config core.hooksPath .githooks` — deliberate decision against a CI gate, 2026-07-18):
+
+```text
+type(scope): subject
+```
+
+- **Types:** `feat` (new behavior) · `fix` (bug fix) · `docs` · `style` (formatting only) · `refactor` (no behavior change) · `perf` · `test` · `build` (dependencies/tooling) · `ci` · `chore` · `revert`
+- **Scopes (suggested):** `backend`, `frontend`, `docs`, `ci`, `harness`, `deps` — omit for repo-wide changes
+- **Subject:** imperative mood, lowercase, no trailing period, ≤ 100 chars
+- **Body:** explains the *why*, wrapped at ~72 chars; reference specs/ADRs where relevant
+- **Breaking changes:** `type(scope)!: subject` plus a `BREAKING CHANGE:` footer — for the API also subject to ADR-006 (new version required)
+
+## Naming Conventions
+
+Beyond the general rule (descriptive names, no abbreviations except established ones), the project follows these stack conventions — the Reviewer Agent flags deviations.
+
+**Backend (C#)**
+
+- **Types** PascalCase; **interfaces** `I`-prefixed (`IStorageRepository`). One *primary* public type per file (filename = type name) for entities, services and DTOs — **exception:** a feature's closely-related small types may be grouped in one file (e.g. `ItemUseCases.cs` holds the item use cases + their input records; `Contracts.cs` holds the boundary DTOs). In this small codebase, grouping by feature beats a sprawl of tiny files.
+- **Role suffixes** are load-bearing and consistent: use cases `*UseCases` (`StorageUseCases`), endpoints `*Endpoints`, EF config `*Configuration`, DI wiring `*ServiceCollectionExtensions`, exceptions `*Exception` (`StorageNotFoundException`).
+- **Use-case input models** bundling several parameters are named `<Operation>Input` (`AddItemInput`, `UpdateItemInput`) — **not** `*Command`. store-it has no command bus/mediator, so `Command` would overclaim CQRS semantics; these are parameter objects for a use case's `ExecuteAsync`. Introduce one once a signature grows past ~4 parameters; keep small signatures positional.
+- **Domain stays noun-first and framework-free** (`Storage`, `Item`, `ExpiryRules`, `Unit`) — no technical suffixes leaking persistence/transport concerns.
+- **Locals/parameters** camelCase; **constants** PascalCase; **async** methods end in `Async` only when a sync sibling exists.
+- **EF migrations** keep the generated `<timestamp>_<Name>` form.
+
+**Frontend (TypeScript / Angular)**
+
+- **Files** kebab-case with a role suffix mirroring the symbol: routed pages `*-page` (`storage-list-page.ts` + co-located `.html`), dialogs `*-dialog`, services either `*.service.ts` or a role name (`storage-api.ts`, `translate.ts`), models `models.ts`.
+- **Classes** PascalCase, **members/signals/inputs** camelCase; specs co-located as `*.spec.ts`.
+- **No user-facing strings in components** — all text via i18n keys (see [test-guidelines] and ADR-002); the invariant brand wordmark ("store-it") is the sole documented exception.
+
+## Project-Specific Rules
+
+- **Server owns the rules:** the Angular client renders and delegates — no business logic, no status computation client-side (status is server-computed per ADR-002). A rule appearing in the UI is a review failure.
+- **Fixed domain lists are constants, not literals:** the unit list and the "expiring soon" threshold (3 days) live as named domain constants, never inlined in the UI.
+- **Cross boundaries via DTOs** (Api request/response models) — domain entities never serialize out directly.

@@ -1,0 +1,21 @@
+<Project>
+    <!-- Roslyn analyzers: enforced at build time (Gate 1) — coding-guidelines.md.
+       Formatting is owned by CSharpier (Gate 5); analyzers own code quality/style. -->
+    <PropertyGroup>
+        <AnalysisLevel>latest-recommended</AnalysisLevel>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+        <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+    </PropertyGroup>
+
+    <!-- SonarAnalyzer runs the same rules locally that the SonarCloud quality gate (Gate 3)
+       applies after the push — so findings like S3776 break the build in Gate 1 instead of
+       being discovered in CI (issue #74). Version is pinned to the analyzer SonarCloud runs
+       (C# 10.31, build 145097) so the two cannot disagree about which rules exist.
+       PrivateAssets=all: an analyzer is a build-time concern and must not leak to consumers. -->
+    <ItemGroup>
+        <PackageReference Include="SonarAnalyzer.CSharp">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+</Project>

@@ -22,3 +22,20 @@ npm-debug.log*
 .idea/
 *.suo
 
+
+# Test artifacts
+coverage.json
+coverage.*.json
+
+# Stryker mutation testing
+StrykerOutput/
+
+# Playwright
+frontend/playwright-report/
+frontend/test-results/
+frontend/.playwright/
+
+# Container stack (SPEC-004): .env holds real OIDC client secrets — never commit it.
+# The committed template is .env.example.
+.env
+!.env.example

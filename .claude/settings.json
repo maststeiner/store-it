@@ -11,6 +11,8 @@
       "Bash(dotnet build*)",
       "Bash(dotnet test*)",
       "Bash(dotnet format*)",
+      "Bash(dotnet csharpier*)",
+      "Bash(dotnet stryker*)",
       "Bash(dotnet run*)",
       "Bash(npm run lint*)",
       "Bash(npm test*)",
@@ -22,6 +24,43 @@
     "deny": [
       "Bash(git push --force*)",
       "Bash(git reset --hard*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|Write|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/deny-secrets-file-access.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/deny-secrets-bash.sh"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/confirm-git-commit.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/format-changed-file.sh"
+          }
+        ]
+      }
     ]
   }
 }

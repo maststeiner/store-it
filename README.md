@@ -33,3 +33,114 @@ This project follows the **KAIFe Framework (L4)** — AI-driven development with
 3. **G3 · DoD/Merge** — CI fully green; only a human merges
 
 See `CLAUDE.md` for orchestration rules and `docs/SETUP.md` for the setup checklist.
+
+## Run it locally
+
+```bash
+./scripts/dev.sh
+```
+
+Starts PostgreSQL (Podman), applies migrations, and launches the backend API
+(http://localhost:5000) and the Angular frontend (http://localhost:4200).
+Ctrl+C tears everything down. Prerequisites: `podman`, .NET 10 SDK, Node 22.
+
+### …or everything in containers
+
+Needs only `podman` (or Docker) — no .NET SDK, no Node — with a **Compose v2** provider
+behind it. Docker Desktop ships one as the `docker compose` plugin; podman has none of its
+own and delegates, so either `podman compose` or `podman-compose` has to answer. Check
+yours with `docker compose version` / `podman compose version`. Docker Compose v1 is
+refused rather than used: it cannot express "migrations finish before the API starts",
+which this stack is built on. If the provider is missing the script says so and names the
+command that installs one.
+
+`curl` or `wget` is used to confirm the stack answers before the script reports success;
+without either it starts the stack and says it could not verify.
+
+```bash
+cp -n .env.example .env   # -n: never clobber an existing .env — it holds your secrets
+                          # then set POSTGRES_PASSWORD — the stack refuses to start without it
+./scripts/stack-up.sh     # → http://localhost:$STOREIT_WEB_PORT (8080 by default)
+./scripts/stack-down.sh   # stops it, DELETES the database, removes the images it built
+./scripts/stack-down.sh --keep-data   # … the same, but keeps the database volume
+```
+
+The default teardown is destructive on purpose — the stack is a testing tool, and a stale
+database is a worse surprise than an empty one. Use `--keep-data` when you want the data
+back on the next start. Should `localhost` show nothing while the stack reports itself up,
+try `http://127.0.0.1:$STOREIT_WEB_PORT`: the port is published on IPv4 only, and on a
+dual-stack host `localhost` can resolve to `::1`.
+
+The stack builds both images, applies migrations in a one-shot service, then starts the
+API and an nginx that serves the built frontend and proxies `/api` and `/auth` — so
+everything is one origin, exactly as the cookie session expects. Configuration comes from
+`.env` only; see `.env.example` for every variable, and
+[SPEC-004](docs/specs/SPEC-004-env-config-and-container-stack.md) for the reasoning.
+
+**Which engine runs it.** Podman first, Docker as fallback — and the scripts require the
+engine's *daemon* to answer, not merely its CLI to exist, because `docker compose version`
+succeeds happily while nothing is running. The fallback is never silent: when podman is
+installed but skipped, the script prints the reason (VM not started, no compose provider)
+and the command that fixes it. Pin the choice to turn that fallback into an error:
+
+```bash
+STOREIT_ENGINE=podman ./scripts/stack-up.sh      # or =docker
+STOREIT_ENGINE=podman ./scripts/stack-down.sh    # the same value — see below
+```
+
+Both scripts detect the engine independently and nothing is persisted between them, so an
+unpinned teardown can pick a different engine than the start did — and then tear down
+nothing while the containers, the volume and the images stay behind on the other one. Pin
+both, or pin neither.
+
+> **This stack is a local testing tool, not a deployment artifact.** It binds to
+> `127.0.0.1` only, serves plain HTTP, and relies on the browser trusting `localhost` for
+> the `Secure` session cookie. Do not expose it on another interface and do not treat it as
+> a template for hosting — that decision belongs to ADR-005 (#17).
+
+Sign-in needs real OIDC credentials in `.env`, with the redirect URI registered at the
+provider — and it must carry the same port as `STOREIT_WEB_PORT`, e.g.
+`http://localhost:8080/auth/callback/google` for the default. Without credentials the
+stack still starts and serves the app; only signing in is unavailable.
+
+### Enabling sign-in
+
+Until a provider has both a `ClientId` and an `Authority`, `/auth/login/{provider}` answers
+`400 auth.provider.unconfigured` — an OIDC scheme is registered only for a fully configured
+provider, so an empty `.env` can never break `/health`.
+
+**The redirect URI follows the address bar, not the configuration.** Open the app at
+`http://localhost:8080` and the callback is `http://localhost:8080/auth/callback/google`;
+open it at `http://127.0.0.1:8080` and it is `http://127.0.0.1:8080/…`. Register the host
+you actually type — or register both. The URIs below assume the default port; with a custom
+`STOREIT_WEB_PORT`, register that one instead.
+
+- **Google** — [Cloud console](https://console.cloud.google.com/apis/credentials) → *Create
+  credentials* → *OAuth client ID* → **Web application**. Authorised redirect URI:
+  `http://localhost:8080/auth/callback/google` (Google accepts `http` for loopback hosts).
+  Put the id and secret in `Authentication__Google__ClientId` / `__ClientSecret`; the
+  authority is already in `.env.example`.
+- **Microsoft** — Entra ID → *App registrations* → *New registration*, redirect URI platform
+  **Web**: `http://localhost:8080/auth/callback/microsoft`. Secret under *Certificates &
+  secrets*. The authority has to be **tenant-specific**:
+  `https://login.microsoftonline.com/<tenant-id-or-domain>/v2.0`. `common` and
+  `organizations` publish the literal issuer
+  `https://login.microsoftonline.com/{tenantid}/v2.0`, and nothing here resolves that
+  template — token validation would fail.
+
+Configuration is read when the container starts, so re-run `./scripts/stack-up.sh` after
+editing `.env`. To see what the app really sends — the `redirect_uri` below is exactly what
+the provider must have on file:
+
+```bash
+port="$(grep -E '^STOREIT_WEB_PORT=' .env | cut -d= -f2)"   # same lookup stack-up.sh does
+curl -si "http://localhost:${port:-8080}/auth/login/google" | grep -i '^location'
+```
+
+One browser caveat: the session and the OIDC correlation cookies are `Secure`, so signing in
+needs a browser that treats `http://localhost` as a secure context. Chrome, Edge and Firefox
+do; Safari is stricter — if sign-in fails there with no visible error, try another browser.
+
+`compose.yaml` stays the separate, native workflow: it starts PostgreSQL alone for
+`./scripts/dev.sh`, and the container stack neither uses nor interferes with it — different
+compose project, different volume.

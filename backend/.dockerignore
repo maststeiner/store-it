@@ -1,0 +1,11 @@
+# Keep the build context small and the image reproducible: everything below is either
+# build output, machine-local state, or irrelevant to compiling the API.
+**/bin/
+**/obj/
+StrykerOutput/
+**/*.user
+**/.vs/
+**/.idea/
+**/TestResults/
+**/coverage*.xml
+**/coverage*.json

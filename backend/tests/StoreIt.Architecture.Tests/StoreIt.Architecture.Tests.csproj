@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <!-- Structure tests, not behavior tests — excluded from the coverage gate (tests/Directory.Build.props) -->
+        <CollectCoverage>false</CollectCoverage>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" />
+        <PackageReference Include="coverlet.msbuild">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="NetArchTest.Rules" />
+        <PackageReference Include="ReferencesRuler" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\StoreIt.Api\StoreIt.Api.csproj" />
+        <ProjectReference Include="..\..\src\StoreIt.Application\StoreIt.Application.csproj" />
+        <ProjectReference Include="..\..\src\StoreIt.Domain\StoreIt.Domain.csproj" />
+        <ProjectReference Include="..\..\src\StoreIt.Infrastructure\StoreIt.Infrastructure.csproj" />
+    </ItemGroup>
+</Project>

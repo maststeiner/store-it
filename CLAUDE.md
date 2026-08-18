@@ -32,9 +32,21 @@ For every task: **Run → Inspect → Challenge → Refine → Re-run**
 
 When output systematically deviates from the goal: don't only fix the code — sharpen the harness (guidelines in `docs/guidelines/` or the persona definition in `.claude/agents/`). The fix then applies to all future runs.
 
+## Branching Model
+
+| Branch | Purpose | Rules |
+|--------|---------|-------|
+| `main` | Releases only | Only receives merges from `develop` (release PRs); never worked on directly |
+| `develop` | Integration | Target branch for all feature PRs; **repository default branch** (since 2026-08-18) |
+| `feature/<feature-name>` | One feature / work item | Branched from `develop`, merged back via PR (Gates G2/G3) |
+
+**Why `develop` is the default branch:** tools that read repo-level config do so from the default branch — Renovate reads `renovate.json` there and nowhere else. With `main` as default, every config change merged to `develop` stayed inert until a release (see `docs/agent-logs/2026-08-18-renovate-config-source-of-truth.md`). Pointing the default at the integration branch keeps config and code in step.
+
+**Keeping branches up to date:** always `git rebase develop` + `git push --force-with-lease` — never merge commits into a branch.
+
 ## Isolation
 
-Every subagent works in its own **git worktree + branch + PR**. No direct work on `main`.
+Every subagent works in its own **git worktree + feature branch + PR** (targeting `develop`). No direct work on `main` or `develop`.
 
 WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict prevention). Calibrate during the pilot.
 
@@ -45,6 +57,18 @@ WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict preventi
 | `backend/` | .NET solution — API-first REST backend (consumed by Angular and later the iPhone app) |
 | `frontend/` | Angular app |
 
+## Commit Conventions
+
+**Conventional Commits** (Angular style), enforced locally by the `commit-msg` hook (`.githooks/`, activate once per clone: `git config core.hooksPath .githooks`):
+
+```text
+type(scope): subject          # imperative, lowercase, no trailing period
+```
+
+- **Types:** `feat` · `fix` · `docs` · `style` · `refactor` · `perf` · `test` · `build` · `ci` · `chore` · `revert`
+- **Scopes (suggested):** `backend`, `frontend`, `docs`, `ci`, `harness`, `deps` — omit when the change is repo-wide
+- **Body:** explains the *why*; wrap at ~72 chars
+
 ## Source of Truth
 
 | Path | Content |
@@ -53,8 +77,20 @@ WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict preventi
 | `docs/architecture/` | arc42 architecture doc (`ARCHITECTURE.md`), ADRs (basis for the architecture conformance gate) |
 | `docs/guidelines/` | Coding and test guidelines (basis for agent work) |
 | `docs/agent-logs/` | One run log per agent task (transparency / compliance, DoD requirement) |
+| `docs/metrics.md` | Pilot metrics — Flow + Quality tracking (KAIFe §8) |
 
 Keep this file short. Detailed content belongs in `docs/guidelines/`.
+
+## Data & Compliance (KAIFe §7)
+
+- **No real or sensitive data in prompts, fixtures, test data, or logs** — use
+  synthetic data only. Storages/items in tests are made up.
+- **Agent run logs (`docs/agent-logs/`) are our accountability record** — how AI
+  produced each change (repository policy, KAIFe Principle 3); supports EU-AI-Act
+  audit readiness. (Article 50, effective 2026-08-02, governs user-facing
+  disclosure of AI-generated content and does not itself mandate internal logs;
+  mandatory logging applies to high-risk systems under Article 12.)
+- Secrets come from the environment (12-factor), never committed.
 
 ## Permission Tiers
 
@@ -63,9 +99,10 @@ Configured in `.claude/settings.json` (add stack-specific commands during setup,
 - **Approval:** package installs, `git push`, schema/migration changes, infrastructure changes
 
 ## Metadata
-```
-last_updated: 2026-07-09
+
+```text
+last_updated: 2026-07-18
 owner: Marcel Steiner (AI Steward)
 scope: store-it — digital pantry management
-stack: .NET (C#) backend · Angular frontend · Kubernetes · GitHub Actions
+stack: .NET 10 (C#) backend · Angular frontend · Kubernetes · GitHub Actions
 ```

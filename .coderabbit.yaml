@@ -1,0 +1,37 @@
+# CodeRabbit — automated AI review, first filter before human review (KAIFe Gate G2).
+# Docs: https://docs.coderabbit.ai/reference/yaml-template
+language: en-US
+reviews:
+  profile: assertive # adversarial-review ethos (see .claude/agents/reviewer.md)
+  high_level_summary: true
+  pre_merge_checks:
+    # 80% docstring coverage contradicts our guidelines (comments only where needed,
+    # simplicity over ceremony) — quality is enforced via analyzers + review instead.
+    docstrings:
+      mode: "off"
+  auto_review:
+    enabled: true
+    base_branches:
+      - develop
+      - main
+  path_filters:
+    - "!**/package-lock.json"
+    - "!**/dist/**"
+    - "!**/bin/**"
+    - "!**/obj/**"
+  path_instructions:
+    - path: "backend/**"
+      instructions: |
+        Verify Clean Architecture layering per ADR-001: Domain must be framework-free;
+        Api must not depend on Infrastructure; dependencies point inward only.
+        Check against docs/guidelines/coding-guidelines.md (SOLID, error handling, 12-factor).
+    - path: "backend/tests/**"
+      instructions: |
+        Tests must verify behavior from spec acceptance criteria (docs/specs/), not the
+        implementation. Naming: Method_Scenario_ExpectedResult.
+    - path: "frontend/**"
+      instructions: |
+        No business rules in the frontend (API-first, ADR-002). All user-facing strings
+        must be localizable (de/en/fr/it) — no hard-coded UI text.
+chat:
+  auto_reply: true

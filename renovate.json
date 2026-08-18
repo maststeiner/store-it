@@ -1,7 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", "schedule:weekly"],
+  "extends": ["config:recommended", "schedule:daily"],
+  "description": [
+    "This file is only read from the repository's DEFAULT BRANCH (develop since 2026-08-18). baseBranches steers where update PRs target, not where this config is read from — that would need useBaseBranchConfig, which is deliberately not set because the default branch already is the integration branch. Consequence: a copy of this file on main is inert. Between 2026-07-13 and 2026-08-18 main was the default branch and its July config was the live one, which made every change below silently ineffective — see docs/agent-logs/2026-08-18-renovate-config-source-of-truth.md.",
+    "Repo config is the source of truth for Renovate's behaviour: the hosted Mend app also merges an org-level inherited config we cannot see from the repository, and repo config wins. The dashboard and approval keys below are therefore set explicitly rather than left to defaults, so the state is readable from this file alone.",
+    "dependencyDashboard: config:recommended already implies it via :dependencyDashboard, but no dashboard issue ever appeared in this repo — stating it makes a missing dashboard a real signal instead of an ambiguity.",
+    "dependencyDashboardApproval: false — updates must not wait for a checkbox tick. Human control over what lands is exercised through review (major updates never automerge, see packageRules) and through holds like allowedVersions, not by gating PR creation. Without a dashboard issue an approval gate is also unsatisfiable.",
+    "schedule:daily + timezone: a nightly instead of a weekly branch-creation window, so an update waits hours rather than up to a week. Note what schedule does and does not do: it gates when Renovate may create or update branches and PRs, not how often the hosted app runs — that cadence is the app's own. schedule:daily resolves to cron '* 0-3 * * *' and the previous schedule:weekly to '* 0-3 * * 1'; both are UTC unless a timezone is set, which had put the window at 02:00-06:00 local in summer. Europe/Zurich makes 'at night' mean night here. prConcurrentLimit is unchanged and caps how many Renovate PRs are open at once (3, aligned with the WIP limit) — it is a cap on concurrent open PRs, not on updates per run. Security updates are exempt from all of this: Renovate's vulnerabilityAlerts defaults are schedule [] (no window), dependencyDashboardApproval false and prCreation 'immediate', and vulnerability-alert branches bypass the concurrency limits in code — so a vulnerability fix does not wait for the night, for a free slot, or for an approval."
+  ],
+  "timezone": "Europe/Zurich",
   "baseBranches": ["develop"],
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": false,
   "prConcurrentLimit": 3,
   "labels": ["dependencies"],
   "packageRules": [
@@ -15,6 +25,16 @@
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "labels": ["dependencies", "major-update"]
+    },
+    {
+      "description": "Microsoft.OpenApi 3.x is coupled to ASP.NET Core 11 (the AspNetCore.OpenApi 10 source generator breaks against it on .NET 10); hold at 2.x until the .NET 11 move — tech-debt #62",
+      "matchPackageNames": ["Microsoft.OpenApi"],
+      "allowedVersions": "<3.0.0"
+    },
+    {
+      "description": "TypeScript 7 is not supported by Angular 22; hold at 6.x until an Angular release supports it — tech-debt #63",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7.0.0"
     }
   ]
 }

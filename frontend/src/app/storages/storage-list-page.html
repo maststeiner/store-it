@@ -1,0 +1,173 @@
+<section>
+  <div class="page-head">
+    <h1>{{ 'storages.title' | translate }}</h1>
+    @if (storages(); as list) {
+      <span class="count-hint">
+        {{
+          (list.length === 1 ? 'storages.count.one' : 'storages.count.other')
+            | translate: { count: list.length }
+        }}
+        ·
+        {{
+          (totalItems() === 1 ? 'items.count.one' : 'items.count.other')
+            | translate: { count: totalItems() }
+        }}
+      </span>
+    }
+    <button type="button" class="btn-primary" (click)="openCreate()">
+      {{ 'storages.new' | translate }}
+    </button>
+  </div>
+
+  @if (loadError(); as error) {
+    <p class="form-error" role="alert">{{ error }}</p>
+  }
+
+  <div class="storage-grid">
+    @for (storage of storages() ?? []; track storage.id) {
+      @if (editId() === storage.id) {
+        <div class="storage-card">
+          <div class="storage-icon" aria-hidden="true">🥫</div>
+          <div class="inline-edit">
+            <input
+              class="inline-input"
+              type="text"
+              [(ngModel)]="editName"
+              [attr.aria-label]="'storages.namePlaceholder' | translate"
+              (keydown.enter)="saveEdit(storage)"
+            />
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="saveEdit(storage)"
+              [title]="'actions.save' | translate"
+              [attr.aria-label]="'actions.save' | translate"
+            >
+              ✓
+            </button>
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="cancelEdit()"
+              [title]="'actions.cancel' | translate"
+              [attr.aria-label]="'actions.cancel' | translate"
+            >
+              ✕
+            </button>
+          </div>
+          @if (editError(); as error) {
+            <p class="form-error" role="alert">{{ error }}</p>
+          }
+        </div>
+      } @else {
+        <div class="storage-card">
+          <button
+            type="button"
+            class="card-open"
+            [attr.aria-label]="'storages.openCard' | translate: { name: storage.name }"
+            (click)="open(storage)"
+          >
+            <div class="storage-icon" aria-hidden="true">🥫</div>
+            <div>
+              <div class="storage-name">{{ storage.name }}</div>
+              <div class="storage-meta">
+                {{
+                  (storage.itemCount === 1 ? 'items.count.one' : 'items.count.other')
+                    | translate: { count: storage.itemCount }
+                }}
+              </div>
+            </div>
+            @if (storage.itemCount > 0) {
+              <div class="chips">
+                @if (storage.expiredCount > 0) {
+                  <span class="chip expired">
+                    {{
+                      (storage.expiredCount === 1
+                        ? 'storages.chips.expired.one'
+                        : 'storages.chips.expired.other'
+                      ) | translate: { count: storage.expiredCount }
+                    }}
+                  </span>
+                }
+                @if (storage.expiringSoonCount > 0) {
+                  <span class="chip expiring">
+                    {{
+                      (storage.expiringSoonCount === 1
+                        ? 'storages.chips.expiring.one'
+                        : 'storages.chips.expiring.other'
+                      ) | translate: { count: storage.expiringSoonCount }
+                    }}
+                  </span>
+                }
+                @if (storage.expiredCount === 0 && storage.expiringSoonCount === 0) {
+                  <span class="chip ok">{{ 'storages.chips.fresh' | translate }}</span>
+                }
+              </div>
+            }
+          </button>
+          <div class="card-actions">
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="startEdit(storage, $event)"
+              [title]="'actions.rename' | translate"
+              [attr.aria-label]="'actions.rename' | translate"
+            >
+              ✎
+            </button>
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="askDelete(storage, $event)"
+              [title]="'actions.delete' | translate"
+              [attr.aria-label]="'actions.delete' | translate"
+            >
+              🗑
+            </button>
+          </div>
+        </div>
+      }
+    }
+
+    @if (createOpen()) {
+      <form class="storage-card ghost create-form" (ngSubmit)="create()">
+        <input
+          class="inline-input"
+          type="text"
+          name="storageName"
+          [(ngModel)]="createName"
+          [placeholder]="'storages.namePlaceholder' | translate"
+          [attr.aria-label]="'storages.namePlaceholder' | translate"
+        />
+        <div class="inline-actions">
+          <button type="submit" class="btn-primary">{{ 'actions.create' | translate }}</button>
+          <button
+            type="button"
+            class="icon-btn"
+            (click)="cancelCreate()"
+            [title]="'actions.cancel' | translate"
+            [attr.aria-label]="'actions.cancel' | translate"
+          >
+            ✕
+          </button>
+        </div>
+        @if (createError(); as error) {
+          <p class="form-error" role="alert">{{ error }}</p>
+        }
+      </form>
+    } @else {
+      <button type="button" class="storage-card ghost" (click)="openCreate()">
+        {{ 'storages.createGhost' | translate }}
+      </button>
+    }
+  </div>
+
+  @if (deleteTarget(); as target) {
+    <app-confirm-dialog
+      [title]="'storages.deleteTitle' | translate"
+      [message]="'storages.deleteConfirm' | translate: { name: target.name }"
+      (confirmed)="confirmDelete()"
+      (cancelled)="deleteTarget.set(null)"
+    />
+  }
+</section>

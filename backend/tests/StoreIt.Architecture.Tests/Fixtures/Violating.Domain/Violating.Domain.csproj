@@ -1,0 +1,10 @@
+<!-- Test fixture: deliberately violates the Domain-is-framework-free package rule.
+     Not part of the solution — only scanned by ReferenceRulesTests negative tests. -->
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" />
+    </ItemGroup>
+</Project>

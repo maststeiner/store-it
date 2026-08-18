@@ -1,0 +1,30 @@
+<header>
+  <!-- "store-it" is the invariant product/brand name — identical in every locale,
+       so it is intentionally not routed through the TranslateService. -->
+  <a class="logo" routerLink="/storages">
+    <img class="logo-mark" src="/logo.svg" alt="" width="30" height="30" />
+    store-it
+  </a>
+  <nav>
+    <a routerLink="/storages" routerLinkActive="active">{{ 'nav.storages' | translate }}</a>
+  </nav>
+  <div class="header-right">
+    <select
+      class="lang"
+      [ngModel]="language.current()"
+      (ngModelChange)="language.set($event)"
+      [attr.aria-label]="'header.language' | translate"
+    >
+      @for (lang of language.supported; track lang) {
+        <option [value]="lang">{{ 'languages.' + lang | translate }}</option>
+      }
+    </select>
+    @if (auth.user(); as u) {
+      <app-session-menu [user]="u" (signOut)="auth.logout()" />
+    }
+  </div>
+</header>
+
+<main>
+  <router-outlet />
+</main>

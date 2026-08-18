@@ -1,0 +1,9 @@
+# Normalize line endings to LF for everyone, independent of local git config
+# (prettier/CSharpier expect LF; avoids CRLF churn after rebases)
+* text=auto eol=lf
+
+# Binary files
+*.ico binary
+*.png binary
+*.jpg binary
+*.woff2 binary

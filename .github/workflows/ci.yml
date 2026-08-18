@@ -3,13 +3,20 @@
 
 name: CI
 
+# Least privilege: these jobs only read code (build, test, scan, format-check)
+permissions:
+  contents: read
+
 on:
   pull_request:
-    branches: [main]
+    branches: [develop, main]
+  push:
+    branches: [develop, main] # post-merge runs keep the SonarCloud baseline current
+  schedule:
+    - cron: '0 3 * * *' # nightly full mutation backstop on develop (job 1a).
+      # NOTE: GitHub fires `schedule` only from the default branch (main), so this
+      # activates once this file reaches main; the job checks out develop to mutate.
   workflow_dispatch:
-
-env:
-  COVERAGE_THRESHOLD: 70 # Calibrate during pilot
 
 jobs:
 
@@ -23,18 +30,75 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          dotnet-version: '8.x'
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.x'
       - name: Build
         run: dotnet build --configuration Release
+      # Coverage gate configured in backend/tests/Directory.Build.props
+      # (threshold 70%, architecture tests excluded)
       - name: Test + coverage gate
+        run: dotnet test --configuration Release
+
+  backend-mutation-test:
+    name: 1a · Backend mutation testing
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          # Full history so Stryker can diff a PR against its base branch (--since).
+          fetch-depth: 0
+          # The nightly backstop mutates develop (the integration line); every other
+          # trigger uses its own ref (PR merge ref / pushed branch).
+          ref: ${{ github.event_name == 'schedule' && 'refs/heads/develop' || github.ref }}
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.x'
+      # Mutation testing is expensive, so scope it to when it adds value: a nightly
+      # full run on develop (backstop against coverage erosion in untouched files;
+      # also runnable on demand via "Run workflow"/workflow_dispatch), only the
+      # changed code on PRs that touch the backend (Stryker --since), and skip the
+      # heavy step otherwise — including post-merge pushes, which the backstop covers.
+      # The job itself always completes green so the required check passes.
+      - name: Decide mutation scope
+        id: scope
         run: |
-          dotnet test --configuration Release \
-            /p:CollectCoverage=true \
-            /p:Threshold=${{ env.COVERAGE_THRESHOLD }} \
-            /p:ThresholdType=line
+          if [ "$GITHUB_EVENT_NAME" = "schedule" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_EVENT_NAME" != "pull_request" ]; then
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "origin/${GITHUB_BASE_REF}...HEAD" | grep -q '^backend/'; then
+            echo "mode=incremental" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Restore tools
+        if: steps.scope.outputs.mode != 'skip'
+        run: dotnet tool restore
+      # Verifies the tests actually test something (kills mutants) — AI-generated
+      # tests can look plausible while asserting nothing. Break threshold: 60%.
+      - name: Stryker mutation testing (full)
+        if: steps.scope.outputs.mode == 'full'
+        run: dotnet stryker
+      - name: Stryker mutation testing (changed code only)
+        if: steps.scope.outputs.mode == 'incremental'
+        run: dotnet stryker --since:"origin/${GITHUB_BASE_REF}"
+      - name: Mutation testing skipped
+        if: steps.scope.outputs.mode == 'skip'
+        run: echo "No backend/ changes to mutate (or a post-merge push — covered by the nightly backstop); skipping."
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always() && steps.scope.outputs.mode != 'skip'
+        with:
+          name: mutation-report
+          path: backend/StrykerOutput/**/reports/
+          if-no-files-found: ignore
 
   frontend-build-test:
     name: 1 · Frontend build & test
@@ -43,63 +107,277 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          node-version: '20'
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
       - name: Install
         run: npm ci
+      - name: Generate API client (drift check)
+        # The committed client must match the backend OpenAPI contract — regenerate
+        # and fail if it drifts (analogous to the backend contract gate, ADR-006).
+        run: |
+          npm run generate:api
+          git diff --exit-code -- src/app/api
       - name: Lint
         run: npm run lint
-      - name: Test + coverage
-        # Coverage thresholds enforced via karma/jest config (TODO: set to $COVERAGE_THRESHOLD)
-        run: npm test -- --watch=false --code-coverage
+      - name: Test + coverage gate
+        # Vitest builder in Node/jsdom (no browser needed); line-coverage threshold
+        # (70%) enforced via vitest-base.config.ts, consistent with the backend gate.
+        run: npm run test:coverage
       - name: Build
         run: npm run build
 
   # ────────────────────────────────────────────
   # 2 · Security & SBOM (Trivy — language-neutral)
   # ────────────────────────────────────────────
+  e2e:
+    name: 1b · End-to-end (full stack)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # pinned by digest for reproducible CI (Renovate keeps it current)
+        image: postgres:18-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+        env:
+          POSTGRES_DB: storeit
+          POSTGRES_USER: storeit
+          POSTGRES_PASSWORD: storeit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      ConnectionStrings__storeit: Host=localhost;Port=5432;Database=storeit;Username=storeit;Password=storeit
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.x'
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Apply migrations (admin process, 12-factor)
+        working-directory: backend
+        run: |
+          dotnet tool restore
+          dotnet restore
+          dotnet ef database update --project src/StoreIt.Infrastructure --startup-project src/StoreIt.Api
+      - name: Start backend
+        working-directory: backend
+        run: |
+          ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/StoreIt.Api --configuration Release --no-launch-profile --urls http://localhost:5000 &
+          for _ in $(seq 1 30); do
+            if curl -sf http://localhost:5000/health > /dev/null; then echo "backend up"; exit 0; fi
+            sleep 2
+          done
+          echo "backend did not become healthy in time" >&2
+          exit 1
+      - name: Install frontend deps + browser
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run E2E (Playwright starts ng serve, proxies to backend)
+        working-directory: frontend
+        run: npm run e2e
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          if-no-files-found: ignore
+
   security:
     name: 2 · Security scan & SBOM
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-      - name: Dependency + secret scan
+      - name: Dependency + secret + license scan
+        # Licenses: forbidden/restricted (GPL/AGPL/etc.) map to HIGH/CRITICAL in
+        # Trivy's default categorization — see docs/SETUP.md license policy.
         run: |
           trivy fs . \
+            --scanners vuln,secret,license \
             --exit-code 1 \
             --severity HIGH,CRITICAL \
             --format table
+
       - name: SBOM export (CycloneDX)
         run: |
           trivy fs . \
             --format cyclonedx \
             --output sbom.cdx.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: SBOM
           path: sbom.cdx.json
 
+  api-contract:
+    name: 2 · API contract gate (drift + breaking)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.x'
+      # ADR-006 stage 1 — drift: the committed contract must match the code
+      - name: Regenerate OpenAPI spec
+        run: dotnet build src/StoreIt.Api --configuration Release
+      - name: Drift check (contract committed and current)
+        run: git diff --exit-code -- openapi/
+      # ADR-006 stage 2 / ADR-007 — breaking changes vs. the last RELEASED contract
+      # (the latest SemVer tag), not the integration branch. Until the first release
+      # is tagged, /api/v1 is pre-release and breaking changes are allowed.
+      - name: Install oasdiff
+        if: github.event_name == 'pull_request'
+        run: |
+          curl -sSfL "https://github.com/oasdiff/oasdiff/releases/download/v1.23.0/oasdiff_1.23.0_linux_amd64.tar.gz" -o /tmp/oasdiff.tgz
+          tar -xzf /tmp/oasdiff.tgz -C /tmp oasdiff
+      - name: Breaking-change check (vs. last released tag)
+        if: github.event_name == 'pull_request'
+        run: |
+          # Baseline = the latest release tag: a strict vMAJOR.MINOR.PATCH tag
+          # reachable from main (ADR-007). Until the first release, /api/v1 is
+          # pre-release and breaking changes are allowed.
+          LAST_TAG="$(git tag --list 'v*.*.*' --merged origin/main --sort=-v:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
+          if [ -z "$LAST_TAG" ]; then
+            echo "No release tag yet — /api/v1 is pre-release, breaking changes allowed (ADR-007). Skipping."
+          elif git show "${LAST_TAG}:backend/openapi/StoreIt.Api.json" > /tmp/base-spec.json 2>/dev/null; then
+            echo "Comparing against the released contract at ${LAST_TAG}."
+            /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json --fail-on ERR
+          else
+            echo "::error::Release ${LAST_TAG} has no committed contract (backend/openapi/StoreIt.Api.json). Every release must carry its contract baseline (ADR-007)."
+            exit 1
+          fi
+
+  dependency-review:
+    name: 2 · Dependency & license review (PR diff)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          # License policy (docs/SETUP.md): permissive licenses only — enforced as an
+          # allow-list (default-deny), so anything outside the set fails the gate for
+          # review, not just a fixed list of copyleft identifiers.
+          # 0BSD (BSD Zero Clause) is public-domain-equivalent — permissive beyond MIT,
+          # it does not even require attribution. Added 2026-08-18: tslib (a direct Angular
+          # runtime dependency, shipped since the frontend scaffold) is 0BSD and had never
+          # appeared in a PR diff against develop, so the gap only surfaced on the full-tree
+          # diff of the main sync PR. The gate sees diffs, not the shipped dependency set.
+          allow-licenses: 0BSD, MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
+          # The allow-list governs what we *ship* (npm/nuget runtime deps). CI-only
+          # GitHub Actions are build tooling that is never distributed, so license
+          # obligations don't arise from CI use; there is no ecosystem filter, so
+          # exempt such actions explicitly by purl (the SonarQube action is LGPL-3.0).
+          allow-dependencies-licenses: pkg:githubactions/sonarsource/sonarqube-scan-action
+
   # ────────────────────────────────────────────
-  # 3 · Code Quality (SonarQube/SonarCloud)
+  # 3 · Code Quality (SonarCloud — monorepo: one project per app)
+  # Requires SONAR_TOKEN secret + SonarCloud projects (see docs/SETUP.md §3).
+  # sonar.qualitygate.wait=true → job fails when the quality gate is red
+  # (duplication threshold, new blockers — counters the AI tech-debt risk).
   # ────────────────────────────────────────────
-  # TODO: activate once a SonarCloud project + SONAR_TOKEN secret exist.
-  # quality:
-  #   name: 3 · SonarCloud quality gate
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-  #     - uses: SonarSource/sonarcloud-github-action@master
-  #       env:
-  #         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  quality-backend:
+    name: 3 · Backend quality gate
+    runs-on: ubuntu-latest
+    # SonarCloud (this org's plan) persists only the main branch + PRs, and the
+    # project's main branch is set to `develop`. Analyze on PRs and develop pushes;
+    # skip main pushes, which the plan rejects as a non-main branch.
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/develop'
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false # full history for accurate new-code detection
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.x'
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: 'temurin'
+          java-version: '21' # required by the Sonar scanner for .NET
+      - name: Install scanner
+        run: dotnet tool install --global dotnet-sonarscanner
+      - name: Analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"maststeiner_store-it-backend" \
+            /o:"maststeiner" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+            /d:sonar.qualitygate.wait=true
+          dotnet build --configuration Release
+          dotnet test --configuration Release /p:CoverletOutputFormat=opencover
+          dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+  quality-frontend:
+    name: 3 · Frontend quality gate
+    runs-on: ubuntu-latest
+    # SonarCloud (this org's plan) persists only the main branch + PRs, and the
+    # project's main branch is set to `develop`. Analyze on PRs and develop pushes;
+    # skip main pushes, which the plan rejects as a non-main branch.
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install + coverage (produces lcov for Sonar)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run test:coverage
+      - uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: frontend
+          args: >
+            -Dsonar.projectKey=maststeiner_store-it-frontend
+            -Dsonar.organization=maststeiner
+            -Dsonar.sources=src
+            -Dsonar.tests=src
+            -Dsonar.test.inclusions=**/*.spec.ts
+            -Dsonar.exclusions=src/app/api/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.qualitygate.wait=true
 
   # ────────────────────────────────────────────
   # 4 · Architecture Conformance
@@ -111,12 +389,16 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          dotnet-version: '8.x'
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.x'
       - name: Layering rules (0 violations)
-        run: dotnet test --filter "Category=ArchitectureTests" --configuration Release
+        # CollectCoverage=false: the coverage gate belongs to job 1; with this filter
+        # other test projects run 0 tests and would fail the threshold spuriously.
+        run: dotnet test --filter "Category=ArchitectureTests" --configuration Release /p:CollectCoverage=false
 
   # ────────────────────────────────────────────
   # 5 · Format & Lint
@@ -128,12 +410,30 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          dotnet-version: '8.x'
-      - name: dotnet format
-        run: dotnet format --verify-no-changes
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          dotnet-version: '10.x'
+      # CSharpier owns formatting; Roslyn analyzers are enforced at build time (job 1)
+      - name: Restore tools
+        run: dotnet tool restore
+      - name: CSharpier check
+        run: dotnet csharpier check .
+
+  workflow-lint:
+    name: 5 · Workflow lint (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: actionlint
+        # Installer pinned to the immutable v1.7.12 tag commit (not mutable main)
+        run: |
+          bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/914e7df21a07ef503a81201c76d2b11c789d3fca/scripts/download-actionlint.bash) 1.7.12
+          ./actionlint -color
 
   format-frontend:
     name: 5 · Frontend format check
@@ -142,9 +442,17 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          node-version: '20'
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        run: npm ci
       - name: Prettier check
+        # npm ci first so the pinned prettier version is used (npx without
+        # node_modules would fetch the latest version → formatting drift)
         run: npx prettier --check .
