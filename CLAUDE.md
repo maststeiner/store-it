@@ -37,8 +37,10 @@ When output systematically deviates from the goal: don't only fix the code — s
 | Branch | Purpose | Rules |
 |--------|---------|-------|
 | `main` | Releases only | Only receives merges from `develop` (release PRs); never worked on directly |
-| `develop` | Integration | Target branch for all feature PRs |
+| `develop` | Integration | Target branch for all feature PRs; **repository default branch** (since 2026-08-18) |
 | `feature/<feature-name>` | One feature / work item | Branched from `develop`, merged back via PR (Gates G2/G3) |
+
+**Why `develop` is the default branch:** tools that read repo-level config do so from the default branch — Renovate reads `renovate.json` there and nowhere else. With `main` as default, every config change merged to `develop` stayed inert until a release (see `docs/agent-logs/2026-08-18-renovate-config-source-of-truth.md`). Pointing the default at the integration branch keeps config and code in step.
 
 **Keeping branches up to date:** always `git rebase develop` + `git push --force-with-lease` — never merge commits into a branch.
 

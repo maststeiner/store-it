@@ -90,6 +90,12 @@ does not have to reconstruct this.
 
 ## Open verification (deliberately stated, not glossed over)
 
+> **Follow-up 2026-08-18:** neither expectation below came true, and the reason is that
+> none of this run's changes were ever live — Renovate reads `renovate.json` from the
+> repository's **default branch**, which was still `main` (last touched 2026-07-13). The
+> hypothesis below about an app-side approval gate is superseded. See
+> `2026-08-18-renovate-config-source-of-truth.md`.
+
 `schedule` does not control **when Renovate runs** — the hosted app runs on its own cadence
 (the evidence table shows bot activity at 2026-08-03 20:04 UTC, far outside the then-current
 Monday window). It controls **when Renovate may create or update branches and PRs**. So
