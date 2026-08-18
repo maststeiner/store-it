@@ -285,7 +285,12 @@ jobs:
           # License policy (docs/SETUP.md): permissive licenses only — enforced as an
           # allow-list (default-deny), so anything outside the set fails the gate for
           # review, not just a fixed list of copyleft identifiers.
-          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
+          # 0BSD (BSD Zero Clause) is public-domain-equivalent — permissive beyond MIT,
+          # it does not even require attribution. Added 2026-08-18: tslib (a direct Angular
+          # runtime dependency, shipped since the frontend scaffold) is 0BSD and had never
+          # appeared in a PR diff against develop, so the gap only surfaced on the full-tree
+          # diff of the main sync PR. The gate sees diffs, not the shipped dependency set.
+          allow-licenses: 0BSD, MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
           # The allow-list governs what we *ship* (npm/nuget runtime deps). CI-only
           # GitHub Actions are build tooling that is never distributed, so license
           # obligations don't arise from CI use; there is no ecosystem filter, so

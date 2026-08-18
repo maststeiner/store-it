@@ -68,6 +68,34 @@ consequence above accepted knowingly.
 merge would start with an artificial conflict. Rebase-merge has the same effect. Since `main`
 is 0 commits ahead, a merge commit is trivially clean.
 
+## What the sync merge exposed: a blind spot in the license gate
+
+The sync PR failed exactly one check — `2 · Dependency & license review (PR diff)`:
+
+```
+The following dependencies have incompatible licenses:
+frontend/package-lock.json » tslib@2.8.1 – License: 0BSD
+```
+
+Not a build error and not caused by the merge. `dependency-review-action` inspects a PR's
+**diff**, so it only ever judges dependencies that a PR adds or changes. `tslib` is a *direct*
+dependency in `frontend/package.json` (Angular's runtime helper library) and has been shipping
+since the frontend scaffold — it never appeared in a diff against `develop`, so its license was
+never checked. The sync PR is the first PR whose diff spans the whole tree back to the July
+scaffold, which is why a dependency this old surfaced now.
+
+`0BSD` (BSD Zero Clause) is public-domain-equivalent — more permissive than MIT, it does not
+even require attribution — so it belongs on a "permissive licenses only" allow-list. Added, with
+the reasoning in `ci.yml` and `docs/SETUP.md`.
+
+**The gap itself is worth keeping in mind:** the allow-list is enforced against diffs, never
+against the shipped dependency set. `docs/SETUP.md` names Trivy's repo-wide license scan as the
+second line of defence, but Trivy classifies by *severity* (forbidden/restricted → HIGH/CRITICAL),
+not against our allow-list — so a permissive-but-unlisted license passes it silently. Between the
+two, nothing systematically checks the full set against the policy. Documented as a known
+limitation rather than silently fixed; closing it properly would mean a periodic full-tree license
+audit, which is a separate piece of work.
+
 ## Verification
 
 | Check | Result |
