@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService, appLocalPath } from '../core/auth.service';
@@ -9,7 +9,7 @@ import { TranslatePipe } from '../core/translate';
   imports: [TranslatePipe],
   templateUrl: './login-page.html',
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -17,7 +17,7 @@ export class LoginPage {
   /** The route authGuard bounced the visitor off, and where sign-in sends them back. */
   private readonly returnUrl = appLocalPath(this.route.snapshot.queryParamMap.get('returnUrl'));
 
-  constructor() {
+  ngOnInit(): void {
     void this.skipWhenAlreadySignedIn();
   }
 

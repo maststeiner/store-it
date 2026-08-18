@@ -54,8 +54,10 @@ public sealed class CreateStorageUseCase(
     public async Task<StorageSummary> ExecuteAsync(string name, CancellationToken cancellationToken)
     {
         // SPEC-003: the owner is stamped server-side from the authenticated session.
-        // Endpoints require authentication (fallback policy), so UserId is present here;
-        // guard defensively rather than persist an ownerless storage.
+        // Endpoints require authentication via the fallback policy, so UserId is present
+        // here. Guard defensively rather than persist an ownerless storage.
+        // NOTE: the wording avoids a parenthesis plus trailing semicolon — that shape made
+        // Sonar S125 misread this prose as commented-out code.
         var ownerId =
             currentUser.UserId
             ?? throw new InvalidOperationException(

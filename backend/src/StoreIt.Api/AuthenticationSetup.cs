@@ -104,11 +104,9 @@ public static class AuthenticationSetup
         // Secure-by-default (SPEC-003 ownership cutover): every endpoint requires an
         // authenticated user unless it opts out with .AllowAnonymous() (the /auth group,
         // /health, and the OpenAPI document — see Program.cs).
-        services.AddAuthorization(options =>
-            options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build()
-        );
+        services
+            .AddAuthorizationBuilder()
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
         return services;
     }

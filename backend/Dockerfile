@@ -32,14 +32,14 @@ ENTRYPOINT ["dotnet", "ef", "database", "update", \
 
 # ── runtime ───────────────────────────────────────────────────────────────────
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
-# curl is here for the container health check only — compose gates the frontend on the
-# API being healthy (AC-06), and the aspnet image ships no HTTP client.
+# One layer for both root-only steps (Sonar S7031). curl is here for the container health
+# check only — compose gates the frontend on the API being healthy (AC-06), and the aspnet
+# image ships no HTTP client. The user is non-root: the API needs no privileges, and
+# rootless podman is a target (AC-08).
 RUN apt-get update \
     && apt-get install --yes --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Non-root: the API needs no privileges, and rootless podman is a target (AC-08).
-RUN useradd --create-home --uid 10001 storeit
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --uid 10001 storeit
 USER storeit
 
 WORKDIR /app

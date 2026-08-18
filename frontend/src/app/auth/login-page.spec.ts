@@ -74,7 +74,7 @@ describe('LoginPage', () => {
     await fixture.whenStable();
 
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('button.btn-provider');
-    expect(buttons.length).toBe(2);
+    expect(buttons).toHaveLength(2);
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Sign in with Microsoft');
