@@ -57,7 +57,7 @@ is one block of startup work.
 
 The flagged line was prose, not code:
 
-```
+```csharp
 // Endpoints require authentication (fallback policy), so UserId is present here;
 ```
 
@@ -82,20 +82,30 @@ hunk — the comment was not wrong, only unluckily punctuated.**
 | Backend tests | **153 passed, 0 failed** (Domain 62, Architecture 9, Api.Service 82); coverage 94.24% line / 71.75% branch |
 | Backend format (CSharpier) | 70 files checked, clean |
 | `S125` build warning | **gone** — `dotnet build` went from 3 warnings to 2 |
-| Sonar re-analysis | pending — only the CI run on this PR can confirm the six are closed |
+| Sonar re-analysis | **0 open issues** on both projects for PR 92 (`api/issues/search?...&pullRequest=92&resolved=false`), both quality gates passed |
+| NU1903 build warning | **gone** — `dotnet build` reports 0 warnings after the Testcontainers bump below |
+| Backend tests after the bump | **153 passed, 0 failed** (Domain 62, Architecture 9, Api.Service 82); coverage unchanged at 94.24% line / 71.75% branch |
 
-## Found on the way, not fixed here
+## Found on the way — NU1903, now fixed here too
 
-`dotnet build` reports **NU1903: SSH.NET 2025.1.0 has a known high severity vulnerability**
-([GHSA-q939-rpr3-3284](https://github.com/advisories/GHSA-q939-rpr3-3284)), pulled in
-transitively by `Testcontainers.PostgreSql` 4.13.0 in `StoreIt.Api.Service.Tests`.
+`dotnet build` reported **NU1903: SSH.NET 2025.1.0 has a known high-severity vulnerability**
+([GHSA-q939-rpr3-3284](https://github.com/advisories/GHSA-q939-rpr3-3284) — `ScpClient` recursive
+download allows arbitrary file write via server-controlled filenames; patched in SSH.NET
+2026.0.0). The exact path, read off the package graph rather than guessed:
+`Testcontainers.PostgreSql` 4.13.0 → `Testcontainers` 4.13.0 → `SSH.NET` 2025.1.0. The reference
+sits in the core `Testcontainers` package, not in the PostgreSQL module, and only
+`StoreIt.Api.Service.Tests` pulls it — production publishes `src/StoreIt.Api` alone.
 
-Test-only and not shipped, so not urgent — but note *why* it is still sitting here: Renovate's
-`vulnerabilityAlerts` defaults would have opened a PR immediately, bypassing schedule, approval
-and concurrency limits. Renovate has not run against a correct config since 2026-07-13 (see
-`2026-08-18-renovate-config-source-of-truth.md`). This is the first concrete cost of that
-config drift. Out of scope here; it should arrive as a Renovate PR now that the default branch
-is fixed, and is worth a tech-debt issue if it does not.
+Test-only and not shipped, so it was first left out of scope — but note *why* it was sitting here
+at all: Renovate's `vulnerabilityAlerts` defaults would have opened a PR immediately, bypassing
+schedule, approval and concurrency limits. Renovate has not run against a correct config since
+2026-07-13 (see `2026-08-18-renovate-config-source-of-truth.md`). This is the first concrete cost
+of that config drift.
+
+Rather than carry it as an issue or an accepted risk, it is fixed in this PR:
+`Testcontainers.PostgreSql` **4.14.0** pulls `Testcontainers` 4.14.0, which depends on `SSH.NET`
+2026.0.0. One line in `backend/Directory.Packages.props`; the 153 backend tests still pass and
+`dotnet build` is down to 0 warnings.
 
 ## Human Interventions
 
@@ -103,6 +113,9 @@ is fixed, and is worth a tech-debt issue if it does not.
 |---|--------------|--------|
 | 1 | *"Warum ist es möglich, dass sonar cube 2 reliability und zweimal 3 Maintainability Vergehen hat?"* — explicitly discussion only, no changes | Established the impact-vs-legacy-rating explanation above |
 | 2 | *"zurück auf die sonar cube findings"* | Trigger to actually clear them |
+| 3 | Automated review (CodeRabbit) raised 5 findings | Three markup/wording fixes taken; the `curl` pin rebutted; NU1903 escalated from "not fixed here" to fixed. The finding that the verbatim quotes in this table be replaced with synthetic text was rebutted: the Data & Compliance rule targets real or personal data, and quoting the orchestrator verbatim *is* the accountability record (KAIFe Principle 3) — the practice is repo-wide, see the container-stack and Renovate logs |
+| 4 | Chose the `# hadolint ignore=DL3008` pragma with a written rationale over pinning `curl=<version>` | An exact apt pin breaks the build the moment Debian drops the superseded build from the mirror, and freezes the package that most needs patches |
+| 5 | Chose to bump `Testcontainers.PostgreSql` in this PR over a tech-debt issue or an accepted-risk expiry | The patched version already existed; a one-line fix beats paperwork for a high-severity advisory, even a test-only one |
 
 ## Outcome
 
