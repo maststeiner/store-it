@@ -3,6 +3,21 @@
         "solution": "StoreIt.sln",
         "target-framework": "net10.0",
         "mutate": ["!**/Program.cs"],
+        "since": {
+            "enabled": false,
+            "ignore-changes-in": [
+                "**/*.md",
+                "**/*.yml",
+                "**/*.yaml",
+                "**/*.json",
+                "**/*.props",
+                "**/*.targets",
+                "**/Dockerfile",
+                "**/.dockerignore",
+                "**/.gitignore",
+                "**/.editorconfig"
+            ]
+        },
         "thresholds": {
             "high": 90,
             "low": 75,
