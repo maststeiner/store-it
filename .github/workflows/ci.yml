@@ -84,12 +84,23 @@ jobs:
         run: dotnet tool restore
       # Verifies the tests actually test something (kills mutants) — AI-generated
       # tests can look plausible while asserting nothing. Break threshold: 60%.
+      #
+      # --concurrency 4: Stryker defaults to logical processors / 2, which is 2 test
+      # runners on a 4-vCPU GitHub runner — half the machine idle for 35 minutes.
+      #
+      # The `since` block in stryker-config.json carries `ignore-changes-in`, without
+      # which "changed code only" was a lie: Stryker treats every changed file outside a
+      # mutated project as a changed *test* file, and one of those invalidates all
+      # mutants. On PR #92 a single edit to backend/Dockerfile logged "Changed test file
+      # backend/Dockerfile" and produced the same 628 mutants and the same 37 minutes as
+      # the nightly full run. `since.enabled` stays false there so this job's full run
+      # and local runs are unaffected; --since below turns it on for pull requests.
       - name: Stryker mutation testing (full)
         if: steps.scope.outputs.mode == 'full'
-        run: dotnet stryker
+        run: dotnet stryker --concurrency 4
       - name: Stryker mutation testing (changed code only)
         if: steps.scope.outputs.mode == 'incremental'
-        run: dotnet stryker --since:"origin/${GITHUB_BASE_REF}"
+        run: dotnet stryker --concurrency 4 --since:"origin/${GITHUB_BASE_REF}"
       - name: Mutation testing skipped
         if: steps.scope.outputs.mode == 'skip'
         run: echo "No backend/ changes to mutate (or a post-merge push — covered by the nightly backstop); skipping."
