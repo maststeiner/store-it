@@ -14,7 +14,7 @@ RUN npm ci
 COPY . .
 RUN npm run build -- --configuration production
 
-FROM docker.io/library/nginx:1.29-alpine AS runtime
+FROM docker.io/library/nginx:1.31-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 # @angular/build:application emits browser assets under dist/<project>/browser.
 COPY --from=build /src/dist/frontend/browser /usr/share/nginx/html
