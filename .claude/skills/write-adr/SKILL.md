@@ -14,8 +14,8 @@ non-trivial, hard-to-reverse decision is made (or revised).
 1. **Pick the number.** Look at existing `docs/architecture/ADR-*.md`; take the next
    free `NNN` (zero-padded, e.g. `004`). Never reuse or renumber.
 2. **Create the file** `docs/architecture/ADR-NNN-<slug>.md` where `<slug>` is a short
-   kebab-case summary (e.g. `ADR-004-identity-auth.md`). Copy `ADR-TEMPLATE.md` as the
-   starting point.
+   kebab-case summary (e.g. `ADR-004-identity-auth.md`). Copy
+   `docs/process/templates/ADR-TEMPLATE.md` as the starting point.
 3. **Fill the header:**
    - `Status:` — start at `Proposed`. Use `Research` while actively exploring options
      (spikes, comparisons). Move to `Accepted` once the human decider signs off. Use
