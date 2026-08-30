@@ -1,10 +1,8 @@
 # Coding Guidelines
 
 > **Owner:** Marcel Steiner (Architecture Stewardship)
-> **Stack:** .NET 10 LTS (C#) backend · Angular (TypeScript) frontend
-> **Formatter:** CSharpier (backend, `dotnet csharpier format .`) · Prettier + ESLint (frontend)
-> **Static analysis:** Roslyn analyzers, `latest-recommended`, enforced at build time (warnings = errors)
-> **Last updated:** 2026-07-29
+> **Stack, formatters, static analysis:** see [`docs/project/tech-stack.md`](../project/tech-stack.md)
+> **Last updated:** 2026-08-30
 
 These guidelines are the primary reference for the Developer Agent and the Reviewer Agent.
 

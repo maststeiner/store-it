@@ -17,7 +17,7 @@
 - [x] **Language / runtime:** .NET (C#) backend · Angular (TypeScript) frontend → arc42 section 2.
 - [x] **Formatter / linter:** `dotnet format` (backend) · Prettier + ESLint (frontend).
 - [x] **Test framework + coverage:** xUnit + coverlet (backend) · Angular default (frontend).
-- [x] **Coverage threshold:** 70%, enforced in the gate configs (frontend `vitest-base.config.ts` · backend coverlet) and fixed after the SPEC-001 pilot (2026-07-27).
+- [x] **Coverage threshold:** defined and calibrated in `docs/guidelines/test-guidelines.md` (Coverage + Decisions & Calibration), enforced in the gate configs (frontend `vitest-base.config.ts` · backend coverlet).
 - [x] **Architecture conformance:** .NET architecture tests (`Category=ArchitectureTests`), rules from ADR-001.
 - [x] Stack commands added to the **Auto** permission tier in `.claude/settings.json`.
 
@@ -45,7 +45,7 @@
 
 ## 4. Branch protection **[platform]**
 
-Branching model: `main` (releases) ← `develop` (integration) ← `feature/<name>` — see `CLAUDE.md`.
+Branching model: `main` (releases) ← `develop` (integration) ← `feature/<name>` — see `docs/process/PROCESS.md` (model) and `CLAUDE.md` (repo specifics).
 
 > **Resolved 2026-07-14:** repo made public (decision Marcel) — branch protection and
 > platform auto-merge available on GitHub Free.
