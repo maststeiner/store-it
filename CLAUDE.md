@@ -3,52 +3,27 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 This file also serves as `AGENTS.md` for other AI tools.
 
-## KAIFe L4 — Orchestration Rules
+## Process
 
-This repository follows the **KAIFe Framework (L4)**: KMS Agile Intelligence Framework. The human is the orchestrator, AI is the multiplier.
+This repository follows the **KAIFe Framework (L4)** — read
+[`docs/process/PROCESS.md`](docs/process/PROCESS.md) first: the three gates (G1 Spec
+Freeze · G2 Review · G3 DoD/Merge), the orchestrator loop, branching, isolation, and
+artifacts are defined there. The five personas are installed in `.claude/agents/`
+(canonical: `docs/process/personas/` — edit there, then re-copy).
 
-**Three non-negotiable gates:**
-- **G1 · Spec Freeze:** No agent starts implementation without a human-frozen spec (`docs/specs/`).
-- **G2 · Review:** No PR is merged without an automated AI review pass + human code review.
-- **G3 · DoD/Merge:** The CI pipeline must be fully green. Only a human merges to `main`.
+## Repo-Specific Rules
 
-## Agent Personas
-
-Five BMAD personas are available in `.claude/agents/`. Always activate the appropriate persona:
-
-| Persona | Task |
-|---------|------|
-| `analyst` | Requirements → testable user stories (EARS notation) |
-| `architect` | Design structure, enforce layering boundaries, write ADRs |
-| `developer` | Implement *within* the architecture constraints |
-| `qa` | Derive tests from acceptance criteria (never from code) |
-| `reviewer` | Adversarial review: security, duplicates, tech debt |
-
-Each persona has **hard limits that are never crossed** — not even when explicitly asked.
-
-## Orchestrator Loop
-
-For every task: **Run → Inspect → Challenge → Refine → Re-run**
-
-When output systematically deviates from the goal: don't only fix the code — sharpen the harness (guidelines in `docs/guidelines/` or the persona definition in `.claude/agents/`). The fix then applies to all future runs.
-
-## Branching Model
-
-| Branch | Purpose | Rules |
-|--------|---------|-------|
-| `main` | Releases only | Only receives merges from `develop` (release PRs); never worked on directly |
-| `develop` | Integration | Target branch for all feature PRs; **repository default branch** (since 2026-08-18) |
-| `feature/<feature-name>` | One feature / work item | Branched from `develop`, merged back via PR (Gates G2/G3) |
-
-**Why `develop` is the default branch:** tools that read repo-level config do so from the default branch — Renovate reads `renovate.json` there and nowhere else. With `main` as default, every config change merged to `develop` stayed inert until a release (see `docs/agent-logs/2026-08-18-renovate-config-source-of-truth.md`). Pointing the default at the integration branch keeps config and code in step.
-
-**Keeping branches up to date:** always `git rebase develop` + `git push --force-with-lease` — never merge commits into a branch.
-
-## Isolation
-
-Every subagent works in its own **git worktree + feature branch + PR** (targeting `develop`). No direct work on `main` or `develop`.
-
-WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict prevention). Calibrate during the pilot.
+- **Default branch is `develop`** (since 2026-08-18): tools that read repo-level config
+  do so from the default branch — Renovate reads `renovate.json` there and nowhere else
+  (see `docs/agent-logs/2026-08-18-renovate-config-source-of-truth.md`). `main` receives
+  release merges only.
+- **WIP limit: max. 3** open agent branches/PRs at a time (calibrated value; the rule is
+  in the process doc).
+- **Commit hook activation** (once per clone): `git config core.hooksPath .githooks` —
+  Conventional Commits are enforced locally, details in
+  `docs/guidelines/coding-guidelines.md`.
+- **Permission tiers** are configured in `.claude/settings.json` (concept in the process
+  doc; stack-specific commands per `docs/SETUP.md`).
 
 ## Project Structure
 
@@ -57,52 +32,27 @@ WIP limit: max. **3 open agent branches/PRs at a time** (merge conflict preventi
 | `backend/` | .NET solution — API-first REST backend (consumed by Angular and later the iPhone app) |
 | `frontend/` | Angular app |
 
-## Commit Conventions
-
-**Conventional Commits** (Angular style), enforced locally by the `commit-msg` hook (`.githooks/`, activate once per clone: `git config core.hooksPath .githooks`):
-
-```text
-type(scope): subject          # imperative, lowercase, no trailing period
-```
-
-- **Types:** `feat` · `fix` · `docs` · `style` · `refactor` · `perf` · `test` · `build` · `ci` · `chore` · `revert`
-- **Scopes (suggested):** `backend`, `frontend`, `docs`, `ci`, `harness`, `deps` — omit when the change is repo-wide
-- **Body:** explains the *why*; wrap at ~72 chars
-
 ## Source of Truth
 
 | Path | Content |
 |------|---------|
+| `docs/process/` | The KAIFe L4 process (project-independent, reusable) |
+| `docs/project/tech-stack.md` | Technology stack — the single source for stack facts |
 | `docs/specs/` | Specs + acceptance criteria (basis for G1 and tests) |
 | `docs/architecture/` | arc42 architecture doc (`ARCHITECTURE.md`), ADRs (basis for the architecture conformance gate) |
 | `docs/guidelines/` | Coding and test guidelines (basis for agent work) |
 | `docs/agent-logs/` | One run log per agent task (transparency / compliance, DoD requirement) |
 | `docs/metrics.md` | Pilot metrics — Flow + Quality tracking (KAIFe §8) |
 
-Keep this file short. Detailed content belongs in `docs/guidelines/`.
-
-## Data & Compliance (KAIFe §7)
-
-- **No real or sensitive data in prompts, fixtures, test data, or logs** — use
-  synthetic data only. Storages/items in tests are made up.
-- **Agent run logs (`docs/agent-logs/`) are our accountability record** — how AI
-  produced each change (repository policy, KAIFe Principle 3); supports EU-AI-Act
-  audit readiness. (Article 50, effective 2026-08-02, governs user-facing
-  disclosure of AI-generated content and does not itself mandate internal logs;
-  mandatory logging applies to high-risk systems under Article 12.)
-- Secrets come from the environment (12-factor), never committed.
-
-## Permission Tiers
-
-Configured in `.claude/settings.json` (add stack-specific commands during setup, see `docs/SETUP.md`):
-- **Auto:** formatting, running single local tests, read/write files in the project folder
-- **Approval:** package installs, `git push`, schema/migration changes, infrastructure changes
+Keep this file short — process content belongs in `docs/process/`, project detail in the
+files above.
 
 ## Metadata
 
 ```text
-last_updated: 2026-07-18
+last_updated: 2026-08-30
 owner: Marcel Steiner (AI Steward)
 scope: store-it — digital pantry management
-stack: .NET 10 (C#) backend · Angular frontend · Kubernetes · GitHub Actions
+stack: see docs/project/tech-stack.md
+process_version: 1.0 (docs/process/CHANGELOG.md)
 ```
