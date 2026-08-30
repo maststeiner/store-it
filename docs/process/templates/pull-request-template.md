@@ -1,11 +1,11 @@
 <!--
-  Instantiated from docs/process/templates/pull-request-template.md (generic master).
-  Project-specific additions live in the human attestation below; structural changes
-  to the gates belong in the master.
+  Generic master. Instantiate as .github/pull_request_template.md and extend the
+  human attestation with the project-specific invariants named in the project's
+  coding guidelines. Keep the gate structure intact.
 -->
 # Pull Request
 
-**Spec:** [link to docs/specs/...]
+**Spec:** [link to docs/specs/... — or the issue that is the frozen G1 input]
 **Agent run log:** [link to docs/agent-logs/...]
 
 ## Summary
@@ -25,7 +25,7 @@
 **Human attestation (must be ticked by a person, never by AI — Gate G2, Principle 3):**
 
 - [ ] Human review done — code understood, not just skimmed (no vibe coding)
-- [ ] Manually verified what machines can't: no business rules in the client, no domain entities leaking through the API (DTOs only), no spec constraints bypassed
+- [ ] Manually verified what machines can't: the project-specific invariants named in the project's coding guidelines, and no spec constraints bypassed
 
 ## Gate G3 · DoD checklist (manual part — pipeline covers the rest, see docs/process/DEFINITION-OF-DONE.md)
 
