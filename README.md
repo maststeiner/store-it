@@ -6,6 +6,8 @@ Digital pantry management: know what's in your pantry or freezer — and when it
 
 ## Stack
 
+Details and single source of truth: [`docs/project/tech-stack.md`](docs/project/tech-stack.md).
+
 | Layer | Technology |
 |-------|------------|
 | Backend | .NET (C#), API-first REST |
@@ -32,7 +34,9 @@ This project follows the **KAIFe Framework (L4)** — AI-driven development with
 2. **G2 · Review** — automated + human code review on every PR
 3. **G3 · DoD/Merge** — CI fully green; only a human merges
 
-See `CLAUDE.md` for orchestration rules and `docs/SETUP.md` for the setup checklist.
+The process is defined in [`docs/process/PROCESS.md`](docs/process/PROCESS.md)
+(project-independent and reusable); repo-specific rules are in `CLAUDE.md`, the setup
+checklist in `docs/SETUP.md`.
 
 ## Run it locally
 

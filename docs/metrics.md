@@ -19,7 +19,7 @@
 
 | Metric | Source |
 |--------|--------|
-| Line coverage (target ≥ 70%) | backend coverlet · frontend vitest (CI job 1 / 3) |
+| Line coverage (gate: see `guidelines/test-guidelines.md`) | backend coverlet · frontend vitest (CI job 1 / 3) |
 | **Mutation score** | Stryker.NET (CI job 1a) |
 | Duplication, code smells, new-code coverage | SonarCloud (backend + frontend projects) |
 | Vulnerabilities / secrets / license issues | Trivy + dependency-review (CI job 2) |

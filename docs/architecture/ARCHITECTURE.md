@@ -54,7 +54,7 @@ store-it is a digital pantry management application:
 
 | Constraint | Background |
 |------------|------------|
-| KAIFe L4 process | Spec-driven, three human gates, agent personas — see `CLAUDE.md` |
+| KAIFe L4 process | Spec-driven, three human gates, agent personas — see `docs/process/PROCESS.md` |
 | Solo orchestrator | One human covers all stewardship hats |
 
 ### Conventions
@@ -181,7 +181,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 - Test pyramid: unit → service (contract/API) → integration — see `docs/guidelines/test-guidelines.md`.
 
 ### AI Agent Integration
-- KAIFe harness: `CLAUDE.md`, personas in `.claude/agents/`, guidelines in `docs/guidelines/`.
+- KAIFe harness: process in `docs/process/`, repo rules in `CLAUDE.md`, personas in `.claude/agents/` (canonical: `docs/process/personas/`), guidelines in `docs/guidelines/`.
 - Layering rules exist as architecture tests so agent output is machine-checked (structural debt = 0).
 
 ---

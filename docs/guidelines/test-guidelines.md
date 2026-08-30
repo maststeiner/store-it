@@ -1,8 +1,8 @@
 # Test Guidelines
 
 > **Owner:** Marcel Steiner (Architecture / QA Stewardship)
-> **Stack:** xUnit + coverlet (backend) · Angular default test setup (frontend)
-> **Last updated:** 2026-07-27
+> **Test frameworks:** see [`docs/project/tech-stack.md`](../project/tech-stack.md)
+> **Last updated:** 2026-08-30
 
 ---
 
