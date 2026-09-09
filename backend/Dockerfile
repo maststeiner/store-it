@@ -3,7 +3,7 @@
 # EF migrations as a one-shot admin process (12-factor) before the API starts. Both come
 # from the same build so they can never disagree about which migrations exist.
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 
 # Restore first, with only the files that affect it, so editing code does not invalidate
@@ -31,7 +31,7 @@ ENTRYPOINT ["dotnet", "ef", "database", "update", \
             "--startup-project", "src/StoreIt.Api"]
 
 # ── runtime ───────────────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
 # One layer for both root-only steps (Sonar S7031). curl is here for the container health
 # check only — compose gates the frontend on the API being healthy (AC-06), and the aspnet
 # image ships no HTTP client. The user is non-root: the API needs no privileges, and
