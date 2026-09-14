@@ -1,7 +1,7 @@
 # Documentation Index
 
 The documentation is organized in **three layers** with one-way references
-(process → personas → project):
+(process → project interface → project):
 
 1. **Process layer** — [`process/`](process/): the AI-Dev Process,
    project-independent and reusable by copying the subtree. Main file:

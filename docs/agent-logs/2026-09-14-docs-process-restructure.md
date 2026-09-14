@@ -52,6 +52,7 @@ Definition of Done a single home, slim `CLAUDE.md` to repo-specific rules, and i
 | 4 | Workflow / lifecycle section added to `PROCESS.md` | Gates and personas existed, but the sequence between them was implicit |
 | 5 | WIP limit made an explicit recommendation the project overrides or replaces; branching marked as a reference model | Keep the process adaptable to projects with a different flow |
 | 6 | Persona byte-identity check moved from "follow-up" into this change (CI job) | Cheap now, and the rule is only credible if enforced |
+| 7 | Automated review (CodeRabbit) raised 7 minor findings, all taken | Product name in the reusable reviewer persona; stack facts still duplicated in README and ARCHITECTURE constraints; stale Harness glossary entry; `mkdir -p` missing in the install step; layer wording mismatch in the docs index; `Gate 1` vs `G1` in the spec template |
 
 ## Outcome
 

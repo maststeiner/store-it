@@ -1,6 +1,6 @@
 # Spec: [User Story Title]
 
-> **Status:** Draft | Review | Frozen (Gate 1)
+> **Status:** Draft | Review | Frozen (Gate G1)
 > **Sprint:** YYYY-Snn
 > **Author:** [Name]
 > **Last updated:** YYYY-MM-DD
