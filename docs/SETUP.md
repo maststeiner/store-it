@@ -89,4 +89,4 @@ Branching model: `main` (releases) ← `develop` (integration) ← `feature/<nam
 
 ## Next steps (in order)
 
-Initial setup is **complete**: SPEC-001 was frozen (Gate G1, 2026-07-13), the `backend/` and `frontend/` scaffolds landed and CI is green, branch protection + CodeRabbit + SonarCloud are configured (platform items above), and SPEC-001 shipped through the full KAIFe flow. Ongoing work — further specs, tech-debt, and the platform-hardening items still unchecked above — is tracked as GitHub issues.
+Initial setup is **complete**: SPEC-001 was frozen (Gate G1, 2026-07-13), the `backend/` and `frontend/` scaffolds landed and CI is green, branch protection + CodeRabbit + SonarCloud are configured (platform items above), and SPEC-001 shipped through the full process flow. Ongoing work — further specs, tech-debt, and the platform-hardening items still unchecked above — is tracked as GitHub issues.

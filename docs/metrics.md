@@ -1,7 +1,7 @@
-# Metrics — store-it (KAIFe §8)
+# Metrics — store-it
 
 > **Purpose:** the pilot must show a **Flow *and* Quality** gain over the classic
-> baseline (KAIFe §10 L4 exit criterion). Velocity/story points are **not** the
+> baseline (pilot exit criterion). Velocity/story points are **not** the
 > lead metric — with AI, effort decouples from complexity. Lightweight by design:
 > most data already exists (CI, SonarCloud, GitHub); this file says what to watch
 > and where to read it. Reviewed in the retro / harness-review session (§5).
@@ -35,12 +35,12 @@
 
 ## Culture
 
-Developer satisfaction / retention (§9) — **not applicable to the solo pilot**;
-capture once a team works in KAIFe.
+Developer satisfaction / retention — **not applicable to the solo pilot**;
+capture once a team works with the process.
 
 ## Baseline
 
-**Data point #1 — SPEC-001** (first full KAIFe feature). Provenance for reproducibility:
+**Data point #1 — SPEC-001** (first feature through the full process). Provenance for reproducibility:
 
 - **Spec:** [`docs/specs/SPEC-001-manage-storage-items.md`](specs/SPEC-001-manage-storage-items.md) — frozen 2026-07-13 (Gate-Status table)
 - **PR:** #5, merged 2026-07-21 → cycle time ≈ 8 days (freeze → merge)
