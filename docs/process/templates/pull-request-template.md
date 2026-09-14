@@ -22,10 +22,11 @@
 - [ ] Tests derived from acceptance criteria, not from the implementation
 - [ ] No new external dependencies without justification (ADR or comment below)
 
-**Human attestation (must be ticked by a person, never by AI — Gate G2, Principle 3):**
+**Human attestation (must be ticked by a person, never by AI — Gates G2/G3):**
 
 - [ ] Human review done — code understood, not just skimmed (no vibe coding)
 - [ ] Manually verified what machines can't: the project-specific invariants named in the project's coding guidelines, and no spec constraints bypassed
+- [ ] **Functionality tested by a human** on the running software — it does what the spec/issue asks for (Gate G3)
 
 ## Gate G3 · DoD checklist (manual part — pipeline covers the rest, see docs/process/DEFINITION-OF-DONE.md)
 

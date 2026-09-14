@@ -33,7 +33,7 @@ store-it is a digital pantry management application:
 
 | Role | Name / Team | Expectations |
 |------|-------------|--------------|
-| Owner / Orchestrator | Marcel Steiner | KAIFe L4 process works end-to-end on a real product |
+| Owner / Orchestrator | Marcel Steiner | AI-Dev Process works end-to-end on a real product |
 | End users | Households, flat-shares | Simple, fast, trustworthy pantry overview |
 
 ---
@@ -44,17 +44,17 @@ store-it is a digital pantry management application:
 
 | Constraint | Background |
 |------------|------------|
-| .NET 10 LTS (C#) backend | Chosen stack (KAIFe pilot alignment); LTS support until Nov 2028 |
+| .NET 10 LTS (C#) backend | Chosen stack (pilot alignment); LTS support until Nov 2028 |
 | Angular (TypeScript) frontend | Chosen stack; Node 22 LTS toolchain |
 | Cloud-native / Kubernetes | Target runtime; containerized services, 12-factor principles |
-| GitHub + GitHub Actions | Repo + CI/CD platform (deviates from KAIFe pilot default Azure DevOps — private project) |
-| Claude Code | AI orchestration tool (KAIFe L4) |
+| GitHub + GitHub Actions | Repo + CI/CD platform (deviates from the pilot default Azure DevOps — private project) |
+| Claude Code | AI orchestration tool (AI-Dev Process) |
 
 ### Organizational Constraints
 
 | Constraint | Background |
 |------------|------------|
-| KAIFe L4 process | Spec-driven, three human gates, agent personas — see `docs/process/PROCESS.md` |
+| AI-Dev Process | Spec-driven, three human gates, agent personas — see `docs/process/PROCESS.md` |
 | Solo orchestrator | One human covers all stewardship hats |
 
 ### Conventions
@@ -100,7 +100,7 @@ External actors: end users via web (later iOS). The only external system integra
 | Evolvability + AI-agent workability | Monorepo `backend/` + `frontend/` with enforced layering (ADR-001) |
 | Kubernetes target | Twelve-Factor App: containerized from the start, config via environment, stateless processes, logs to stdout, health endpoints |
 | Maintainable core under AI velocity | Clean Architecture: framework-free Domain, use cases in Application, frameworks at the edges (details in coding guidelines) |
-| Quality despite AI velocity | KAIFe DoD gates in CI (build/test/coverage, Trivy+SBOM, quality, architecture conformance, format) |
+| Quality despite AI velocity | DoD gates in CI (build/test/coverage, Trivy+SBOM, quality, architecture conformance, format) |
 
 ---
 
@@ -181,7 +181,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 - Test pyramid: unit → service (contract/API) → integration — see `docs/guidelines/test-guidelines.md`.
 
 ### AI Agent Integration
-- KAIFe harness: process in `docs/process/`, repo rules in `CLAUDE.md`, personas in `.claude/agents/` (canonical: `docs/process/personas/`), guidelines in `docs/guidelines/`.
+- AI-Dev harness: process in `docs/process/`, repo rules in `CLAUDE.md`, personas in `.claude/agents/` (canonical: `docs/process/personas/`), guidelines in `docs/guidelines/`.
 - Layering rules exist as architecture tests so agent output is machine-checked (structural debt = 0).
 
 ---
@@ -228,7 +228,6 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 | Storage | A managed container (pantry, freezer, shelf) holding items |
 | Item | An entry in a storage: name, quantity, expiry date |
 | Membership | The link between an account and a storage (sharing) |
-| KAIFe | KMS Agile Intelligence Framework |
 | EARS | Easy Approach to Requirements Syntax |
 | ADR | Architecture Decision Record |
 | Gate | Non-negotiable human checkpoint (G1 Spec Freeze, G2 Review, G3 DoD/Merge) |
