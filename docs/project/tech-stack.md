@@ -15,7 +15,7 @@
 | Auth | OIDC federation (Google/Microsoft), BFF session | [ADR-004](../architecture/ADR-004-identity-auth.md) |
 | Runtime | Cloud-native, Kubernetes | Twelve-factor principles; hosting decision pending (ADR-005) |
 | DevOps | GitHub + GitHub Actions | CI carries the DoD gates (`.github/workflows/ci.yml`) |
-| AI orchestration | Claude Code | KAIFe L4 harness, see `docs/process/PROCESS.md` |
+| AI orchestration | Claude Code | AI-Dev Process harness, see `docs/process/PROCESS.md` |
 
 ## Formatting & Static Analysis
 

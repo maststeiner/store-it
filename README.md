@@ -23,16 +23,16 @@ Details and single source of truth: [`docs/project/tech-stack.md`](docs/project/
 | `backend/` | .NET solution (API) — *scaffold pending* |
 | `frontend/` | Angular app — *scaffold pending* |
 | `docs/` | Specs, arc42 architecture doc, ADRs, guidelines, agent logs |
-| `.claude/` | KAIFe agent personas + permission tiers |
+| `.claude/` | Installed agent personas + permission tiers |
 | `.github/workflows/` | CI: DoD gates (build/test, security+SBOM, quality, architecture, format) |
 
 ## Development process
 
-This project follows the **KAIFe Framework (L4)** — AI-driven development with three non-negotiable human gates:
+This project follows the **AI-Dev Process** — AI-driven development with three non-negotiable human gates:
 
 1. **G1 · Spec Freeze** — every work item starts as a spec in `docs/specs/`, frozen by a human
 2. **G2 · Review** — automated + human code review on every PR
-3. **G3 · DoD/Merge** — CI fully green; only a human merges
+3. **G3 · DoD/Merge** — CI fully green, functionality tested by a human; only a human merges
 
 The process is defined in [`docs/process/PROCESS.md`](docs/process/PROCESS.md)
 (project-independent and reusable); repo-specific rules are in `CLAUDE.md`, the setup

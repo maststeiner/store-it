@@ -39,7 +39,7 @@ and **which risks nothing covers yet**. store-it is a public GitHub repository
 
 ## 3. AI-development-specific risks
 
-store-it is built with AI agents (KAIFe L4). That adds a risk class most threat models omit:
+store-it is built with AI agents (AI-Dev Process). That adds a risk class most threat models omit:
 
 | ID | Risk | Impact | Likelihood | Mitigation in store-it | Status |
 |----|------|--------|-----------|------------------------|--------|

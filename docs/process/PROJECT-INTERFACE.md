@@ -19,7 +19,7 @@ A project adopting this process must provide:
 | `docs/agent-logs/` | One run log per agent task (from `templates/AGENT-LOG-TEMPLATE.md`) — the accountability record | Orchestrator |
 | `docs/metrics.md` | Project instance of the process metrics concept (flow + quality) | Orchestrator |
 | `.claude/settings.json` | Concrete permission-tier allowlist (the *concept* is defined in [`PROCESS.md`](PROCESS.md)) | All personas |
-| `.claude/agents/` | Installed, byte-identical copies of [`personas/`](personas/) | Claude Code (subagent dispatch) |
+| `.claude/agents/` | Installed, byte-identical copies of [`personas/`](personas/); the project's CI verifies the identity (`diff -r`) as part of Gate G3 | Claude Code (subagent dispatch) |
 | `.github/pull_request_template.md` | Instantiated copy of `templates/pull-request-template.md`, extended with project-specific checklist items | Reviewer, human at G2/G3 |
 
 ## Rules
