@@ -44,8 +44,8 @@ store-it is a digital pantry management application:
 
 | Constraint | Background |
 |------------|------------|
-| .NET 10 LTS (C#) backend | Chosen stack (pilot alignment); LTS support until Nov 2028 |
-| Angular (TypeScript) frontend | Chosen stack; Node 22 LTS toolchain |
+| .NET (C#) backend | Chosen stack (pilot alignment); versions and support horizon in [`docs/project/tech-stack.md`](../project/tech-stack.md) |
+| Angular (TypeScript) frontend | Chosen stack; toolchain versions in [`docs/project/tech-stack.md`](../project/tech-stack.md) |
 | Cloud-native / Kubernetes | Target runtime; containerized services, 12-factor principles |
 | GitHub + GitHub Actions | Repo + CI/CD platform (deviates from the pilot default Azure DevOps — private project) |
 | Claude Code | AI orchestration tool (AI-Dev Process) |
@@ -231,4 +231,4 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 | EARS | Easy Approach to Requirements Syntax |
 | ADR | Architecture Decision Record |
 | Gate | Non-negotiable human checkpoint (G1 Spec Freeze, G2 Review, G3 DoD/Merge) |
-| Harness | Context engineering artifacts (CLAUDE.md, guidelines, tooling rules) |
+| Harness | Context engineering artifacts: process in `docs/process/`, repo rules in `CLAUDE.md`, personas in `.claude/agents/` (canonical: `docs/process/personas/`), guidelines in `docs/guidelines/`, tooling rules |
