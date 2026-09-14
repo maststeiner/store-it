@@ -1,4 +1,4 @@
-# KAIFe DoD gates as CI jobs (Gate G3 machine part).
+# AI-Dev Process DoD gates as CI jobs (Gate G3 machine part).
 # NOTE: backend/ and frontend/ jobs go green once the respective scaffold lands.
 
 name: CI
@@ -445,6 +445,19 @@ jobs:
         run: |
           bash <(curl -sSfL https://raw.githubusercontent.com/rhysd/actionlint/914e7df21a07ef503a81201c76d2b11c789d3fca/scripts/download-actionlint.bash) 1.7.12
           ./actionlint -color
+
+  harness-consistency:
+    name: 5 · Harness consistency (personas)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Installed personas mirror the canonical ones
+        # docs/process/personas/ is canonical; .claude/agents/ must be a byte-identical
+        # copy (see docs/process/PROCESS.md, Orchestrator Loop). Fails on any drift,
+        # including a persona that exists on only one side.
+        run: diff -r docs/process/personas .claude/agents
 
   format-frontend:
     name: 5 · Frontend format check
