@@ -6,15 +6,9 @@ Digital pantry management: know what's in your pantry or freezer — and when it
 
 ## Stack
 
-Details and single source of truth: [`docs/project/tech-stack.md`](docs/project/tech-stack.md).
-
-| Layer | Technology |
-|-------|------------|
-| Backend | .NET (C#), API-first REST |
-| Frontend | Angular (TypeScript) |
-| Mobile | iPhone app (planned, consumes the same API) |
-| Runtime | Cloud-native, Kubernetes |
-| DevOps | GitHub + GitHub Actions |
+API-first .NET backend, Angular frontend, cloud-native runtime — the single source of truth
+for languages, frameworks, tooling, and versions is
+[`docs/project/tech-stack.md`](docs/project/tech-stack.md).
 
 ## Repository structure
 
