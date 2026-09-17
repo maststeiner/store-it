@@ -43,7 +43,7 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
 - **Compose, not Kubernetes, with explicit revisit triggers** (second environment, second
   node, second maintainer). The 12-factor shape is kept so the move stays possible.
 - **Forwarded headers via `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`**, not code — with the
-  caveat (SPEC-005 EC-12) that the switch trusts any proxy and is safe only because `backend`
+  caveat (SPEC-005 EC-04) that the switch trusts any proxy and is safe only because `backend`
   is never published on a host interface.
 - **Multi-arch images (arm64 + amd64)** proposed as default (D3) so published images also run
   on x86 laptops and a fallback host; listed as an open decision because arm64-only is simpler.
