@@ -1,7 +1,7 @@
 # Agent Run Log: ADR-005 hosting decision and SPEC-005 draft
 
 > **Date:** 2026-09-17
-> **Spec:** [SPEC-005](../specs/SPEC-005-release-images-and-production-deployment.md) (Draft) — implements [ADR-005](../architecture/ADR-005-hosting-deployment.md) (Proposed)
+> **Spec:** [SPEC-005](../specs/SPEC-005-release-images-and-runtime-contract.md) (Draft) — implements [ADR-005](../architecture/ADR-005-hosting-deployment.md) (Proposed)
 > **Persona(s):** analyst, architect
 > **Model:** Claude Fable 5.1
 > **Branch / PR:** `feature/adr-005-oracle-hosting` → PR linked from issue #17
@@ -47,18 +47,28 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
   is never published on a host interface.
 - **Multi-arch images (arm64 + amd64)** proposed as default (D3) so published images also run
   on x86 laptops and a fallback host; listed as an open decision because arm64-only is simpler.
+- **Separate private deployment repository `store-it-deploy`** (Marcel's requirement, see
+  intervention 3): the application repository publishes images plus a runtime contract
+  (`docs/operations/runtime-contract.md`) and carries no hostname, provider or bucket; the
+  deployment repository holds compose, Caddy, timer, backups, runbook and one
+  `deployments/<name>/` directory per installation. The host pulls that repository with a
+  read-only deploy key in the same timer run that pulls images, so configuration rolls out like
+  a release. SPEC-005 was rescoped to the application side (sections A–C), the spec file renamed,
+  and D1/D4/D5 moved out of this repo's spec.
 
 ## Human Interventions
 
 | # | Intervention | Reason |
 |---|--------------|--------|
 | 1 | "warum nicht Oracle Cloud Always Free" — challenged the Hetzner-first ranking | The ranking weighed reliability risk over cost; Marcel weighs cost higher. ADR written for Oracle, Hetzner demoted to fallback. |
-| 2 | "es soll automatisch aktualisiert werden, wenn neue images zur Verfügung stehen" | Added as constraint 2 in the ADR and as section C of the spec; ruled out Render's image-based services (no auto-deploy) for this reason. |
+| 2 | "es soll automatisch aktualisiert werden, wenn neue images zur Verfügung stehen" | Added as constraint 2 in the ADR; ruled out Render's image-based services (no auto-deploy) for this reason. |
+| 3 | "für das deployment ein eigenes Repo machen mit der Konfiguration … Auch wenn dann mehrere deployments gemacht werden möchten" | First draft had `compose.prod.yaml`, runbook and hostnames inside `store-it`. Added ADR constraint 5 and decision 1 (two repositories), rescoped SPEC-005 to images + runtime contract, created the private `store-it-deploy` skeleton. |
 
 ## Outcome
 
-- **Result:** ADR-005 (Proposed) and SPEC-005 (Draft) committed; freeze and acceptance
-  requested from Marcel. Implementation (release workflow, `compose.prod.yaml`, runbook)
-  starts only after G1.
+- **Result:** ADR-005 (Proposed) and SPEC-005 (Draft) committed in PR #145; the private
+  `store-it-deploy` repository exists as a skeleton. Freeze and acceptance requested from
+  Marcel. Implementation (release workflow, runtime contract; deploy compose and runbook in the
+  other repository) starts only after G1.
 - **Deviations from spec:** n/a (no implementation yet).
 - **Harness follow-up:** none.

@@ -1,0 +1,193 @@
+# Spec: Release images and a runtime contract for external deployments
+
+> **Status:** Draft
+> **Sprint:** 2026-S38
+> **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request
+> **Last updated:** 2026-09-17
+
+---
+
+## User Story
+
+As the **owner of store-it** I want **every release published as container images together
+with a documented runtime contract** so that **a separate deployment repository can run the
+application anywhere — first on a free Oracle VM, later elsewhere or twice — while this
+repository stays free of hosting-specific data**.
+
+---
+
+## Scope split (ADR-005 decision 1)
+
+| Concern | Lives in | Governed by |
+|---|---|---|
+| Building and publishing images on release tags | `store-it` (this repo) | this spec, section A |
+| The runtime contract: env vars, ports, health, ordering, forwarded headers | `store-it` | this spec, section B |
+| Production `compose.yaml`, Caddy, systemd timer, backup, runbook, per-deployment settings | `store-it-deploy` (private) | that repository's README/runbook; not under this repo's gates |
+| Hostnames, provider details, buckets, image tag pins | `store-it-deploy/deployments/<name>/` | — |
+| Secrets | the host only (`secrets.env`, git-ignored) | — |
+
+The end-to-end acceptance (a release observed from tag to a working sign-in on the public URL)
+spans both repositories and is the human G3 test of this spec.
+
+---
+
+## Context: what already exists
+
+| Already true | Evidence |
+|---|---|
+| Both services are containerised, with a `migrate` target from the same build as the API | `backend/Dockerfile` (targets `migrate`, `runtime`), `frontend/Dockerfile` |
+| The single-origin topology is proven locally | `compose.stack.yaml`, `frontend/nginx.conf` proxying `/api` and `/auth` |
+| Startup order and failure semantics are defined | SPEC-004 A3: `postgres` healthy → `migrate` exit 0 → `backend` → `web`; no restart loop on config errors |
+| Configuration is environment-only, missing config fails at startup | SPEC-004 AC-01/02, `StartupConfigurationCheck` |
+| The environment contract is partially documented | `.env.example` (local stack), SPEC-004 A3 table |
+| Releases are annotated `vMAJOR.MINOR.PATCH` tags on `main` | ADR-007 |
+| The hosting decision is drafted | [ADR-005](../architecture/ADR-005-hosting-deployment.md) (Proposed) |
+
+| Missing | Consequence |
+|---|---|
+| CI publishes no image | Nothing to deploy; `compose.stack.yaml` builds locally every time |
+| No single, complete runtime contract document | A deployment author has to read code and three files to learn what the services need |
+| Forwarded-header behaviour is untested | Whether `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` really yields `https` redirect URIs is assumed, not verified |
+| The docs still say "Kubernetes, hosting pending" | Tech stack, architecture §7/§9, README and threat model point at a TODO |
+
+---
+
+## Open decisions (to be answered before the freeze)
+
+| # | Question | Default assumed below |
+|---|---|---|
+| D2 | What is published | **releases only**: `vX.Y.Z` and `latest` on `v*` tags. Alternative: additionally a moving `develop` tag on every push to `develop`, for a staging deployment |
+| D3 | Image architectures | **arm64 + amd64** multi-arch on native runners. Alternative: arm64 only (simpler workflow) |
+| D6 | Image names | `ghcr.io/maststeiner/store-it-backend`, `…-migrate`, `…-web` |
+| D7 | Deployment repository | **private** `maststeiner/store-it-deploy`; hosts pull it with a read-only deploy key (ADR-005 decision 1) |
+
+D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved to
+`store-it-deploy` — they are deployment settings, not application concerns.
+
+---
+
+## Acceptance Criteria (EARS Notation)
+
+### A · Release images
+
+- [ ] AC-01: WHEN an annotated tag matching `v[0-9]+.[0-9]+.[0-9]+` is pushed THE release
+      workflow SHALL build the `backend`, `migrate` and `web` images and push them to GHCR
+      tagged with the exact version (`vX.Y.Z`) and `latest`.
+- [ ] AC-02: WHEN the release workflow builds THE images SHALL be published for
+      `linux/arm64` and `linux/amd64` under one multi-arch manifest per image (D3).
+- [ ] AC-03: WHEN images are built THE `migrate` and `backend` images SHALL come from the
+      same build of the same commit — one never ships without the other.
+- [ ] AC-04: WHEN a pull request or a push to `develop` or `main` runs CI THE system SHALL
+      publish **no** image; only tags publish (D2).
+- [ ] AC-05: WHEN the release workflow runs THE workflow SHALL use only the repository's own
+      `GITHUB_TOKEN` with `packages: write`; no long-lived registry credential SHALL be stored.
+- [ ] AC-06 (Error): WHEN any image build or push fails THE workflow SHALL fail and publish
+      **none** of the three images under the version tag (no partially released version).
+- [ ] AC-07: WHEN an image is published THE image SHALL carry OCI labels for source
+      repository, revision and version, so a running container can be traced to its commit.
+
+### B · Runtime contract and a hosting-agnostic repository
+
+- [ ] AC-08: WHEN a deployment author reads `docs/operations/runtime-contract.md` THE document
+      SHALL list, for each service: image name, every environment variable (required/optional,
+      secret or not, default), the listening port, the health endpoint, the required start
+      ordering (`postgres` healthy → `migrate` exit 0 → `backend` → `web`), and the
+      forwarded-headers requirement behind a TLS terminator — complete enough to write a
+      compose file or a Kubernetes manifest without reading code.
+- [ ] AC-09: WHEN `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` is set and a request arrives with
+      `X-Forwarded-Proto: https` and `X-Forwarded-Host: <public host>` THE API SHALL build the
+      OIDC `redirect_uri` (and any other absolute URL) with `https://<public host>` — covered
+      by a service test, not only by a manual check.
+- [ ] AC-10: WHEN the repository is inspected THE system SHALL contain no hostname, IP
+      address, provider account detail, bucket name or other installation-specific value in
+      any runnable or configuration file; such values live only in `store-it-deploy`. (ADR-005
+      naming the provider as a *decision* is documentation, not configuration.)
+- [ ] AC-11: WHEN `compose.stack.yaml` and `scripts/stack-*.sh` are used THE local stack SHALL
+      behave exactly as before this change (no regression of SPEC-004).
+- [ ] AC-12: WHEN the runtime contract changes in a later PR (new variable, port, ordering)
+      THE PR SHALL update `runtime-contract.md` in the same change — recorded as a rule in
+      `docs/guidelines/coding-guidelines.md` so review can check it.
+
+### C · Documentation
+
+- [ ] AC-13: WHEN ADR-005 is accepted THE tech stack (row *Runtime*), `ARCHITECTURE.md` §7
+      and §9, `README.md` (a short "Deploying" note pointing at the contract and the deployment
+      repository) and `docs/security/threat-model.md` (R-07, the at-rest/in-transit and DoS
+      bullets) SHALL reference the decision instead of "Kubernetes / ADR-005 pending".
+
+---
+
+## Edge Cases
+
+- EC-01: **Tag pushed twice / workflow re-run** — GitHub's tag protection (ADR-007) refuses a
+  moved tag; a manual re-run of a succeeded workflow re-pushes identical images, harmless.
+- EC-02: **Tag on a commit not on `main`** — the workflow builds whatever the tag points at;
+  ADR-007's discipline is a human rule, not enforced here. Documented, not guarded.
+- EC-03: **`latest` on a laptop** — a developer pulling `latest` gets the amd64 variant (D3);
+  the local stack keeps building from source and is unaffected.
+- EC-04: **Forwarded headers without a trusted-proxy list** — the built-in switch trusts any
+  `X-Forwarded-*` header. The runtime contract SHALL state the coupling explicitly: the switch
+  is safe only when `backend` is reachable exclusively from the reverse proxy (never published
+  on a host interface). Enforcing that is the deployment's job; documenting it is this repo's.
+- EC-05: **A native arm64 runner is unavailable** — the workflow SHALL fall back to QEMU
+  emulation for that platform rather than publish an amd64-only manifest under `latest`.
+- EC-06: **The `web` image and the API disagree on paths** (`/api`, `/auth`, `/health`) — both
+  come from the same tag; the contract lists the paths nginx proxies so a deployment that
+  replaces nginx (e.g. an ingress) knows what to route.
+
+---
+
+## Out of Scope
+
+- Everything on the deployment side: the production compose file, Caddy, systemd timer,
+  backups, runbook, provisioning, hostnames — `store-it-deploy`.
+- Kubernetes manifests, Helm/Kustomize — deferred by ADR-005.
+- A staging environment or per-PR preview deployments (D2 alternative would only publish the
+  tag; running it is still a deployment concern).
+- Alerting/monitoring beyond `/health`.
+- Zero-downtime / blue-green releases.
+- Application-level rate limiting or a WAF (threat model R-07 stays "hosting layer").
+- Any code change to the API beyond what AC-09 needs — expected to be **none**.
+
+---
+
+## Technical Constraints (from Architect Agent)
+
+<!-- To be confirmed by the architect persona after Gate 1 -->
+
+- [ ] Layering: no application code changes expected. If AC-09 reveals that the built-in
+      switch is insufficient, the fix lives in `StoreIt.Api` (composition root) only.
+- [ ] Dependencies: no new NuGet or npm dependency. New GitHub Actions (`docker/login-action`,
+      `docker/setup-buildx-action`, `docker/build-push-action`, `docker/metadata-action`) are
+      pinned by SHA like the existing ones.
+- [ ] Workflow: `release.yml` is separate from `ci.yml`, `permissions: contents: read,
+      packages: write`, and is covered by the existing workflow-lint job.
+- [ ] Images stay non-root and on unprivileged ports (SPEC-004 AC-08).
+- [ ] ADR required: yes → [ADR-005](../architecture/ADR-005-hosting-deployment.md) — must be
+      **Accepted** before this spec is frozen, since the spec implements it.
+
+---
+
+## Verification
+
+<!-- Filled in by QA / developer during implementation -->
+
+| AC | How verified | Status |
+|----|--------------|--------|
+| AC-01 – AC-07 | Release workflow run on a `v0.x.y` pre-release tag; GHCR package pages show tags, both platforms and labels | ⬜ |
+| AC-08 | Reviewed against `compose.stack.yaml`, `.env.example` and `StartupConfigurationCheck`; a deployment author (Marcel) writes the deploy compose from the document alone | ⬜ |
+| AC-09 | Service test in `StoreIt.Api.Service.Tests` (forwarded headers → `https` redirect URI) | ⬜ |
+| AC-10 | Grep over runnable/config files in review; no hostname/IP/bucket | ⬜ |
+| AC-11 | `./scripts/stack-up.sh` passes unchanged | ⬜ |
+| AC-12 – AC-13 | Doc diff in review | ⬜ |
+| End to end (G3) | One release observed: tag → workflow → `store-it-deploy` host pulls → sign-in on the public URL | ⬜ |
+
+---
+
+## Gate Status
+
+| Gate | Status | Date | Person |
+|------|--------|------|--------|
+| G1 · Spec Freeze | ⬜ | | |
+| G2 · Review | ⬜ | | |
+| G3 · DoD/Merge | ⬜ | | |
