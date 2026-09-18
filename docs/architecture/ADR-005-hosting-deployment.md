@@ -1,7 +1,7 @@
 # ADR-005: Hosting and deployment — separate deployment repository, one free Oracle Cloud VM, Docker Compose, pull-based updates
 
-> **Status:** Proposed
-> **Date:** 2026-09-17
+> **Status:** Accepted
+> **Date:** 2026-09-18 (proposed 2026-09-17)
 > **Deciders:** Marcel Steiner
 
 ---
