@@ -180,6 +180,8 @@ the application repository.
 | Render free tier + Neon free PostgreSQL | ✗ | Service sleeps after 15 min idle (≈ 30–60 s cold start for a .NET container), no pre-deploy command on the free tier (migrations), image-based services do not auto-deploy. |
 | Azure Container Apps (consumption) + Neon | ✗ | Fits the Microsoft identity story and has a Swiss region, but a managed PostgreSQL costs ≈ CHF 15/month, and the setup surface (ACA environment, ACR or GHCR auth, jobs for migrations) is out of proportion for one app. |
 | Managed Kubernetes (any provider) | ✗ | Control-plane and node fees alone exceed every other option combined. Deferred per decision 3. |
+| Database on a home NAS, application on the VM | ✗ | Needs a tunnel (Tailscale/WireGuard), adds 10–30 ms per query round trip, and combines the availability risks of the home connection *and* the cloud host. Considered 2026-09-18, rejected. |
+| Everything on a home NAS (container-capable, 24/7) | deferred | Zero cost, no reclaim risk, data at home; needs inbound exposure (port forward + DynDNS, or Cloudflare Tunnel). Not chosen as the first deployment; if wanted later it is another `deployments/<name>/` directory — `postgres` and `caddy` are compose profiles for exactly this reason. |
 | Hosting configuration inside `store-it` | ✗ | Mixes concerns, puts hostnames and provider details into a public repository, and bakes exactly one installation into the code repo. A private deployment repository with per-deployment directories keeps the application portable and lets a second installation be a directory, not a fork. |
 | Watchtower for updates | ✗ | Migration ordering; upstream archived. |
 | Push deploy via SSH from CI | ✗ | Inbound SSH + VM credential in GitHub for a gain of a few minutes. |
