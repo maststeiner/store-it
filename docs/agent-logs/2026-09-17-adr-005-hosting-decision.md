@@ -56,6 +56,16 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
   a release. SPEC-005 was rescoped to the application side (sections A–C), the spec file renamed,
   and D1/D4/D5 moved out of this repo's spec.
 
+- **Finding while building the deployment topology (2026-09-18):** `frontend/nginx.conf`
+  overwrites `X-Forwarded-Proto` with nginx's own `$scheme` (`http` inside the container), so
+  the framework switch alone would still yield `http://` redirect URIs behind Caddy. Added
+  AC-09a to SPEC-005 (pass an upstream `X-Forwarded-Proto` through, keep `$scheme` as default);
+  the deployment repository does not work around it, so the contract stays in one place.
+- **Deployment repository built out on 2026-09-18** ("weitermachen"): `compose.yaml` with
+  `db`/`caddy` profiles, Caddyfile, systemd timers, `update/backup/restore/bootstrap` scripts,
+  runbook, Renovate, validate workflow. Validated locally (`compose config` with and without
+  profiles, shellcheck, `caddy validate`). The application side stays untouched until G1.
+
 ## Human Interventions
 
 | # | Intervention | Reason |
