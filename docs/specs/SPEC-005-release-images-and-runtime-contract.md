@@ -3,7 +3,7 @@
 > **Status:** Draft
 > **Sprint:** 2026-S38
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request
-> **Last updated:** 2026-09-17
+> **Last updated:** 2026-09-18
 
 ---
 
@@ -48,6 +48,7 @@ spans both repositories and is the human G3 test of this spec.
 | CI publishes no image | Nothing to deploy; `compose.stack.yaml` builds locally every time |
 | No single, complete runtime contract document | A deployment author has to read code and three files to learn what the services need |
 | Forwarded-header behaviour is untested | Whether `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true` really yields `https` redirect URIs is assumed, not verified |
+| **The `web` image overwrites `X-Forwarded-Proto`** | `frontend/nginx.conf` sets `X-Forwarded-Proto $scheme`, and nginx's own scheme inside the container is always `http`. Behind a TLS terminator (Caddy → nginx → API) the API therefore sees `http` even with forwarded headers enabled, and builds `http://` redirect URIs. Found 2026-09-18 while writing the deployment topology. |
 | The docs still say "Kubernetes, hosting pending" | Tech stack, architecture §7/§9, README and threat model point at a TODO |
 
 ---
@@ -98,6 +99,11 @@ D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved t
       `X-Forwarded-Proto: https` and `X-Forwarded-Host: <public host>` THE API SHALL build the
       OIDC `redirect_uri` (and any other absolute URL) with `https://<public host>` — covered
       by a service test, not only by a manual check.
+- [ ] AC-09a: WHEN the `web` image receives a request that already carries
+      `X-Forwarded-Proto` from an upstream proxy THE nginx SHALL pass that value on to the
+      API instead of its own `$scheme`; WHEN the header is absent THE nginx SHALL keep sending
+      `$scheme` (local stack unchanged). Implementation hint: an nginx `map` on
+      `$http_x_forwarded_proto` with `default $scheme`.
 - [ ] AC-10: WHEN the repository is inspected THE system SHALL contain no hostname, IP
       address, provider account detail, bucket name or other installation-specific value in
       any runnable or configuration file; such values live only in `store-it-deploy`. (ADR-005
@@ -125,6 +131,10 @@ D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved t
   ADR-007's discipline is a human rule, not enforced here. Documented, not guarded.
 - EC-03: **`latest` on a laptop** — a developer pulling `latest` gets the amd64 variant (D3);
   the local stack keeps building from source and is unaffected.
+- EC-03a: **Spoofed `X-Forwarded-Proto` when nginx is reached directly** — with AC-09a a
+  client that can reach `web` without a proxy could claim `https`. The consequence is only a
+  scheme upgrade in generated URLs (cookies are `Secure` anyway in Production), and in every
+  deployment `web` is reachable only through the proxy. Accepted; noted in the contract.
 - EC-04: **Forwarded headers without a trusted-proxy list** — the built-in switch trusts any
   `X-Forwarded-*` header. The runtime contract SHALL state the coupling explicitly: the switch
   is safe only when `backend` is reachable exclusively from the reverse proxy (never published
@@ -147,7 +157,8 @@ D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved t
 - Alerting/monitoring beyond `/health`.
 - Zero-downtime / blue-green releases.
 - Application-level rate limiting or a WAF (threat model R-07 stays "hosting layer").
-- Any code change to the API beyond what AC-09 needs — expected to be **none**.
+- Any code change to the API beyond what AC-09 needs — expected to be **none**. (AC-09a is a
+  change to `frontend/nginx.conf`, not to application code.)
 
 ---
 
@@ -177,6 +188,7 @@ D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved t
 | AC-01 – AC-07 | Release workflow run on a `v0.x.y` pre-release tag; GHCR package pages show tags, both platforms and labels | ⬜ |
 | AC-08 | Reviewed against `compose.stack.yaml`, `.env.example` and `StartupConfigurationCheck`; a deployment author (Marcel) writes the deploy compose from the document alone | ⬜ |
 | AC-09 | Service test in `StoreIt.Api.Service.Tests` (forwarded headers → `https` redirect URI) | ⬜ |
+| AC-09a | `nginx -T` on the built image plus a request through the local stack with and without the header; end-to-end by the sign-in in the G3 test | ⬜ |
 | AC-10 | Grep over runnable/config files in review; no hostname/IP/bucket | ⬜ |
 | AC-11 | `./scripts/stack-up.sh` passes unchanged | ⬜ |
 | AC-12 – AC-13 | Doc diff in review | ⬜ |
