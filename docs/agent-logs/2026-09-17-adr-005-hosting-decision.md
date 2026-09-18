@@ -62,6 +62,7 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
 |---|--------------|--------|
 | 1 | "warum nicht Oracle Cloud Always Free" — challenged the Hetzner-first ranking | The ranking weighed reliability risk over cost; Marcel weighs cost higher. ADR written for Oracle, Hetzner demoted to fallback. |
 | 2 | "es soll automatisch aktualisiert werden, wenn neue images zur Verfügung stehen" | Added as constraint 2 in the ADR; ruled out Render's image-based services (no auto-deploy) for this reason. |
+| 4 | 2026-09-18: "würde es auch gehen, wenn ich die Datenbank bei mir auf einem NAS laufen lassen würde?" → "ok, dann lassen wir es so" | Assessed: DB-only on the NAS combines both sites' failure modes plus latency; whole stack on the NAS is a viable alternative deployment. Marcel keeps the Oracle plan; both options recorded in the ADR rationale table. |
 | 3 | "für das deployment ein eigenes Repo machen mit der Konfiguration … Auch wenn dann mehrere deployments gemacht werden möchten" | First draft had `compose.prod.yaml`, runbook and hostnames inside `store-it`. Added ADR constraint 5 and decision 1 (two repositories), rescoped SPEC-005 to images + runtime contract, created the private `store-it-deploy` skeleton. |
 
 ## Outcome
