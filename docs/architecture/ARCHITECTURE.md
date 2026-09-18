@@ -156,7 +156,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 |-------------|----------------|-------|
 | Development | Local (dotnet run / ng serve) | |
 | CI | GitHub Actions | DoD gates, see `.github/workflows/ci.yml` |
-| Production | Kubernetes | TODO: cluster/provider, ingress, DB hosting — decide via ADR |
+| Production | Kubernetes | Decided in [ADR-005](ADR-005-hosting-deployment.md) (Accepted 2026-09-18): single VM, Docker Compose, deployment repository `store-it-deploy`; this row and §9 are rewritten by SPEC-005 AC-13 |
 
 ---
 
@@ -196,7 +196,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 | [ADR-004](ADR-004-identity-auth.md) | Identity / auth solution (direct OIDC federation, BFF) | Accepted | 2026-07-30 |
 | [ADR-006](ADR-006-api-versioning-contract-gate.md) | API versioning and contract gate | Accepted | 2026-07-18 |
 | [ADR-007](ADR-007-release-versioning.md) | Release process, SemVer tagging, breaking-change baseline | Accepted | 2026-07-31 |
-| ADR-005 | Kubernetes hosting & deployment strategy | TODO | |
+| [ADR-005](ADR-005-hosting-deployment.md) | Hosting and deployment — separate deployment repository, one free Oracle Cloud VM, Docker Compose, pull-based updates | Accepted | 2026-09-18 |
 
 ---
 
