@@ -145,7 +145,8 @@ public class DevLoginTests(DevLoginFixture factory) : IClassFixture<DevLoginFixt
         // The session cookie is HttpOnly and Lax (SPEC-003); Development relaxes only Secure.
         Assert.True(loginResponse.Headers.TryGetValues("Set-Cookie", out var setCookies));
         var session = Assert.Single(
-            setCookies.Where(c => c.StartsWith(".AspNetCore.Cookies=", StringComparison.Ordinal))
+            setCookies,
+            c => c.StartsWith(".AspNetCore.Cookies=", StringComparison.Ordinal)
         );
         Assert.Contains("httponly", session, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("samesite=lax", session, StringComparison.OrdinalIgnoreCase);
