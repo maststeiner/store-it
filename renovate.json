@@ -37,6 +37,12 @@
       "description": "TypeScript 7 is not supported by Angular 22; hold at 6.x until an Angular release supports it — tech-debt #63",
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7.0.0"
+    },
+    {
+      "description": "The .NET base images must match the TargetFramework (net10.0): the OpenAPI build step runs the API on the SDK image's runtime, and aspnet must ship the app's framework. The 'dotnet monorepo' bump to 11 (68cf5fd, 2026-09-09) broke every image build until the first release (v0.1.0) exposed it. Hold both at 10.x until the .NET 11 move — tech-debt #62",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["mcr.microsoft.com/dotnet/sdk", "mcr.microsoft.com/dotnet/aspnet"],
+      "allowedVersions": "<11.0"
     }
   ]
 }
