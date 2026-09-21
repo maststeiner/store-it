@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace StoreIt.Api.Service.Tests;
 
@@ -62,6 +63,52 @@ public class AuthEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTestF
         var response = await client.PostAsync("/auth/logout", null);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.Equal("csrf.invalid", problem.GetProperty("title").GetString());
+        Assert.Equal("csrf.invalid", problem.GetProperty("errorCode").GetString());
+    }
+
+    [Fact]
+    public async Task Logout_WithCsrfToken_Returns204AndExpiresTheSessionCookie()
+    {
+        // CreateClientAs primes the CSRF pair; the session itself comes from the Test scheme.
+        var client = factory.CreateClientAs("auth-logout-subject");
+
+        var response = await client.PostAsync("/auth/logout", null);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        // SignOutAsync on the cookie scheme answers with an expired session cookie.
+        var sessionCookie = SetCookie(response, ".AspNetCore.Cookies");
+        Assert.Contains(
+            "expires=Thu, 01 Jan 1970",
+            sessionCookie,
+            StringComparison.OrdinalIgnoreCase
+        );
+    }
+
+    [Fact]
+    public async Task Csrf_SetsJsReadableLaxTokenCookie()
+    {
+        var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/auth/csrf");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var xsrf = SetCookie(response, "XSRF-TOKEN");
+        // The SPA must be able to read it (double submit) — so NOT HttpOnly …
+        Assert.DoesNotContain("httponly", xsrf, StringComparison.OrdinalIgnoreCase);
+        // … but it never travels cross-site.
+        Assert.Contains("samesite=lax", xsrf, StringComparison.OrdinalIgnoreCase);
+        // The factory boots in Development, where Secure is relaxed for http://localhost.
+        Assert.DoesNotContain("secure", xsrf, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string SetCookie(HttpResponseMessage response, string name)
+    {
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var cookies));
+        var line = cookies.FirstOrDefault(c => c.StartsWith(name + "=", StringComparison.Ordinal));
+        Assert.NotNull(line);
+        return line;
     }
 }
 
@@ -94,6 +141,14 @@ public class DevLoginTests(DevLoginFixture factory) : IClassFixture<DevLoginFixt
         var loginResponse = await client.PostAsync("/auth/dev-login", null);
 
         Assert.Equal(HttpStatusCode.NoContent, loginResponse.StatusCode);
+
+        // The session cookie is HttpOnly and Lax (SPEC-003); Development relaxes only Secure.
+        Assert.True(loginResponse.Headers.TryGetValues("Set-Cookie", out var setCookies));
+        var session = Assert.Single(
+            setCookies.Where(c => c.StartsWith(".AspNetCore.Cookies=", StringComparison.Ordinal))
+        );
+        Assert.Contains("httponly", session, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("samesite=lax", session, StringComparison.OrdinalIgnoreCase);
 
         // The session cookie must have been issued.  HttpClient's CookieContainer
         // stores it automatically, so the next request carries it.
