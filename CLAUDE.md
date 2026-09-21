@@ -41,6 +41,7 @@ isolation, and artifacts are defined there. The five personas are installed in `
 | `docs/specs/` | Specs + acceptance criteria (basis for G1 and tests) |
 | `docs/architecture/` | arc42 architecture doc (`ARCHITECTURE.md`), ADRs (basis for the architecture conformance gate) |
 | `docs/guidelines/` | Coding and test guidelines (basis for agent work) |
+| `docs/operations/` | Runtime contract for deployments — what the published images need; updated in the same PR as any variable/port/ordering change (SPEC-005) |
 | `docs/agent-logs/` | One run log per agent task (transparency / compliance, DoD requirement) |
 | `docs/metrics.md` | Pilot metrics — Flow + Quality tracking (process metrics concept) |
 
@@ -50,7 +51,7 @@ files above.
 ## Metadata
 
 ```text
-last_updated: 2026-09-14
+last_updated: 2026-09-21
 owner: Marcel Steiner (AI Steward)
 scope: store-it — digital pantry management
 stack: see docs/project/tech-stack.md
