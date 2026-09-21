@@ -156,7 +156,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 |-------------|----------------|-------|
 | Development | Local (dotnet run / ng serve) | |
 | CI | GitHub Actions | DoD gates, see `.github/workflows/ci.yml` |
-| Production | Kubernetes | Decided in [ADR-005](ADR-005-hosting-deployment.md) (Accepted 2026-09-18): single VM, Docker Compose, deployment repository `store-it-deploy`; this row and §9 are rewritten by SPEC-005 AC-13 |
+| Production | One VM (Oracle Cloud Always Free, Zurich), Docker Compose, Caddy for TLS | [ADR-005](ADR-005-hosting-deployment.md). Images from GHCR on release tags (`release.yml`); topology, host and runbook live in the private repository `store-it-deploy`, pulled by the host every 5 minutes. What the images need: [`docs/operations/runtime-contract.md`](../operations/runtime-contract.md). Kubernetes deferred (revisit triggers in the ADR). |
 
 ---
 

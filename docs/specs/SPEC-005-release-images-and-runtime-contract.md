@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-21
 > **Sprint:** 2026-S38
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request
-> **Last updated:** 2026-09-21
+> **Last updated:** 2026-09-21 (A1)
 
 ---
 
@@ -67,6 +67,17 @@ the whole spec is a separate step recorded in the gate table.
 
 D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved to
 `store-it-deploy` — they are deployment settings, not application concerns.
+
+---
+
+## Amendments (post-freeze)
+
+Corrections found during implementation. None changes scope or an acceptance criterion's
+intent; they fix statements that were imprecise when frozen.
+
+| # | Date | Change |
+|---|------|--------|
+| A1 | 2026-09-21 | AC-09 names `X-Forwarded-Host: <public host>` as an input. The framework switch (`ASPNETCORE_FORWARDEDHEADERS_ENABLED`) processes only `X-Forwarded-For` and `X-Forwarded-Proto`; the public host reaches the API in the **`Host` header**, which both nginx (`proxy_set_header Host $http_host`) and Caddy preserve. The test and the runtime contract therefore use `Host` + `X-Forwarded-Proto`; `X-Forwarded-Host` is neither needed nor evaluated. The AC's intent — `https://<public host>` in the redirect URI — is unchanged. |
 
 ---
 
@@ -188,16 +199,15 @@ D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved t
 
 | AC | How verified | Status |
 |----|--------------|--------|
-| AC-01 – AC-07 | Release workflow run on a `v0.x.y` pre-release tag; GHCR package pages show tags, both platforms and labels | ⬜ |
-| AC-08 | Reviewed against `compose.stack.yaml`, `.env.example` and `StartupConfigurationCheck`; a deployment author (Marcel) writes the deploy compose from the document alone | ⬜ |
-| AC-09 | Service test in `StoreIt.Api.Service.Tests` (forwarded headers → `https` redirect URI) | ⬜ |
-| AC-09a | `nginx -T` on the built image plus a request through the local stack with and without the header; end-to-end by the sign-in in the G3 test | ⬜ |
-| AC-10 | Grep over runnable/config files in review; no hostname/IP/bucket | ⬜ |
-| AC-11 | `./scripts/stack-up.sh` passes unchanged | ⬜ |
-| AC-12 – AC-13 | Doc diff in review | ⬜ |
-| End to end (G3) | One release observed: tag → workflow → `store-it-deploy` host pulls → sign-in on the public URL | ⬜ |
-
----
+| AC-01 – AC-07 | `release.yml` written and linted (actionlint 1.7.12, clean); native runners per arch, push-by-digest, manifests only in the final job (AC-06), labels + index annotations (AC-07). **Runtime proof needs the first `v*` tag** — recorded here after the run. | 🟡 pending first release |
+| AC-08 | `docs/operations/runtime-contract.md` written from `compose.stack.yaml`, `.env.example`, `appsettings.json`, both Dockerfiles, `nginx.conf`, `StartupConfigurationCheck` and `AuthenticationSetup`; the `store-it-deploy` compose was written against it | ✅ 2026-09-21 |
+| AC-09 | `ForwardedHeadersTests.Login_BehindTlsTerminator_BuildsHttpsRedirectUri` (+ `…KeepsTheRequestScheme` as the control) — real host, `ForwardedHeaders_Enabled=true`, static OIDC discovery; 84/84 service tests green locally | ✅ 2026-09-21 |
+| AC-09a | nginx `map` in `frontend/nginx.conf`; functional test with the `nginx:1.31-alpine` image against an echo backend: no header → `proto=http`, `X-Forwarded-Proto: https` → `proto=https`, `X-Forwarded-Proto: evil` → `proto=http`, SPA fallback 200; `nginx -t` ok | ✅ 2026-09-21 |
+| AC-10 | grep over yml/yaml/json/conf/sh/cs/ts/Dockerfile/.env.example for hostnames, IPs, provider, bucket names: no hits (the GHCR image names are decision D6, not installation data) | ✅ 2026-09-21 |
+| AC-11 | Only `nginx.conf` changed for the local stack, and only the header value when an upstream sends `https`; the no-header path is byte-identical in behaviour (tested above). `stack-up.sh` untouched | ✅ 2026-09-21 (by test of the changed path; full stack run left to G3) |
+| AC-12 | Rule added to `docs/guidelines/coding-guidelines.md` (*Project-Specific Rules*), pointer row in `CLAUDE.md` | ✅ 2026-09-21 |
+| AC-13 | tech-stack *Runtime* row, `ARCHITECTURE.md` §7 + §9, `README.md` *Deploying*, threat model R-07 updated + R-21 added + owner-responsibility bullets | ✅ 2026-09-21 |
+| End to end (G3) | One release observed: tag → workflow → `store-it-deploy` host pulls → sign-in on the public URL | ⬜ human |
 
 ## Gate Status
 

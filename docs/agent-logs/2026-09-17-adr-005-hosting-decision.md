@@ -66,6 +66,25 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
   runbook, Renovate, validate workflow. Validated locally (`compose config` with and without
   profiles, shellcheck, `caddy validate`). The application side stays untouched until G1.
 
+## Implementation (2026-09-21, after G1)
+
+- `.github/workflows/release.yml`: on `v*` tags, matrix build on `ubuntu-latest` (amd64) and
+  `ubuntu-24.04-arm` (arm64), each pushing the three images **by digest only**; a final job
+  stitches the digests into `vX.Y.Z` + `latest` manifests with index annotations. Same buildx
+  cache scope for backend and migrate so they share the `build` stage (AC-03). Actions pinned
+  by SHA (resolved via the GitHub API on 2026-09-21). actionlint clean.
+- `frontend/nginx.conf`: `map $http_x_forwarded_proto` → passes only a literal `https` through,
+  defaults to `$scheme`. Verified functionally with an echo backend (see spec verification).
+- `ForwardedHeadersTests.cs`: own fixture with `ForwardedHeaders_Enabled=true` and a
+  `StaticConfigurationManager` for Google so the challenge never fetches discovery. Two tests:
+  https behind the proxy, http without. Found while writing it: `X-Forwarded-Host` is not
+  processed by the framework switch → spec amendment A1 (the host travels in `Host`).
+- `docs/operations/runtime-contract.md`: images, services, ordering, routed paths, every
+  variable per service, the TLS-proxy requirements and the trust caveat, a checklist.
+- Docs per AC-13, guideline rule per AC-12, `CLAUDE.md` pointer row, threat model R-21.
+- Verification: 84/84 service tests locally (Testcontainers), CSharpier clean, actionlint
+  clean, `nginx -t` ok. AC-01–07 can only be proven by the first tag.
+
 ## Human Interventions
 
 | # | Intervention | Reason |
@@ -80,9 +99,8 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
 
 ## Outcome
 
-- **Result:** ADR-005 (Proposed) and SPEC-005 (Draft) committed in PR #145; the private
-  `store-it-deploy` repository exists as a skeleton. Freeze and acceptance requested from
-  Marcel. Implementation (release workflow, runtime contract; deploy compose and runbook in the
-  other repository) starts only after G1.
-- **Deviations from spec:** n/a (no implementation yet).
+- **Result:** ADR-005 Accepted (2026-09-18), SPEC-005 frozen (2026-09-21), application side
+  implemented in PR #145 (ready for review); `store-it-deploy` complete on `main`. Open: G2
+  review, merge, first `v*` tag, Oracle provisioning, G3 end-to-end test.
+- **Deviations from spec:** amendment A1 (`Host` instead of `X-Forwarded-Host`); otherwise none.
 - **Harness follow-up:** none.

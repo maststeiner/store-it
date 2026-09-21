@@ -46,13 +46,13 @@ These rules are enforced by the architecture conformance gate (CI) — violation
 
 ## Twelve-Factor App
 
-The backend targets Kubernetes and follows [the twelve factors](https://12factor.net/); the ones most relevant for day-to-day coding:
+The backend runs as containers (one VM with Compose today, Kubernetes deferred — ADR-005) and follows [the twelve factors](https://12factor.net/); the ones most relevant for day-to-day coding:
 
 - **Config from the environment:** all config (connection strings, URLs, feature flags) via environment variables — never hard-coded, never in committed config files. Secrets never in the repo.
 - **Backing services as attached resources:** PostgreSQL & co. addressed via config only — swappable without code change.
 - **Stateless processes:** no in-process session state, no local file persistence; any instance can serve any request.
 - **Logs as event stream:** structured logs to stdout — no log files, no in-app log routing (the platform handles it).
-- **Port binding & disposability:** self-contained service, fast startup, graceful shutdown (k8s lifecycle).
+- **Port binding & disposability:** self-contained service, fast startup, graceful shutdown (container lifecycle).
 - **Dev/prod parity:** local development runs against real PostgreSQL (container), not an in-memory substitute.
 - **Admin processes:** DB migrations run as separate one-off processes (not implicitly at app startup).
 
@@ -107,3 +107,5 @@ Beyond the general rule (descriptive names, no abbreviations except established 
 - **Server owns the rules:** the Angular client renders and delegates — no business logic, no status computation client-side (status is server-computed per ADR-002). A rule appearing in the UI is a review failure.
 - **Fixed domain lists are constants, not literals:** the unit list and the "expiring soon" threshold (3 days) live as named domain constants, never inlined in the UI.
 - **Cross boundaries via DTOs** (Api request/response models) — domain entities never serialize out directly.
+- **The runtime contract is code (SPEC-005 AC-12):** a change to an environment variable, a listening port, a path `web` proxies, a health endpoint or the start ordering updates [`docs/operations/runtime-contract.md`](../operations/runtime-contract.md) in the **same PR**. Deployments in `store-it-deploy` are written from that document alone; a stale contract is a review failure.
+- **Nothing installation-specific in this repository (SPEC-005 AC-10):** no hostname, IP, provider account, bucket or per-deployment value in any runnable or configuration file. Such values live in `store-it-deploy/deployments/<name>/`.

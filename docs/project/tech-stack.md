@@ -13,7 +13,7 @@
 | Mobile | iPhone app (planned) | Consumes the same API |
 | Persistence | PostgreSQL via EF Core | [ADR-003](../architecture/ADR-003-persistence.md) |
 | Auth | OIDC federation (Google/Microsoft), BFF session | [ADR-004](../architecture/ADR-004-identity-auth.md) |
-| Runtime | Cloud-native, Kubernetes | Twelve-factor principles; hosting decision pending (ADR-005) |
+| Runtime | Containers (multi-arch images on GHCR), one VM with Docker Compose; Kubernetes deferred | Twelve-factor principles; deployment lives in the separate repository `store-it-deploy` — [ADR-005](../architecture/ADR-005-hosting-deployment.md), contract in [`docs/operations/runtime-contract.md`](../operations/runtime-contract.md) |
 | DevOps | GitHub + GitHub Actions | CI carries the DoD gates (`.github/workflows/ci.yml`) |
 | AI orchestration | Claude Code | AI-Dev Process harness, see `docs/process/PROCESS.md` |
 
