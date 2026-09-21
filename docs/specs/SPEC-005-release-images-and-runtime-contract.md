@@ -3,7 +3,7 @@
 > **Status:** Draft
 > **Sprint:** 2026-S38
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request
-> **Last updated:** 2026-09-18
+> **Last updated:** 2026-09-21
 
 ---
 
@@ -53,14 +53,17 @@ spans both repositories and is the human G3 test of this spec.
 
 ---
 
-## Open decisions (to be answered before the freeze)
+## Decisions taken (Marcel, 2026-09-21)
 
-| # | Question | Default assumed below |
+Answers to the open questions of the draft. They settle the individual points; the freeze of
+the whole spec is a separate step recorded in the gate table.
+
+| # | Question | Decision |
 |---|---|---|
-| D2 | What is published | **releases only**: `vX.Y.Z` and `latest` on `v*` tags. Alternative: additionally a moving `develop` tag on every push to `develop`, for a staging deployment |
-| D3 | Image architectures | **arm64 + amd64** multi-arch on native runners. Alternative: arm64 only (simpler workflow) |
-| D6 | Image names | `ghcr.io/maststeiner/store-it-backend`, `…-migrate`, `…-web` |
-| D7 | Deployment repository | **private** `maststeiner/store-it-deploy`; hosts pull it with a read-only deploy key (ADR-005 decision 1) |
+| D2 | What is published | **Releases only**: `vX.Y.Z` and `latest` on `v*` tags. No `develop` tag; a staging channel can be added later without touching anything else. |
+| D3 | Image architectures | **arm64 + amd64**, one multi-arch manifest per image, built on native runners. |
+| D6 | Image names | `ghcr.io/maststeiner/store-it-backend`, `…/store-it-migrate`, `…/store-it-web`. |
+| D7 | Deployment repository | **Private** `maststeiner/store-it-deploy`; hosts pull it with a read-only deploy key. |
 
 D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved to
 `store-it-deploy` — they are deployment settings, not application concerns.
