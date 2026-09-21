@@ -1,6 +1,6 @@
 # Spec: Release images and a runtime contract for external deployments
 
-> **Status:** Draft
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-21
 > **Sprint:** 2026-S38
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request
 > **Last updated:** 2026-09-21
@@ -203,6 +203,6 @@ D1 (hostname), D4 (backup target) and D5 (alerting) from the first draft moved t
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-09-21 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |

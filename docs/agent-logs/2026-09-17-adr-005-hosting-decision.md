@@ -72,6 +72,7 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
 |---|--------------|--------|
 | 1 | "warum nicht Oracle Cloud Always Free" — challenged the Hetzner-first ranking | The ranking weighed reliability risk over cost; Marcel weighs cost higher. ADR written for Oracle, Hetzner demoted to fallback. |
 | 2 | "es soll automatisch aktualisiert werden, wenn neue images zur Verfügung stehen" | Added as constraint 2 in the ADR; ruled out Render's image-based services (no auto-deploy) for this reason. |
+| 7 | 2026-09-21: "ja" to "Passt SPEC-005 so, soll ich auf Frozen setzen?" | G1 set. Implementation starts in the same PR (#145), following the SPEC-004/PR #83 precedent of spec + implementation in one PR. |
 | 6 | 2026-09-21: D2/D3/D6/D7 answered one by one (defaults confirmed) after asking to be walked through them | Recorded as "Decisions taken" in SPEC-005; freeze still to be asked separately. |
 | 5 | 2026-09-18: "ADR-005 akzeptiert." | Status set to Accepted; ARCHITECTURE.md §9 row updated. The wider doc updates (tech stack, §7, README, threat model) stay with SPEC-005 AC-13 — the spec is not frozen yet. |
 | 4 | 2026-09-18: "würde es auch gehen, wenn ich die Datenbank bei mir auf einem NAS laufen lassen würde?" → "ok, dann lassen wir es so" | Assessed: DB-only on the NAS combines both sites' failure modes plus latency; whole stack on the NAS is a viable alternative deployment. Marcel keeps the Oracle plan; both options recorded in the ADR rationale table. |
