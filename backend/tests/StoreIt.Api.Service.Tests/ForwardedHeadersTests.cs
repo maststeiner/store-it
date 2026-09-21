@@ -30,6 +30,7 @@ public sealed class ForwardedHeadersTests(ForwardedHeadersFixture factory)
         var response = await ChallengeAsync(forwardedProto: "https");
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        ChallengeAssertions.AssertAuthorizationCodeChallenge(response.Headers.Location);
         Assert.Equal(
             $"https://{PublicHost}/auth/callback/google",
             RedirectUriOf(response.Headers.Location)
@@ -44,6 +45,7 @@ public sealed class ForwardedHeadersTests(ForwardedHeadersFixture factory)
         var response = await ChallengeAsync(forwardedProto: null);
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        ChallengeAssertions.AssertAuthorizationCodeChallenge(response.Headers.Location);
         Assert.Equal(
             $"http://{PublicHost}/auth/callback/google",
             RedirectUriOf(response.Headers.Location)
