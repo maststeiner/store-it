@@ -23,7 +23,8 @@ and **which risks nothing covers yet**. store-it is a public GitHub repository
 | R-04 | Sensitive data in logs / error responses | M | M | Structured logs to stdout; domain exceptions mapped to sanitized responses (`DomainExceptionHandler`); no PII in test data (synthetic-only policy) | 🟡 |
 | R-05 | Secrets committed to the repo | H | M | Env-based config (12-factor); no secrets in repo; Trivy secret scan (independent detective control); PreToolUse guardrails deny agents secret-file access (best-effort / fail-open — see note) | 🟡 |
 | R-06 | Broken access control / no authn-authz | H | H | Single-owner BFF auth implemented: cookie session (OIDC via Microsoft/Google), ownership query filter (EF global filter on `OwnerId`), `RequireAuthorization` on all storages/items endpoints, CSRF double-submit protection (403 on failure), 401 for unauthenticated access, cross-user by-id returns 404 (no data leak). ADR-004 + SPEC-003. Fine-grained sharing still deferred. | ✅ |
-| R-07 | Denial of service (resource exhaustion) | M | L | No app-level rate limiting yet; owner concern at the ingress/hosting layer (ADR-005) | ⚪ |
+| R-07 | Denial of service (resource exhaustion) | M | L | No app-level rate limiting yet; the edge is Caddy on a single VM (ADR-005) — no WAF, no rate limit; accepted for the audience, revisit with public exposure beyond the household | 🟡 |
+| R-21 | Forwarded-header spoofing: `ASPNETCORE_FORWARDEDHEADERS_ENABLED` trusts any proxy | M | L | Mitigation is topological, not in code: `backend` is never published on a host interface, only `web`/the TLS proxy reach it (runtime contract §5, `store-it-deploy` compose). `web` passes only the literal `https` upstream value through. If the API is ever exposed directly, switch to `KnownProxies` in code | 🟡 |
 | R-08 | CORS / API surface misconfiguration | M | L | API surface is explicit (minimal APIs, typed contracts); revisit CORS with the first real client deployment | 🟡 |
 
 ## 2. Supply-chain & CI/CD risks
@@ -56,9 +57,9 @@ store-it is built with AI agents (AI-Dev Process). That adds a risk class most t
 
 Some concerns are the operator's, not the app's — store-it's job is to **not block** them:
 
-- **At-rest / in-transit encryption** — provided by the hosting/DB layer (ADR-005 pending).
+- **In-transit encryption** — TLS terminates at Caddy in front of `web` (ADR-005); inside the deployment network traffic is plain HTTP by design (single host). **At rest** — the VM's block volume; no database-level encryption. Backups are `pg_dump` files in the provider's object storage (server-side encrypted by the provider).
 - **Fine-grained authorization (sharing)** — single-owner auth is implemented (SPEC-003/ADR-004); multi-user sharing/delegation remains deferred.
-- **DoS / rate limiting / WAF** — expected at the ingress layer (ADR-005).
+- **DoS / rate limiting / WAF** — none beyond what Caddy does by default (ADR-005, R-07); a household-scale deployment accepts this.
 - **Secret management / rotation** — env-injected at deploy time; the repo only guarantees no secret is committed.
 - **Guardrail hooks are best-effort, not absolute.** The PreToolUse hooks (R-05, R-20) are **fail-open** by design — a hook failure, an unmatched pattern, or a session that never loads them all permit the action. They lower risk; they do not guarantee it. The real backstops are the independent controls: Trivy secret scanning, human review (Gate G2), and least-privilege CI.
 

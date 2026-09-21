@@ -18,7 +18,7 @@ for languages, frameworks, tooling, and versions is
 | `frontend/` | Angular app — *scaffold pending* |
 | `docs/` | Specs, arc42 architecture doc, ADRs, guidelines, agent logs |
 | `.claude/` | Installed agent personas + permission tiers |
-| `.github/workflows/` | CI: DoD gates (build/test, security+SBOM, quality, architecture, format) |
+| `.github/workflows/` | CI: DoD gates (build/test, security+SBOM, quality, architecture, format); `release.yml` publishes images on release tags |
 
 ## Development process
 
@@ -100,6 +100,18 @@ Sign-in needs real OIDC credentials in `.env`, with the redirect URI registered 
 provider — and it must carry the same port as `STOREIT_WEB_PORT`, e.g.
 `http://localhost:8080/auth/callback/google` for the default. Without credentials the
 stack still starts and serves the app; only signing in is unavailable.
+
+## Deploying
+
+This repository publishes **images, not a deployment**. An annotated release tag `vX.Y.Z`
+(ADR-007) runs `.github/workflows/release.yml`, which pushes multi-arch images to
+`ghcr.io/maststeiner/store-it-{backend,migrate,web}`. Everything a deployment needs to know
+— variables, ports, health endpoints, start ordering, what your TLS proxy must forward — is
+in [`docs/operations/runtime-contract.md`](docs/operations/runtime-contract.md). The actual
+production topology, host provisioning and runbook live in the separate (private) repository
+`store-it-deploy`; the decision and its reasons are
+[ADR-005](docs/architecture/ADR-005-hosting-deployment.md). No hostname, provider or
+installation-specific value belongs in this repository.
 
 ### Enabling sign-in
 
