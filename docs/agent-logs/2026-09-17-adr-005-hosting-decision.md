@@ -82,8 +82,20 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
 - `docs/operations/runtime-contract.md`: images, services, ordering, routed paths, every
   variable per service, the TLS-proxy requirements and the trust caveat, a checklist.
 - Docs per AC-13, guideline rule per AC-12, `CLAUDE.md` pointer row, threat model R-21.
-- Verification: 84/84 service tests locally (Testcontainers), CSharpier clean, actionlint
+- Verification: 97/97 service tests locally (Testcontainers), CSharpier clean, actionlint
   clean, `nginx -t` ok. AC-01–07 can only be proven by the first tag.
+- **Mutation gate (CI job 1a) failed on the first push at 54.55 %.** Cause, found with a local
+  Stryker run on the two auth files: the new fixture made `HandleLogin`, `ConfigureOidc`, the
+  cookie options and `SafeReturnUrl` "covered by changed tests", and the existing assertions
+  did not pin their behaviour. A second effect: options-building code (`ConfigureOidc`) is
+  attributed to whichever test first resolves the OIDC options, and Stryker runs only the
+  attributed tests — so every login test must assert the whole challenge shape, not just one
+  of them. Added `LoginChallengeTests` (code flow, PKCE S256, scopes incl. `email`, client id,
+  unsupported provider as ProblemDetails), `SafeReturnUrlTests` (theory over the open-redirect
+  guard), CSRF-cookie attributes, logout success/failure bodies, session-cookie flags on
+  dev-login. Survivors 31 → 16, killed 63 → 79; the remaining survivors are unobservable over
+  HTTP (endpoint names, `ClientSecret`, `SaveTokens`, `GetClaimsFromUserInfoEndpoint`,
+  `MapInboundClaims`, `RequireHttpsMetadata`).
 
 ## Human Interventions
 
