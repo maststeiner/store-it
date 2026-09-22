@@ -3,7 +3,12 @@
 # EF migrations as a one-shot admin process (12-factor) before the API starts. Both come
 # from the same build so they can never disagree about which migrations exist.
 
-FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
+# 10.0, not 11.0: the projects target net10.0 (LTS, docs/project/tech-stack.md). The build-time
+# OpenAPI generator (Microsoft.Extensions.ApiDescription.Server) RUNS the API on the SDK image's
+# runtime, and the runtime image below has to carry the framework the app was built for — an
+# 11.0 image has neither, and the publish fails with "You must install or update .NET"
+# (release v0.1.0, run 35649150975). Renovate holds this major until the .NET 11 move (#62).
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Restore first, with only the files that affect it, so editing code does not invalidate
@@ -31,7 +36,7 @@ ENTRYPOINT ["dotnet", "ef", "database", "update", \
             "--startup-project", "src/StoreIt.Api"]
 
 # ── runtime ───────────────────────────────────────────────────────────────────
-FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 # One layer for both root-only steps (Sonar S7031). curl is here for the container health
 # check only — compose gates the frontend on the API being healthy (AC-06), and the aspnet
 # image ships no HTTP client. The user is non-root: the API needs no privileges, and
