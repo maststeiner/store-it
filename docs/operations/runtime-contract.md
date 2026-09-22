@@ -21,7 +21,9 @@ manifests for `linux/amd64` and `linux/arm64`:
 | `ghcr.io/maststeiner/store-it-migrate` | `backend/Dockerfile`, target `migrate` | EF Core migrations, then exits | `vX.Y.Z`, `latest` |
 | `ghcr.io/maststeiner/store-it-web` | `frontend/Dockerfile` | nginx: Angular bundle + reverse proxy | `vX.Y.Z`, `latest` |
 
-`latest` always equals the newest release tag. **Run `backend` and `migrate` from the same
+`latest` always equals the newest release tag. Each index also carries buildx **attestation
+manifests** (provenance/SBOM), which registries and `imagetools inspect` list as platform
+`unknown/unknown` — expected, not a broken build. Images are pullable without credentials. **Run `backend` and `migrate` from the same
 tag** — they come from the same build and agree on the set of migrations; mixing tags is
 unsupported. Every image carries the OCI labels `org.opencontainers.image.{source,revision,
 version,title}`.
