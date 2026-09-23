@@ -10,6 +10,8 @@ public sealed class StorageRepository(StoreItDbContext dbContext) : IStorageRepo
         dbContext
             .Storages.Include(s => s.Items)
             .Include(s => s.Members)
+            // Two collection includes → one query would multiply rows (Sonar S8733).
+            .AsSplitQuery()
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
     // SPEC-007 AC-09: only for redeeming an invitation — the caller is not a member yet.
@@ -21,12 +23,16 @@ public sealed class StorageRepository(StoreItDbContext dbContext) : IStorageRepo
             .Storages.IgnoreQueryFilters()
             .Include(s => s.Items)
             .Include(s => s.Members)
+            // Two collection includes → one query would multiply rows (Sonar S8733).
+            .AsSplitQuery()
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
     public async Task<IReadOnlyList<Storage>> GetAllAsync(CancellationToken cancellationToken) =>
         await dbContext
             .Storages.Include(s => s.Items)
             .Include(s => s.Members)
+            // Two collection includes → one query would multiply rows (Sonar S8733).
+            .AsSplitQuery()
             .OrderBy(s => s.Name)
             .ToListAsync(cancellationToken);
 

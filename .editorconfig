@@ -59,6 +59,8 @@ dotnet_diagnostic.S1448.severity = error   # class with too many methods
 dotnet_diagnostic.S2436.severity = error   # too many generic parameters
 dotnet_diagnostic.S138.severity = error     # too many lines in a method (> 80)
 # EF Core migrations are auto-generated — exempt them from analyzer style rules
-# (e.g. CA1861 on the generated multi-column index arrays).
+# (e.g. CA1861 on the generated multi-column index arrays). Mirrored in
+# backend/src/StoreIt.Infrastructure/Migrations/.editorconfig, which is what the Docker build
+# context (backend/) sees — keep both in sync.
 [**/Migrations/*.cs]
 generated_code = true
