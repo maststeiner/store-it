@@ -17,12 +17,19 @@ public class StoreItDbContext(DbContextOptions<StoreItDbContext> options, ICurre
 {
     public DbSet<Storage> Storages => Set<Storage>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<StorageInvitation> StorageInvitations => Set<StorageInvitation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(StoreItDbContext).Assembly);
 
-        // Ownership isolation (SPEC-003): anonymous ⇒ UserId is null ⇒ matches nothing.
-        modelBuilder.Entity<Storage>().HasQueryFilter(s => s.OwnerId == currentUser.UserId);
+        // Access isolation (SPEC-003 ownership, widened by SPEC-007 sharing / ADR-008 to
+        // "owner or member"): anonymous ⇒ UserId is null ⇒ matches nothing.
+        modelBuilder
+            .Entity<Storage>()
+            .HasQueryFilter(s =>
+                s.OwnerId == currentUser.UserId
+                || s.Members.Any(m => m.UserId == currentUser.UserId)
+            );
     }
 }

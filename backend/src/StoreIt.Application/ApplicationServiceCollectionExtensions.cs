@@ -21,6 +21,17 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ProvisionUserUseCase>();
         services.AddScoped<DeleteAccountUseCase>();
 
+        // SPEC-007 sharing
+        services.AddScoped<StorageSummaries>();
+        services.AddScoped<CreateInvitationUseCase>();
+        services.AddScoped<GetInvitationUseCase>();
+        services.AddScoped<DeactivateInvitationUseCase>();
+        services.AddScoped<PreviewInvitationUseCase>();
+        services.AddScoped<AcceptInvitationUseCase>();
+        services.AddScoped<ListMembersUseCase>();
+        services.AddScoped<RemoveMemberUseCase>();
+        services.AddScoped<LeaveStorageUseCase>();
+
         return services;
     }
 }

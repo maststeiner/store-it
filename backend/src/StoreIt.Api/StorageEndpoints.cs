@@ -337,7 +337,7 @@ public static class StorageEndpoints
     /// endpoint (issue #69). Parsing explicitly answers 400 ProblemDetails API-wide and
     /// independently of the hosting environment. The raw value is never echoed back.
     /// </summary>
-    private static bool TryParseRouteId(
+    internal static bool TryParseRouteId(
         string value,
         string parameterName,
         out Guid id,

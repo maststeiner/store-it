@@ -12,10 +12,22 @@ public sealed record StorageSummary(
     string Name,
     int ItemCount,
     int ExpiredCount,
-    int ExpiringSoonCount
+    int ExpiringSoonCount,
+    bool IsOwner,
+    int MemberCount,
+    string OwnerName
 )
 {
-    public static StorageSummary From(Storage storage, DateOnly today)
+    /// <summary>
+    /// SPEC-007 AC-01: <paramref name="viewerId"/> decides <c>IsOwner</c>; <c>MemberCount</c>
+    /// counts members without the owner; <c>OwnerName</c> is the owner's display name (D6).
+    /// </summary>
+    public static StorageSummary From(
+        Storage storage,
+        DateOnly today,
+        Guid? viewerId,
+        string ownerName
+    )
     {
         var expired = 0;
         var expiringSoon = 0;
@@ -39,8 +51,45 @@ public sealed record StorageSummary(
             storage.Name,
             storage.Items.Count,
             expired,
-            expiringSoon
+            expiringSoon,
+            viewerId is not null && storage.IsOwner(viewerId.Value),
+            storage.Members.Count,
+            ownerName
         );
+    }
+}
+
+/// <summary>Resolves owner display names for summaries (one query per request, SPEC-007 D6).</summary>
+public sealed class StorageSummaries(
+    IUserRepository users,
+    ICurrentUser currentUser,
+    TimeProvider timeProvider
+)
+{
+    public async Task<StorageSummary> OneAsync(Storage storage, CancellationToken cancellationToken)
+    {
+        var names = await users.GetDisplayNamesAsync([storage.OwnerId], cancellationToken);
+        return StorageSummary.From(
+            storage,
+            timeProvider.Today(),
+            currentUser.UserId,
+            names.NameOf(storage.OwnerId)
+        );
+    }
+
+    public async Task<IReadOnlyList<StorageSummary>> ManyAsync(
+        IReadOnlyList<Storage> storages,
+        CancellationToken cancellationToken
+    )
+    {
+        var names = await users.GetDisplayNamesAsync(
+            storages.Select(s => s.OwnerId).Distinct().ToList(),
+            cancellationToken
+        );
+        var today = timeProvider.Today();
+        return storages
+            .Select(s => StorageSummary.From(s, today, currentUser.UserId, names.NameOf(s.OwnerId)))
+            .ToList();
     }
 }
 
@@ -48,7 +97,7 @@ public sealed record StorageSummary(
 public sealed class CreateStorageUseCase(
     IStorageRepository repository,
     ICurrentUser currentUser,
-    TimeProvider timeProvider
+    StorageSummaries summaries
 )
 {
     public async Task<StorageSummary> ExecuteAsync(string name, CancellationToken cancellationToken)
@@ -67,27 +116,25 @@ public sealed class CreateStorageUseCase(
         var storage = Storage.Create(name, ownerId);
         repository.Add(storage);
         await repository.SaveChangesAsync(cancellationToken);
-        return StorageSummary.From(storage, timeProvider.Today());
+        return await summaries.OneAsync(storage, cancellationToken);
     }
 }
 
-/// <summary>AC-01: list all storages with status counts.</summary>
-public sealed class ListStoragesUseCase(IStorageRepository repository, TimeProvider timeProvider)
+/// <summary>AC-01: list all storages with status counts — owned and shared (SPEC-007 AC-01).</summary>
+public sealed class ListStoragesUseCase(IStorageRepository repository, StorageSummaries summaries)
 {
     public async Task<IReadOnlyList<StorageSummary>> ExecuteAsync(
         CancellationToken cancellationToken
-    )
-    {
-        var today = timeProvider.Today();
-        return (await repository.GetAllAsync(cancellationToken))
-            .Select(storage => StorageSummary.From(storage, today))
-            .ToList();
-    }
+    ) =>
+        await summaries.ManyAsync(
+            await repository.GetAllAsync(cancellationToken),
+            cancellationToken
+        );
 }
 
 /// <summary>Get a single storage with status counts — lets a client refresh one
 /// storage without fetching the whole list (#29).</summary>
-public sealed class GetStorageUseCase(IStorageRepository repository, TimeProvider timeProvider)
+public sealed class GetStorageUseCase(IStorageRepository repository, StorageSummaries summaries)
 {
     public async Task<StorageSummary> ExecuteAsync(
         Guid storageId,
@@ -95,12 +142,12 @@ public sealed class GetStorageUseCase(IStorageRepository repository, TimeProvide
     )
     {
         var storage = await repository.GetRequiredAsync(storageId, cancellationToken);
-        return StorageSummary.From(storage, timeProvider.Today());
+        return await summaries.OneAsync(storage, cancellationToken);
     }
 }
 
-/// <summary>AC-03: rename a storage.</summary>
-public sealed class RenameStorageUseCase(IStorageRepository repository, TimeProvider timeProvider)
+/// <summary>AC-03: rename a storage (SPEC-007 D1: members may, too).</summary>
+public sealed class RenameStorageUseCase(IStorageRepository repository, StorageSummaries summaries)
 {
     public async Task<StorageSummary> ExecuteAsync(
         Guid storageId,
@@ -111,16 +158,20 @@ public sealed class RenameStorageUseCase(IStorageRepository repository, TimeProv
         var storage = await repository.GetRequiredAsync(storageId, cancellationToken);
         storage.Rename(name);
         await repository.SaveChangesAsync(cancellationToken);
-        return StorageSummary.From(storage, timeProvider.Today());
+        return await summaries.OneAsync(storage, cancellationToken);
     }
 }
 
-/// <summary>AC-04: delete a storage including all of its items (EC-06: no orphans).</summary>
-public sealed class DeleteStorageUseCase(IStorageRepository repository)
+/// <summary>
+/// AC-04: delete a storage including all of its items (EC-06: no orphans). SPEC-007 AC-04:
+/// owner only — members leave instead (<see cref="LeaveStorageUseCase"/>).
+/// </summary>
+public sealed class DeleteStorageUseCase(IStorageRepository repository, ICurrentUser currentUser)
 {
     public async Task ExecuteAsync(Guid storageId, CancellationToken cancellationToken)
     {
         var storage = await repository.GetRequiredAsync(storageId, cancellationToken);
+        storage.EnsureOwner(currentUser.RequireUser());
         repository.Remove(storage);
         await repository.SaveChangesAsync(cancellationToken);
     }

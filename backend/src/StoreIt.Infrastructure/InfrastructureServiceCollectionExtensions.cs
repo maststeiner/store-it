@@ -33,6 +33,8 @@ public static class InfrastructureServiceCollectionExtensions
         );
         services.AddScoped<IStorageRepository, StorageRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IInvitationRepository, InvitationRepository>();
+        services.AddSingleton<IInvitationTokens, InvitationTokens>();
         return services;
     }
 }

@@ -27,6 +27,36 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         Assert.Equal("renameStorage", OperationId(paths, "/api/v1/storages/{storageId}", "put"));
         Assert.Equal("deleteStorage", OperationId(paths, "/api/v1/storages/{storageId}", "delete"));
         Assert.Equal("deleteAccount", OperationId(paths, "/api/v1/account", "delete"));
+        // SPEC-007 sharing
+        Assert.Equal(
+            "getInvitation",
+            OperationId(paths, "/api/v1/storages/{storageId}/invitation", "get")
+        );
+        Assert.Equal(
+            "createInvitation",
+            OperationId(paths, "/api/v1/storages/{storageId}/invitation", "post")
+        );
+        Assert.Equal(
+            "deactivateInvitation",
+            OperationId(paths, "/api/v1/storages/{storageId}/invitation", "delete")
+        );
+        Assert.Equal(
+            "getMembers",
+            OperationId(paths, "/api/v1/storages/{storageId}/members", "get")
+        );
+        Assert.Equal(
+            "removeMember",
+            OperationId(paths, "/api/v1/storages/{storageId}/members/{userId}", "delete")
+        );
+        Assert.Equal(
+            "leaveStorage",
+            OperationId(paths, "/api/v1/storages/{storageId}/membership", "delete")
+        );
+        Assert.Equal(
+            "previewInvitation",
+            OperationId(paths, "/api/v1/invitations/preview", "post")
+        );
+        Assert.Equal("acceptInvitation", OperationId(paths, "/api/v1/invitations/accept", "post"));
         Assert.Equal("getItems", OperationId(paths, "/api/v1/storages/{storageId}/items", "get"));
         Assert.Equal("addItem", OperationId(paths, "/api/v1/storages/{storageId}/items", "post"));
         Assert.Equal(

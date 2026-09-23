@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StoreIt.Infrastructure;
@@ -11,9 +12,11 @@ using StoreIt.Infrastructure;
 namespace StoreIt.Infrastructure.Migrations
 {
     [DbContext(typeof(StoreItDbContext))]
-    partial class StoreItDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260923163345_SharedStorages")]
+    partial class SharedStorages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
