@@ -1,6 +1,6 @@
 # Spec: Users delete their own account and all their data
 
-> **Status:** Draft
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-23
 > **Sprint:** 2026-S39
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request (issue #168)
 > **Last updated:** 2026-09-23
@@ -34,7 +34,7 @@ session cookie. The web client offers **Delete account** in the session menu, as
 explicit confirmation with a plain warning, and afterwards lands on the sign-in page with a
 short confirmation notice.
 
-### Decisions taken (defaults proposed by the agent, to be confirmed at G1)
+### Decisions taken (confirmed at G1, 2026-09-23)
 
 | # | Decision | Rationale |
 |---|----------|-----------|
@@ -173,6 +173,6 @@ short confirmation notice.
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-09-23 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
