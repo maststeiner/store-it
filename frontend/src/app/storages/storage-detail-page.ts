@@ -11,6 +11,7 @@ import { LanguageService } from '../core/language.service';
 import { TranslatePipe } from '../core/translate';
 import { ConfirmDialog } from '../shared/confirm-dialog';
 import { SharingPanel } from './sharing-panel';
+import { StorageDeleteDialog } from './storage-delete-dialog';
 
 interface ItemFormModel {
   name: string;
@@ -26,7 +27,15 @@ function emptyForm(): ItemFormModel {
 
 @Component({
   selector: 'app-storage-detail-page',
-  imports: [FormsModule, TranslatePipe, DatePipe, RouterLink, ConfirmDialog, SharingPanel],
+  imports: [
+    FormsModule,
+    TranslatePipe,
+    DatePipe,
+    RouterLink,
+    ConfirmDialog,
+    SharingPanel,
+    StorageDeleteDialog,
+  ],
   templateUrl: './storage-detail-page.html',
 })
 export class StorageDetailPage implements OnInit {
@@ -185,6 +194,45 @@ export class StorageDetailPage implements OnInit {
         this.loadError.set(this.errors.messageFor(error));
       },
     });
+  }
+
+  /**
+   * SPEC-007 AC-20, decision "a": hand the storage to a member and leave it — two calls, the
+   * second harmless to fail (the user simply stays a member and sees the error).
+   */
+  protected confirmHandOver(newOwnerId: string): void {
+    this.sharingApi
+      .transferOwnership({
+        'X-XSRF-TOKEN': '',
+        storageId: this.storageId,
+        body: { userId: newOwnerId },
+      })
+      .subscribe({
+        next: () => {
+          this.sharingApi
+            .leaveStorage({ 'X-XSRF-TOKEN': '', storageId: this.storageId })
+            .subscribe({
+              next: () => {
+                this.deleteOpen.set(false);
+                this.router.navigate(['/storages']);
+              },
+              error: (error: unknown) => {
+                this.deleteOpen.set(false);
+                this.loadStorage();
+                this.loadError.set(this.errors.messageFor(error));
+              },
+            });
+        },
+        error: (error: unknown) => {
+          this.deleteOpen.set(false);
+          this.loadError.set(this.errors.messageFor(error));
+        },
+      });
+  }
+
+  /** The panel handed ownership to a member: the header switches to the member view. */
+  protected onOwnershipChanged(): void {
+    this.loadStorage();
   }
 
   protected confirmLeave(): void {

@@ -347,6 +347,138 @@ public class SharingTests(ApiTestFixture factory) : IClassFixture<ApiTestFixture
         );
         _ = newcomer;
     }
+
+    // --- PR 2: AC-18 / AC-19 ownership transfer ---
+
+    [Fact]
+    public async Task TransferOwnership_ByOwnerToMember_SwapsRolesAndKeepsTheLink()
+    {
+        var (storage, token) = await SharedStorageAsync("Olga hands over");
+        var maxId = await MemberIdAsync(Olga, storage.Id, "Max Member");
+
+        var response = await Olga.PutAsJsonAsync(
+            $"/api/v1/storages/{storage.Id}/owner",
+            new { userId = maxId }
+        );
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var forMax = await Max.GetStorageAsync(storage.Id);
+        Assert.True(forMax.IsOwner);
+        Assert.Equal("Max Member", forMax.OwnerName);
+        Assert.Equal(1, forMax.MemberCount); // Olga is now the member
+        var forOlga = await Olga.GetStorageAsync(storage.Id);
+        Assert.False(forOlga.IsOwner);
+        // The link belongs to the storage: still redeemable by a third person.
+        Assert.Equal(HttpStatusCode.OK, (await Stranger.PreviewAsync(token)).StatusCode);
+        // Owner-only operations moved with the role.
+        Assert.Equal(
+            HttpStatusCode.Forbidden,
+            (await Olga.PostAsync($"/api/v1/storages/{storage.Id}/invitation", null)).StatusCode
+        );
+    }
+
+    [Fact]
+    public async Task TransferOwnership_ToNonMember_Returns404MemberNotFound()
+    {
+        var (storage, _) = await SharedStorageAsync("Olga hands to nobody");
+
+        var response = await Olga.PutAsJsonAsync(
+            $"/api/v1/storages/{storage.Id}/owner",
+            new { userId = Guid.NewGuid() }
+        );
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("member.notFound", await response.ReadErrorCodeAsync());
+        Assert.True((await Olga.GetStorageAsync(storage.Id)).IsOwner);
+    }
+
+    [Fact]
+    public async Task TransferOwnership_ByMember_Returns403OwnerOnly()
+    {
+        var (storage, _) = await SharedStorageAsync("Max may not hand over");
+        var maxId = await MemberIdAsync(Olga, storage.Id, "Max Member");
+
+        var response = await Max.PutAsJsonAsync(
+            $"/api/v1/storages/{storage.Id}/owner",
+            new { userId = maxId }
+        );
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("storage.ownerOnly", await response.ReadErrorCodeAsync());
+    }
+
+    // --- PR 2: AC-21 / AC-22 account deletion with shared storages ---
+
+    [Fact]
+    public async Task GetAccount_CountsOwnedSharedAndMemberships()
+    {
+        var leaver = factory.CreateClientAs("share-leaver", name: "Lena Leaver");
+        var joiner = factory.CreateClientAs("share-joiner", name: "Jo Joiner");
+        var privateOne = await leaver.CreateStorageAsync("Lena private");
+        var sharedOne = await leaver.CreateStorageAsync("Lena shared");
+        Assert.Equal(
+            HttpStatusCode.OK,
+            (await joiner.AcceptAsync(await leaver.CreateInvitationAsync(sharedOne.Id))).StatusCode
+        );
+        var jos = await joiner.CreateStorageAsync("Jo's own");
+        Assert.Equal(
+            HttpStatusCode.OK,
+            (await leaver.AcceptAsync(await joiner.CreateInvitationAsync(jos.Id))).StatusCode
+        );
+
+        var summary = await leaver.GetFromJsonAsync<JsonElement>("/api/v1/account");
+
+        Assert.Equal(2, summary.GetProperty("ownedStorages").GetInt32());
+        Assert.Equal(1, summary.GetProperty("ownedSharedStorages").GetInt32());
+        Assert.Equal(1, summary.GetProperty("memberships").GetInt32());
+        _ = privateOne;
+    }
+
+    [Fact]
+    public async Task DeleteAccount_OwnerOfSharedStorage_DeletesItForEveryoneAndEndsMemberships()
+    {
+        var leaver = factory.CreateClientAs("share-leaver-2", name: "Lena Leaver");
+        var joiner = factory.CreateClientAs("share-joiner-2", name: "Jo Joiner");
+        var shared = await leaver.CreateStorageAsync("Lena's shared cellar");
+        Assert.Equal(
+            HttpStatusCode.OK,
+            (await joiner.AcceptAsync(await leaver.CreateInvitationAsync(shared.Id))).StatusCode
+        );
+        var jos = await joiner.CreateStorageAsync("Jo's pantry");
+        Assert.Equal(
+            HttpStatusCode.OK,
+            (await leaver.AcceptAsync(await joiner.CreateInvitationAsync(jos.Id))).StatusCode
+        );
+        Assert.Equal(1, (await joiner.GetStorageAsync(jos.Id)).MemberCount);
+
+        var response = await leaver.DeleteAsync("/api/v1/account");
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        // D5: the owned shared storage is gone for the member too …
+        Assert.Equal(
+            HttpStatusCode.NotFound,
+            (await joiner.GetAsync($"/api/v1/storages/{shared.Id}")).StatusCode
+        );
+        // … and the membership elsewhere ended, the other storage untouched.
+        var josAfter = await joiner.GetStorageAsync(jos.Id);
+        Assert.Equal(0, josAfter.MemberCount);
+        Assert.Equal("Jo's pantry", josAfter.Name);
+    }
+
+    private static async Task<Guid> MemberIdAsync(
+        HttpClient client,
+        Guid storageId,
+        string displayName
+    )
+    {
+        var members = await client.GetFromJsonAsync<JsonElement[]>(
+            $"/api/v1/storages/{storageId}/members"
+        );
+        return members!
+            .Single(m => m.GetProperty("displayName").GetString() == displayName)
+            .GetProperty("userId")
+            .GetGuid();
+    }
 }
 
 file static class SharingTestExtensions

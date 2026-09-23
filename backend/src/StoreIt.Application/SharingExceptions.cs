@@ -18,3 +18,7 @@ public sealed class OwnerCannotLeaveException(Guid storageId)
 /// </summary>
 public sealed class MemberAlreadyExistsException()
     : Exception("The user is already a member of this storage.");
+
+/// <summary>SPEC-007 AC-19: ownership can only go to a member → 404.</summary>
+public sealed class MemberNotFoundException(Guid storageId, Guid userId)
+    : Exception($"User {userId} is not a member of storage {storageId}.");

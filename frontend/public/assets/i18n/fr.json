@@ -91,7 +91,11 @@
       "message": "Votre compte ainsi que tous vos stocks et articles seront définitivement supprimés. Cette action est irréversible.",
       "challengeLabel": "Saisissez votre adresse e-mail pour confirmer",
       "done": "Votre compte et toutes vos données ont été supprimés.",
-      "challengeLabelName": "Saisissez votre nom affiché pour confirmer"
+      "challengeLabelName": "Saisissez votre nom affiché pour confirmer",
+      "sharedWarning": {
+        "one": "1 stock partagé sera supprimé pour tous. Transmettez-le d’abord s’il doit rester.",
+        "other": "{{count}} stocks partagés seront supprimés pour tous. Transmettez-les d’abord s’ils doivent rester."
+      }
     }
   },
   "errors": {
@@ -123,6 +127,9 @@
     },
     "invite": {
       "invalid": "L’invitation est invalide ou a expiré."
+    },
+    "member": {
+      "notFound": "Cette personne n’est pas membre du stock."
     }
   },
   "sharing": {
@@ -151,7 +158,9 @@
       "owner": "Propriétaire",
       "remove": "Retirer",
       "removeNamed": "Retirer {{name}}",
-      "none": "Personne d’autre que vous pour l’instant."
+      "none": "Personne d’autre que vous pour l’instant.",
+      "makeOwner": "Nommer propriétaire",
+      "makeOwnerNamed": "Nommer {{name}} propriétaire"
     },
     "join": {
       "title": "Invitation à un stock",
@@ -161,6 +170,18 @@
       "invalidTitle": "Ce lien n’est plus valable",
       "invalidText": "L’invitation a expiré ou a été désactivée. Demandez un nouveau lien.",
       "backToList": "Vers mes stocks"
+    },
+    "ownerDelete": {
+      "message": "« {{name}} » est partagé avec d’autres personnes. Que faire ?",
+      "choose": "Que faire du stock ?",
+      "handOver": "Transmettre la propriété et quitter – les autres conservent le stock.",
+      "newOwner": "Nouveau propriétaire",
+      "deleteForEveryone": "Supprimer pour tous – le stock et tous ses articles disparaissent.",
+      "confirmHandOver": "Transmettre et quitter"
+    },
+    "makeOwner": {
+      "title": "Transmettre la propriété",
+      "message": "{{name}} devient propriétaire de ce stock. Vous restez membre et ne pouvez plus le supprimer ni le partager."
     }
   }
 }

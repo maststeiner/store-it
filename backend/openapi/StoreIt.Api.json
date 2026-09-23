@@ -885,6 +885,49 @@
             "cookieSession": [ ]
           }
         ]
+      },
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "operationId": "getAccount",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountSummaryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieSession": [ ]
+          }
+        ]
       }
     },
     "/api/v1/storages/{storageId}/invitation": {
@@ -1376,6 +1419,94 @@
         ]
       }
     },
+    "/api/v1/storages/{storageId}/owner": {
+      "put": {
+        "tags": [
+          "Sharing"
+        ],
+        "operationId": "transferOwnership",
+        "parameters": [
+          {
+            "name": "storageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "X-XSRF-TOKEN",
+            "in": "header",
+            "description": "Double-submit CSRF token. Obtain it from GET /auth/csrf (which sets the JS-readable XSRF-TOKEN cookie) and echo the value here.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferOwnershipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieSession": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/invitations/preview": {
       "post": {
         "tags": [
@@ -1560,6 +1691,28 @@
           "storageId": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "AccountSummaryResponse": {
+        "required": [
+          "ownedStorages",
+          "ownedSharedStorages",
+          "memberships"
+        ],
+        "type": "object",
+        "properties": {
+          "ownedStorages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ownedSharedStorages": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "memberships": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1838,6 +1991,18 @@
           },
           "ownerName": {
             "type": "string"
+          }
+        }
+      },
+      "TransferOwnershipRequest": {
+        "required": [
+          "userId"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },

@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -26,6 +26,10 @@ const BASE_TRANSLATIONS = {
       challengeLabel: 'Type your e-mail address to confirm',
       challengeLabelName: 'Type your display name to confirm',
       done: 'Deleted.',
+      sharedWarning: {
+        one: '1 shared storage will be deleted for everyone.',
+        other: '{{count}} shared storages will be deleted for everyone.',
+      },
     },
   },
 };
@@ -146,7 +150,7 @@ describe('App — session menu', () => {
 
   // SPEC-006 AC-08 – AC-11: menu item → typed confirmation → service call; errors stay visible.
   describe('account deletion', () => {
-    async function openConfirmation(): Promise<{
+    async function openConfirmation(sharedOwned = 0): Promise<{
       fixture: ReturnType<typeof TestBed.createComponent<App>>;
       element: HTMLElement;
     }> {
@@ -161,6 +165,11 @@ describe('App — session menu', () => {
       fixture.detectChanges();
       await fixture.whenStable();
       (element.querySelectorAll('[role="menuitem"]')[1] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      TestBed.inject(HttpTestingController)
+        .expectOne('/api/v1/account')
+        .flush({ ownedStorages: 1, ownedSharedStorages: sharedOwned, memberships: 0 });
       fixture.detectChanges();
       await fixture.whenStable();
       return { fixture, element };
@@ -180,6 +189,22 @@ describe('App — session menu', () => {
 
     afterEach(() => {
       document.querySelectorAll('app-root').forEach((node) => node.remove());
+    });
+
+    it('DeleteAccount_WithSharedOwnedStorages_WarnsInTheDialog', async () => {
+      const { element } = await openConfirmation(2);
+
+      expect(element.querySelector('#confirm-dialog-message')?.textContent).toContain(
+        'Everything goes. 2 shared storages will be deleted for everyone.',
+      );
+    });
+
+    it('DeleteAccount_WithoutSharedStorages_ShowsNoWarning', async () => {
+      const { element } = await openConfirmation(0);
+
+      expect(element.querySelector('#confirm-dialog-message')?.textContent?.trim()).toBe(
+        'Everything goes.',
+      );
     });
 
     it('DeleteAccount_WhenChosenFromTheMenu_AsksForTheEmailAddress', async () => {
@@ -208,6 +233,11 @@ describe('App — session menu', () => {
       fixture.detectChanges();
       await fixture.whenStable();
       (element.querySelectorAll('[role="menuitem"]')[1] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      TestBed.inject(HttpTestingController)
+        .expectOne('/api/v1/account')
+        .flush({ ownedStorages: 0, ownedSharedStorages: 0, memberships: 0 });
       fixture.detectChanges();
       await fixture.whenStable();
 

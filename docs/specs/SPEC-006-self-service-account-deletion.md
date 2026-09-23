@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-23
 > **Sprint:** 2026-S39
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request (issue #168)
-> **Last updated:** 2026-09-23 (implemented, verification filled)
+> **Last updated:** 2026-09-23 (A1: shared storages)
 
 ---
 
@@ -170,6 +170,12 @@ short confirmation notice.
 | AC-12 | `i18n.spec` key-parity over de/en/fr/it (5 new keys) | ✅ 2026-09-23 |
 | Local runs | backend: 105 service + 62 domain + 9 architecture tests green, CSharpier clean; frontend: 113 vitest green, coverage 91.9 % statements, lint + prettier clean, `ng build` ok | ✅ 2026-09-23 |
 | End to end (G3) | Marcel deletes a test account on `prod-oracle` (after the next release) and signs in again to an empty app; Playwright E2E deliberately not extended — the flow is covered by service tests and component tests, the human test on the public URL is the spec's G3 | ⬜ |
+
+## Amendments (post-freeze)
+
+| # | Date | Change |
+|---|------|--------|
+| A1 | 2026-09-23 | **Shared storages (SPEC-007 / ADR-008 decision 6).** Deleting an account deletes every storage the account **owns — for all its members too** — and ends the account's memberships in other people's storages. No automatic hand-over. The deletion dialog states how many owned storages still have members (`GET /api/v1/account`, `ownedSharedStorages`) so the person can hand them over first (SPEC-007 AC-22). The promise "all your data are deleted" stays literally true; the deployment's privacy text needs no change. Decided by Marcel Steiner, 2026-09-23. |
 
 ## Gate Status
 

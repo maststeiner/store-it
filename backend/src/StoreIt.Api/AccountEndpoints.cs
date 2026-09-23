@@ -38,6 +38,17 @@ public static class AccountEndpoints
             )
             .WithName("deleteAccount");
 
+        // SPEC-007 AC-22: the numbers the deletion dialog warns with (D5).
+        account
+            .MapGet(
+                "/",
+                async Task<Ok<AccountSummaryResponse>> (
+                    GetAccountSummaryUseCase useCase,
+                    CancellationToken ct
+                ) => TypedResults.Ok(AccountSummaryResponse.From(await useCase.ExecuteAsync(ct)))
+            )
+            .WithName("getAccount");
+
         return app;
     }
 }

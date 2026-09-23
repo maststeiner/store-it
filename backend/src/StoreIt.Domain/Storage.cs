@@ -94,6 +94,30 @@ public class Storage
         return member is not null && _members.Remove(member);
     }
 
+    /// <summary>
+    /// SPEC-007 AC-18: hand the storage to a member. The previous owner becomes an ordinary
+    /// member; the storage never has zero or two owners (one column, one transaction).
+    /// Returns false when <paramref name="newOwnerId"/> is not a member.
+    /// </summary>
+    public bool TransferOwnership(Guid newOwnerId, DateTimeOffset now)
+    {
+        if (IsOwner(newOwnerId))
+        {
+            return true;
+        }
+
+        var newOwner = _members.FirstOrDefault(m => m.UserId == newOwnerId);
+        if (newOwner is null)
+        {
+            return false;
+        }
+
+        _members.Remove(newOwner);
+        _members.Add(new StorageMember(Id, OwnerId, now));
+        OwnerId = newOwnerId;
+        return true;
+    }
+
     /// <summary>AC-05/AC-06: add an item (validation inside <see cref="Item"/>).</summary>
     public Item AddItem(
         string name,

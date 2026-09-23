@@ -1,11 +1,12 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
 
 import { InvitationStatusResponse, StorageMemberResponse } from '../api/models';
 import { SharingService } from '../api/services';
 import { ErrorMessages } from '../core/error-messages';
 import { LanguageService } from '../core/language.service';
 import { TranslatePipe } from '../core/translate';
+import { ConfirmDialog } from '../shared/confirm-dialog';
 
 /**
  * SPEC-007 AC-16: the owner's share view (invitation link + member list) and, read-only, the
@@ -14,12 +15,14 @@ import { TranslatePipe } from '../core/translate';
  */
 @Component({
   selector: 'app-sharing-panel',
-  imports: [TranslatePipe, DatePipe],
+  imports: [TranslatePipe, DatePipe, ConfirmDialog],
   templateUrl: './sharing-panel.html',
 })
 export class SharingPanel implements OnInit {
   readonly storageId = input.required<string>();
   readonly isOwner = input.required<boolean>();
+  /** AC-18/AC-23: ownership went to a member; the host reloads the storage. */
+  readonly ownershipChanged = output<void>();
 
   private readonly api = inject(SharingService);
   private readonly errors = inject(ErrorMessages);
@@ -39,6 +42,8 @@ export class SharingPanel implements OnInit {
   private statusRequest = 0;
 
   protected readonly others = computed(() => (this.members() ?? []).filter((m) => !m.isOwner));
+  /** The member about to become owner (confirmation open). */
+  protected readonly handOverTarget = signal<StorageMemberResponse | null>(null);
 
   ngOnInit(): void {
     this.loadMembers();
@@ -108,6 +113,31 @@ export class SharingPanel implements OnInit {
       .subscribe({
         next: () => this.loadMembers(),
         error: (error: unknown) => this.error.set(this.errors.messageFor(error)),
+      });
+  }
+
+  protected confirmMakeOwner(): void {
+    const target = this.handOverTarget();
+    if (!target) {
+      return;
+    }
+    this.api
+      .transferOwnership({
+        'X-XSRF-TOKEN': '',
+        storageId: this.storageId(),
+        body: { userId: target.userId },
+      })
+      .subscribe({
+        next: () => {
+          this.handOverTarget.set(null);
+          this.error.set(null);
+          this.loadMembers();
+          this.ownershipChanged.emit();
+        },
+        error: (error: unknown) => {
+          this.handOverTarget.set(null);
+          this.error.set(this.errors.messageFor(error));
+        },
       });
   }
 

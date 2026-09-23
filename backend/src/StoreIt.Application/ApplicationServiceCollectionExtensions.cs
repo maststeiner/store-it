@@ -31,6 +31,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ListMembersUseCase>();
         services.AddScoped<RemoveMemberUseCase>();
         services.AddScoped<LeaveStorageUseCase>();
+        services.AddScoped<TransferOwnershipUseCase>();
+        services.AddScoped<GetAccountSummaryUseCase>();
 
         return services;
     }

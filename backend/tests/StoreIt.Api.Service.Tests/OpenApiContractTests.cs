@@ -57,6 +57,11 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
             OperationId(paths, "/api/v1/invitations/preview", "post")
         );
         Assert.Equal("acceptInvitation", OperationId(paths, "/api/v1/invitations/accept", "post"));
+        Assert.Equal(
+            "transferOwnership",
+            OperationId(paths, "/api/v1/storages/{storageId}/owner", "put")
+        );
+        Assert.Equal("getAccount", OperationId(paths, "/api/v1/account", "get"));
         Assert.Equal("getItems", OperationId(paths, "/api/v1/storages/{storageId}/items", "get"));
         Assert.Equal("addItem", OperationId(paths, "/api/v1/storages/{storageId}/items", "post"));
         Assert.Equal(
@@ -164,6 +169,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         ("/api/v1/storages/{storageId}/members", "get"),
         ("/api/v1/storages/{storageId}/members/{userId}", "delete"),
         ("/api/v1/storages/{storageId}/membership", "delete"),
+        ("/api/v1/storages/{storageId}/owner", "put"),
     ];
 
     [Fact]
@@ -219,7 +225,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         }
 
         // 5 storageId-only operations + 2 operations carrying storageId and itemId
-        // 3 storage + 2 items + 2 item-by-id×2 = 9 (SPEC-001/003) + 5 sharing×1 + members/{userId}×2 = 16
-        Assert.Equal(16, pathParameters);
+        // 3 storage + 2 items + 2 item-by-id×2 = 9 (SPEC-001/003) + 6 sharing×1 + members/{userId}×2 = 17
+        Assert.Equal(17, pathParameters);
     }
 }

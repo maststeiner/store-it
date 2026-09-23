@@ -75,4 +75,34 @@ public class StorageSharingTests
         );
         Assert.Equal("invitation.tokenHash.empty", ex.ErrorCode);
     }
+
+    [Fact]
+    public void TransferOwnership_ToMember_SwapsRoles()
+    {
+        var owner = Guid.NewGuid();
+        var member = Guid.NewGuid();
+        var storage = Storage.Create("Pantry", owner);
+        storage.AddMember(member, Now);
+
+        var transferred = storage.TransferOwnership(member, Now.AddDays(1));
+
+        Assert.True(transferred);
+        Assert.True(storage.IsOwner(member));
+        Assert.False(storage.IsOwner(owner));
+        Assert.True(storage.IsMember(owner));
+        Assert.False(storage.IsMember(member));
+        Assert.Single(storage.Members);
+    }
+
+    [Fact]
+    public void TransferOwnership_ToNonMemberOrSelf_ChangesNothing()
+    {
+        var owner = Guid.NewGuid();
+        var storage = Storage.Create("Pantry", owner);
+
+        Assert.False(storage.TransferOwnership(Guid.NewGuid(), Now));
+        Assert.True(storage.TransferOwnership(owner, Now));
+        Assert.True(storage.IsOwner(owner));
+        Assert.Empty(storage.Members);
+    }
 }

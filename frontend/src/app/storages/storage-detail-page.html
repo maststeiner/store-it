@@ -89,7 +89,11 @@
       <p class="storage-owner">{{ 'sharing.sharedBy' | translate: { name: s.ownerName } }}</p>
     }
     @if (sharingOpen()) {
-      <app-sharing-panel [storageId]="storageId" [isOwner]="s.isOwner" />
+      <app-sharing-panel
+        [storageId]="storageId"
+        [isOwner]="s.isOwner"
+        (ownershipChanged)="onOwnershipChanged()"
+      />
     }
   }
 
@@ -278,12 +282,22 @@
   }
 
   @if (deleteOpen()) {
-    <app-confirm-dialog
-      [title]="'storages.deleteTitle' | translate"
-      [message]="'storages.deleteConfirm' | translate: { name: storage()?.name ?? '' }"
-      (confirmed)="confirmDelete()"
-      (cancelled)="deleteOpen.set(false)"
-    />
+    @if ((storage()?.memberCount ?? 0) > 0) {
+      <app-storage-delete-dialog
+        [storageId]="storageId"
+        [storageName]="storage()?.name ?? ''"
+        (deleteForEveryone)="confirmDelete()"
+        (handOver)="confirmHandOver($event)"
+        (cancelled)="deleteOpen.set(false)"
+      />
+    } @else {
+      <app-confirm-dialog
+        [title]="'storages.deleteTitle' | translate"
+        [message]="'storages.deleteConfirm' | translate: { name: storage()?.name ?? '' }"
+        (confirmed)="confirmDelete()"
+        (cancelled)="deleteOpen.set(false)"
+      />
+    }
   }
 
   @if (leaveOpen()) {
