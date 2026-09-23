@@ -47,6 +47,14 @@ const TRANSLATIONS = {
     sharedBy: 'Shared by {{name}}',
     members: { title: 'Members', owner: 'Owner', remove: 'Remove', none: 'Nobody but you yet.' },
     link: { none: 'No active invitation link.', create: 'Create invitation link', warning: 'w' },
+    ownerDelete: {
+      message: '"{{name}}" is shared. What should happen?',
+      choose: 'c',
+      handOver: 'Hand over and leave',
+      newOwner: 'New owner',
+      deleteForEveryone: 'Delete for everyone',
+      confirmHandOver: 'Hand over and leave',
+    },
   },
 };
 
@@ -384,6 +392,64 @@ describe('StorageDetailPage', () => {
         'No active invitation link.',
       );
       expect(element.querySelector('.sharing-panel')?.textContent).toContain('Nobody but you yet.');
+    });
+  });
+
+  // SPEC-007 AC-20 (decision "a"): the owner of a shared storage hands over and leaves
+  describe('owner delete with members', () => {
+    it('Delete_WithMembers_OpensTheOwnerDialogInsteadOfThePlainOne', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true, memberCount: 2 });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Delete"]') as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      http.expectOne('/api/v1/storages/s1/members').flush([
+        { userId: 'u1', displayName: 'Me', isOwner: true, joinedAt: null },
+        { userId: 'u2', displayName: 'Max', isOwner: false, joinedAt: '2026-09-23T10:00:00Z' },
+      ]);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element.querySelector('app-storage-delete-dialog')).not.toBeNull();
+      expect(element.querySelector('app-confirm-dialog')).toBeNull();
+    });
+
+    it('HandOver_Confirmed_TransfersThenLeavesAndNavigatesToTheList', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true, memberCount: 1 });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Delete"]') as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      http.expectOne('/api/v1/storages/s1/members').flush([
+        { userId: 'u1', displayName: 'Me', isOwner: true, joinedAt: null },
+        { userId: 'u2', displayName: 'Max', isOwner: false, joinedAt: '2026-09-23T10:00:00Z' },
+      ]);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      (element.querySelector('app-storage-delete-dialog .btn-danger') as HTMLButtonElement).click();
+
+      const put = http.expectOne('/api/v1/storages/s1/owner');
+      expect(put.request.body).toEqual({ userId: 'u2' });
+      put.flush(null);
+      const leave = http.expectOne('/api/v1/storages/s1/membership');
+      expect(leave.request.method).toBe('DELETE');
+      leave.flush(null);
+      await fixture.whenStable();
+
+      expect(navigate).toHaveBeenCalledWith(['/storages']);
     });
   });
 });

@@ -64,16 +64,28 @@
           @if (member.isOwner) {
             <span class="member-role">{{ 'sharing.members.owner' | translate }}</span>
           } @else if (isOwner()) {
-            <button
-              type="button"
-              class="btn-ghost btn-small"
-              (click)="removeMember(member)"
-              [attr.aria-label]="
-                'sharing.members.removeNamed' | translate: { name: member.displayName }
-              "
-            >
-              {{ 'sharing.members.remove' | translate }}
-            </button>
+            <span class="member-actions">
+              <button
+                type="button"
+                class="btn-ghost btn-small"
+                (click)="handOverTarget.set(member)"
+                [attr.aria-label]="
+                  'sharing.members.makeOwnerNamed' | translate: { name: member.displayName }
+                "
+              >
+                {{ 'sharing.members.makeOwner' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn-ghost btn-small"
+                (click)="removeMember(member)"
+                [attr.aria-label]="
+                  'sharing.members.removeNamed' | translate: { name: member.displayName }
+                "
+              >
+                {{ 'sharing.members.remove' | translate }}
+              </button>
+            </span>
           }
         </li>
       }
@@ -83,3 +95,13 @@
     }
   }
 </section>
+
+@if (handOverTarget(); as target) {
+  <app-confirm-dialog
+    [title]="'sharing.makeOwner.title' | translate"
+    [message]="'sharing.makeOwner.message' | translate: { name: target.displayName }"
+    [confirmLabel]="'sharing.members.makeOwner' | translate"
+    (confirmed)="confirmMakeOwner()"
+    (cancelled)="handOverTarget.set(null)"
+  />
+}

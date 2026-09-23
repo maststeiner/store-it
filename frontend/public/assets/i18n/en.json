@@ -91,7 +91,11 @@
       "message": "Your account and all your storages and items will be permanently deleted. This cannot be undone.",
       "challengeLabel": "Type your e-mail address to confirm",
       "done": "Your account and all your data have been deleted.",
-      "challengeLabelName": "Type your display name to confirm"
+      "challengeLabelName": "Type your display name to confirm",
+      "sharedWarning": {
+        "one": "1 shared storage will be deleted for everyone. Hand it over first if it should stay.",
+        "other": "{{count}} shared storages will be deleted for everyone. Hand them over first if they should stay."
+      }
     }
   },
   "errors": {
@@ -123,6 +127,9 @@
     },
     "invite": {
       "invalid": "The invitation is invalid or has expired."
+    },
+    "member": {
+      "notFound": "This person is not a member of the storage."
     }
   },
   "sharing": {
@@ -151,7 +158,9 @@
       "owner": "Owner",
       "remove": "Remove",
       "removeNamed": "Remove {{name}}",
-      "none": "Nobody but you yet."
+      "none": "Nobody but you yet.",
+      "makeOwner": "Make owner",
+      "makeOwnerNamed": "Make {{name}} the owner"
     },
     "join": {
       "title": "Invitation to a storage",
@@ -161,6 +170,18 @@
       "invalidTitle": "This link is no longer valid",
       "invalidText": "The invitation has expired or was deactivated. Ask for a new link.",
       "backToList": "To my storages"
+    },
+    "ownerDelete": {
+      "message": "“{{name}}” is shared with others. What should happen?",
+      "choose": "What should happen to the storage?",
+      "handOver": "Hand over ownership and leave – the others keep the storage.",
+      "newOwner": "New owner",
+      "deleteForEveryone": "Delete for everyone – the storage and all its items are gone.",
+      "confirmHandOver": "Hand over and leave"
+    },
+    "makeOwner": {
+      "title": "Hand over ownership",
+      "message": "{{name}} becomes the owner of this storage. You stay a member and can no longer delete or share it."
     }
   }
 }

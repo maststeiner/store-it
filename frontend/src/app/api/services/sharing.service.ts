@@ -31,6 +31,8 @@ import { PreviewInvitation$Params } from '../fn/sharing/preview-invitation';
 import { removeMember } from '../fn/sharing/remove-member';
 import { RemoveMember$Params } from '../fn/sharing/remove-member';
 import { StorageMemberResponse } from '../models/storage-member-response';
+import { transferOwnership } from '../fn/sharing/transfer-ownership';
+import { TransferOwnership$Params } from '../fn/sharing/transfer-ownership';
 
 @Injectable({ providedIn: 'root' })
 export class SharingService extends BaseService {
@@ -195,6 +197,33 @@ export class SharingService extends BaseService {
    */
   leaveStorage(params: LeaveStorage$Params, context?: HttpContext): Observable<void> {
     const resp = this.leaveStorage$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
+    );
+  }
+
+  /** Path part for operation `transferOwnership()` */
+  static readonly TransferOwnershipPath = '/api/v1/storages/{storageId}/owner';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `transferOwnership()` instead.
+   *
+   * This method sends `application/json` and handles request body of type `application/json`.
+   */
+  transferOwnership$Response(params: TransferOwnership$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    const obs = transferOwnership(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `transferOwnership$Response()` instead.
+   *
+   * This method sends `application/json` and handles request body of type `application/json`.
+   */
+  transferOwnership(params: TransferOwnership$Params, context?: HttpContext): Observable<void> {
+    const resp = this.transferOwnership$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<void>): void => r.body)
     );

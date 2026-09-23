@@ -91,7 +91,11 @@
       "message": "Il tuo account e tutti i tuoi depositi e articoli verranno eliminati definitivamente. L'operazione non può essere annullata.",
       "challengeLabel": "Inserisci il tuo indirizzo e-mail per confermare",
       "done": "Il tuo account e tutti i tuoi dati sono stati eliminati.",
-      "challengeLabelName": "Inserisci il tuo nome visualizzato per confermare"
+      "challengeLabelName": "Inserisci il tuo nome visualizzato per confermare",
+      "sharedWarning": {
+        "one": "1 deposito condiviso verrà eliminato per tutti. Trasferiscilo prima se deve restare.",
+        "other": "{{count}} depositi condivisi verranno eliminati per tutti. Trasferiscili prima se devono restare."
+      }
     }
   },
   "errors": {
@@ -123,6 +127,9 @@
     },
     "invite": {
       "invalid": "L’invito non è valido o è scaduto."
+    },
+    "member": {
+      "notFound": "Questa persona non è membro del deposito."
     }
   },
   "sharing": {
@@ -151,7 +158,9 @@
       "owner": "Proprietario",
       "remove": "Rimuovi",
       "removeNamed": "Rimuovi {{name}}",
-      "none": "Ancora nessuno oltre a te."
+      "none": "Ancora nessuno oltre a te.",
+      "makeOwner": "Rendi proprietario",
+      "makeOwnerNamed": "Rendi {{name}} proprietario"
     },
     "join": {
       "title": "Invito a un deposito",
@@ -161,6 +170,18 @@
       "invalidTitle": "Questo link non è più valido",
       "invalidText": "L’invito è scaduto o è stato disattivato. Chiedi un nuovo link.",
       "backToList": "Ai miei depositi"
+    },
+    "ownerDelete": {
+      "message": "«{{name}}» è condiviso con altri. Cosa deve succedere?",
+      "choose": "Cosa deve succedere al deposito?",
+      "handOver": "Trasferire la proprietà e abbandonare: gli altri mantengono il deposito.",
+      "newOwner": "Nuovo proprietario",
+      "deleteForEveryone": "Eliminare per tutti: il deposito e tutti gli articoli scompaiono.",
+      "confirmHandOver": "Trasferisci e abbandona"
+    },
+    "makeOwner": {
+      "title": "Trasferire la proprietà",
+      "message": "{{name}} diventa proprietario di questo deposito. Tu resti membro e non potrai più eliminarlo o condividerlo."
     }
   }
 }

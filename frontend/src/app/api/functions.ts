@@ -27,6 +27,8 @@ export type { UpdateItem$Params as UpdateItem$Params } from './fn/items/update-i
 export { updateItem as updateItem } from './fn/items/update-item';
 export type { DeleteItem$Params as DeleteItem$Params } from './fn/items/delete-item';
 export { deleteItem as deleteItem } from './fn/items/delete-item';
+export type { GetAccount$Params as GetAccount$Params } from './fn/account/get-account';
+export { getAccount as getAccount } from './fn/account/get-account';
 export type { DeleteAccount$Params as DeleteAccount$Params } from './fn/account/delete-account';
 export { deleteAccount as deleteAccount } from './fn/account/delete-account';
 export type { GetInvitation$Params as GetInvitation$Params } from './fn/sharing/get-invitation';
@@ -41,6 +43,8 @@ export type { RemoveMember$Params as RemoveMember$Params } from './fn/sharing/re
 export { removeMember as removeMember } from './fn/sharing/remove-member';
 export type { LeaveStorage$Params as LeaveStorage$Params } from './fn/sharing/leave-storage';
 export { leaveStorage as leaveStorage } from './fn/sharing/leave-storage';
+export type { TransferOwnership$Params as TransferOwnership$Params } from './fn/sharing/transfer-ownership';
+export { transferOwnership as transferOwnership } from './fn/sharing/transfer-ownership';
 export type { PreviewInvitation$Params as PreviewInvitation$Params } from './fn/sharing/preview-invitation';
 export { previewInvitation as previewInvitation } from './fn/sharing/preview-invitation';
 export type { AcceptInvitation$Params as AcceptInvitation$Params } from './fn/sharing/accept-invitation';

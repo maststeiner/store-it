@@ -36,7 +36,7 @@
 @if (deleteAccountOpen()) {
   <app-confirm-dialog
     [title]="'auth.deleteAccount.title' | translate"
-    [message]="'auth.deleteAccount.message' | translate"
+    [message]="deleteAccountMessage()"
     [challenge]="deleteAccountChallenge()"
     [challengeLabel]="deleteAccountChallengeLabelKey() | translate"
     (confirmed)="confirmDeleteAccount()"

@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-23
 > **Sprint:** 2026-S39
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's direction (issue #81)
-> **Last updated:** 2026-09-23 (PR 1 implemented)
+> **Last updated:** 2026-09-23 (PR 1 and PR 2 implemented)
 
 ---
 
@@ -33,7 +33,7 @@ instead of each keeping our own copy.**
 | D1 | One level of access. Members change items and the storage name; owner-only: delete for everyone, members, invitation link, ownership transfer. |
 | D2 | Invitation by link, 7 days valid, multi-use, one active link per storage, a new link replaces the old, the owner can deactivate it. |
 | D3 | Opening a link shows a join page ("*Owner* shares the storage *Name* with you" + *Join*); unauthenticated visitors sign in first and come back; existing members are sent straight to the storage. The token travels in the URL **fragment** (`/join#<token>`), so it never reaches the server's access logs — only the web client reads it and sends it to the API in a request body. |
-| D4 | Members see **Leave**; the owner sees **Delete** and, when members exist, chooses between *hand over to …* and *delete for everyone*. |
+| D4 | Members see **Leave**; the owner sees **Delete** and, when members exist, chooses between *hand over to … and leave* and *delete for everyone*. Handing over while staying a member is the separate *Make owner* action in the member list (AC-23). |
 | D5 | Account deletion deletes owned storages for everyone and leaves the others; the dialog states how many owned storages still have members. No automatic handover. |
 | D6 | People are shown by display name only — no e-mail addresses in member lists or on the join page. |
 | D7 | Members can **see** the member list (display names only), only the owner can change it. |
@@ -107,8 +107,9 @@ instead of each keeping our own copy.**
 - [ ] AC-19 (Error): WHEN ownership is transferred to a non-member THE system SHALL answer `404`
       with `errorCode: member.notFound`.
 - [ ] AC-20: WHEN the owner deletes a storage that has members THE client SHALL offer *hand over
-      to …* (choose a member) or *delete for everyone*; without members the dialog is the
-      existing one.
+      to … and leave* (choose a member; the storage stays with the others, the previous owner
+      is no longer part of it — Marcel Steiner, 2026-09-23: "a") or *delete for everyone*;
+      without members the dialog is the existing one.
 - [ ] AC-21: WHEN a user deletes their account THE system SHALL delete the storages they own
       (for everyone) and end their memberships elsewhere (D5) — the SPEC-006 cascade plus the
       membership FK.
@@ -189,7 +190,7 @@ instead of each keeping our own copy.**
       only the hash. Plain-token generation and SHA-256 hashing live in Infrastructure
       (`InvitationTokens`) behind the Application port `IInvitationTokens`; persistence behind
       `IInvitationRepository`.
-- [x] API (additive, `/api/v1`; PR 1 endpoints implemented, PR 2 pending): `GET/POST/DELETE /storages/{id}/invitation`,
+- [x] API (additive, `/api/v1`; all endpoints implemented — PR 2 added `PUT /storages/{id}/owner` and `GET /account`): `GET/POST/DELETE /storages/{id}/invitation`,
       `POST /invitations/preview` and `POST /invitations/accept` (token in the JSON body),
       `GET /storages/{id}/members`, `DELETE /storages/{id}/members/{userId}`,
       `DELETE /storages/{id}/membership` (leave); PR 2: `PUT /storages/{id}/owner`,
@@ -225,7 +226,14 @@ instead of each keeping our own copy.**
 | AC-16 | `sharing-panel.spec` (owner: members + link state + remove; create link → `origin/join#token`; deactivate; remove member; member: read-only) | ✅ 2026-09-23 |
 | AC-17 | `join-page.spec` (token from fragment → POST body; parked token after sign-in used once; join → navigate; already member → navigate; 404 → invalid page; no fragment → invalid); `auth.guard.spec` (fragment stripped from `returnUrl`, parked); `i18n.spec` key parity | ✅ 2026-09-23 |
 | Local runs (PR 1) | backend 198 tests (121 service incl. 16 new, 68 domain incl. 6 new, 9 architecture), CSharpier, both images build; frontend 132 vitest (18 new), lint, prettier, `ng build`; contract + client regenerated | ✅ 2026-09-23 |
-| AC-18 … AC-24 | PR 2 | ⬜ |
+| AC-18 | `SharingTests.TransferOwnership_ByOwnerToMember_SwapsRolesAndKeepsTheLink` (roles swapped, link still redeemable, owner-only rights moved); domain `TransferOwnership_ToMember_SwapsRoles` | ✅ 2026-09-23 |
+| AC-19 | `TransferOwnership_ToNonMember_Returns404MemberNotFound`; `TransferOwnership_ByMember_Returns403OwnerOnly`; domain `TransferOwnership_ToNonMemberOrSelf_ChangesNothing` | ✅ 2026-09-23 |
+| AC-20 | `storage-delete-dialog.spec` (hand-over preselected with first member, chosen member emitted, delete-for-everyone hides the picker, Escape cancels); `storage-detail-page.spec` (owner dialog only with members; hand over → `PUT owner` → `DELETE membership` → list) | ✅ 2026-09-23 |
+| AC-21 | `DeleteAccount_OwnerOfSharedStorage_DeletesItForEveryoneAndEndsMemberships` | ✅ 2026-09-23 |
+| AC-22 | `GetAccount_CountsOwnedSharedAndMemberships`; `app.spec` (`DeleteAccount_WithSharedOwnedStorages_WarnsInTheDialog`, `…WithoutSharedStorages_ShowsNoWarning`) | ✅ 2026-09-23 |
+| AC-23 | `sharing-panel.spec.Owner_MakesMemberOwner_ConfirmsThenTransfersAndNotifiesTheHost` | ✅ 2026-09-23 |
+| AC-24 | SPEC-006 amendment A1 written; privacy text unchanged (still literally true) | ✅ 2026-09-23 |
+| Local runs (PR 2) | backend 205 tests (126 service incl. 5 new, 70 domain incl. 2 new, 9 architecture), CSharpier; frontend 141 vitest (9 new), lint, prettier, `ng build`; contract + client regenerated | ✅ 2026-09-23 |
 | End to end (G3) | Marcel and Patrizia share a storage on `prod-oracle` via a link, both edit it, one leaves; owner hands over and deletes (PR 2) | ⬜ |
 
 ## Gate Status

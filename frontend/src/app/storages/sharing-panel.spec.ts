@@ -28,8 +28,12 @@ const TRANSLATIONS = {
       remove: 'Remove',
       removeNamed: 'Remove {{name}}',
       none: 'Nobody but you yet.',
+      makeOwner: 'Make owner',
+      makeOwnerNamed: 'Make {{name}} the owner',
     },
+    makeOwner: { title: 'Hand over ownership', message: '{{name}} becomes the owner.' },
   },
+  actions: { cancel: 'Cancel', delete: 'Delete' },
   errors: { generic: 'Something went wrong.' },
 };
 
@@ -79,7 +83,10 @@ describe('SharingPanel (SPEC-007 AC-16)', () => {
       'Max Member',
     ]);
     expect(rows[0].querySelector('.member-role')?.textContent).toContain('Owner');
-    expect(rows[1].querySelector('button')?.getAttribute('aria-label')).toBe('Remove Max Member');
+    const labels = Array.from(rows[1].querySelectorAll('button')).map((b) =>
+      b.getAttribute('aria-label'),
+    );
+    expect(labels).toEqual(['Make Max Member the owner', 'Remove Max Member']);
     expect(el.textContent).toContain('No active invitation link.');
     expect(el.textContent).not.toContain('@');
   });
@@ -137,7 +144,9 @@ describe('SharingPanel (SPEC-007 AC-16)', () => {
   it('Owner_RemovesMember_SendsDeleteAndReloadsTheList', async () => {
     const { fixture, el } = await render(true);
 
-    (el.querySelector('.member-row button') as HTMLButtonElement).click();
+    (
+      el.querySelector('.member-row button[aria-label="Remove Max Member"]') as HTMLButtonElement
+    ).click();
     const del = http.expectOne('/api/v1/storages/s1/members/u2');
     expect(del.request.method).toBe('DELETE');
     del.flush(null);
@@ -168,5 +177,39 @@ describe('SharingPanel (SPEC-007 AC-16)', () => {
     await fixture.whenStable();
 
     expect(create.disabled).toBe(false);
+  });
+
+  // SPEC-007 AC-18 / AC-23: hand over from the member list
+  it('Owner_MakesMemberOwner_ConfirmsThenTransfersAndNotifiesTheHost', async () => {
+    const { fixture, el } = await render(true);
+    const changed = vi.fn();
+    fixture.componentInstance.ownershipChanged.subscribe(changed);
+
+    (
+      el.querySelector(
+        '.member-row button[aria-label="Make Max Member the owner"]',
+      ) as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(el.querySelector('app-confirm-dialog')?.textContent).toContain(
+      'Max Member becomes the owner.',
+    );
+    expect(el.querySelector('.dialog .btn-danger')?.textContent?.trim()).toBe('Make owner');
+
+    (el.querySelector('.dialog .btn-danger') as HTMLButtonElement).click();
+    const put = http.expectOne('/api/v1/storages/s1/owner');
+    expect(put.request.method).toBe('PUT');
+    expect(put.request.body).toEqual({ userId: 'u2' });
+    put.flush(null);
+    http.expectOne('/api/v1/storages/s1/members').flush([
+      { userId: 'u2', displayName: 'Max Member', isOwner: true, joinedAt: null },
+      { userId: 'u1', displayName: 'Olga Owner', isOwner: false, joinedAt: '2026-09-23T12:00:00Z' },
+    ]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(changed).toHaveBeenCalledTimes(1);
+    expect(el.querySelector('app-confirm-dialog')).toBeNull();
   });
 });
