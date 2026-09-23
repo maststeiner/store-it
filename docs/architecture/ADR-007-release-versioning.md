@@ -1,6 +1,6 @@
 # ADR-007: Release process, SemVer tagging, and the breaking-change baseline
 
-> **Status:** Accepted
+> **Status:** Accepted (amended 2026-09-23, A1)
 > **Date:** 2026-07-31
 > **Deciders:** Marcel Steiner
 
@@ -16,9 +16,10 @@ That is too strict for a pre-release API. The intent of ADR-006 is to protect *p
 
 1. **A release is a `develop` → `main` merge, marked by an annotated SemVer tag `vMAJOR.MINOR.PATCH`.** `main` is the released line (GitFlow-light) — this is distinct from SonarCloud's *analyzed* branch, which is `develop`. **Release tags are protected** (a GitHub `v*` tag-protection rule): since the breaking-change gate reads the contract at the latest tag, that tag must not be movable or deletable. The CI selects the baseline strictly — an annotated `vMAJOR.MINOR.PATCH` tag reachable from `main`.
 2. **Pre-release semantics (SemVer `0.x`): while no `v*` tag exists, `/api/v1` is unfrozen** — breaking changes to it are allowed. The first stable tag **`v1.0.0`** freezes the released `/api/v1` contract; from then on a breaking change requires a new path version (`/api/v2`, per ADR-006).
-3. **The breaking-change baseline is the OpenAPI contract at the latest release tag**, not `develop`. This refines ADR-006 stage 2:
+3. **The breaking-change baseline is the OpenAPI contract at the latest *stable* release tag** (`MAJOR ≥ 1`), not `develop`. This refines ADR-006 stage 2 *(wording amended 2026-09-23, A1 — see below)*:
    - No `v*` tag yet → skip the breaking check (pre-release, breaking allowed).
-   - A tag exists → `oasdiff breaking <contract@latest-tag> <PR-contract> --fail-on ERR`.
+   - Only `0.x` tags exist → compare against the latest `0.x` tag and **report** the result (job summary, warning annotations), but do not fail: decision 2 says `/api/v1` is unfrozen until `v1.0.0`.
+   - A stable tag `vMAJOR.MINOR.PATCH` with `MAJOR ≥ 1` exists → `oasdiff breaking <contract@latest-stable-tag> <PR-contract> --fail-on ERR`.
    - The **drift check is unchanged** — the committed contract must always match the code, released or not.
    - **Replaces** the interim `--err-ignore` acknowledgment list (`backend/openapi/oasdiff-ignore.txt`, added for SPEC-002): under the tag baseline, pre-release breaking changes are allowed wholesale, so per-change listing is unnecessary.
 4. **Three distinct version concepts** (kept separate to avoid confusion):
@@ -42,4 +43,10 @@ That is too strict for a pre-release API. The intent of ADR-006 is to protect *p
 ## Relationship to other ADRs
 
 - **Refines ADR-006** (baseline: last release tag instead of `develop`; the rest of ADR-006 stands).
-- Release *deployment* (how a tagged release reaches Kubernetes) is out of scope here and belongs to **ADR-005**.
+- Release *deployment* (how a tagged release reaches the host) is out of scope here and belongs to **ADR-005**.
+
+## Amendments
+
+| # | Date | Change |
+|---|------|--------|
+| A1 | 2026-09-23 | **Decision 3 aligned with decision 2 (the 0.x rule).** As written, decision 3 took *any* `vMAJOR.MINOR.PATCH` tag as the baseline, so the first release `v0.1.1` (2026-09-22) made the gate blocking — while decision 2 reserves the freeze of `/api/v1` for the deliberate `v1.0.0`. Now: baseline = latest tag with `MAJOR ≥ 1`; with only `0.x` tags the gate compares against the latest `0.x` tag and reports (job summary + warning annotations) without failing. Rejected alternatives: accept the freeze at `v0.1.1` (every breaking change → `/api/v2` for a 0.x product whose only client ships in the same release); a PR label as escape hatch. Decided by Marcel Steiner, issue #166. |
