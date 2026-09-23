@@ -54,6 +54,7 @@ Deliver spec + ADR, then the first of two PRs: membership, invitation links, mem
 | 2 | Marcel's simplified sketch (flat access, link, owner, delete = disappear from my view, hand-over on account deletion, remove members) + "in einem oder mehrere Tasks?" | Basis of ADR-008; two points challenged (leave vs delete; no automatic hand-over); split into two PRs agreed. |
 | 3 | "1: Ja (nur die Anzeigenamen), 2: Ja … mit einem Symbol, 3. mit hash, 4 und 5 werde ich anschliessend reviewen" | D7, D8, fragment token; review before acceptance/freeze. |
 | 4 | "ADR-008 akzeptiert, SPEC-007 einfrieren und PR 1 umsetzen" | G1 + ADR acceptance. |
+| 5 | Local two-account test (Microsoft + Google on the container stack): "Login mit Google funktioniert nun und auch die Funktionalität ist in Ordnung. Nur das Icon beim Verlassen ist etwas unpassend" → "1" (↩) | Human test of PR 1 passed; leave icon changed from the coloured door emoji to a monochrome ↩ matching ✎/✕. |
 
 ## Verification
 
