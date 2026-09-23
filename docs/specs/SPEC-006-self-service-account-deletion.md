@@ -41,7 +41,7 @@ short confirmation notice.
 | D1 | Endpoint `DELETE /api/v1/account`, operationId `deleteAccount`, `204 No Content`; same group rules as the storages tree: `RequireAuthorization` + CSRF filter → `401` / `403`. | Under `/api/v1` because it is an authenticated, versioned resource of the signed-in user — not part of the anonymous `/auth` BFF group. Additive → no `/api/v2`. |
 | D2 | Deletion = remove the `users` row; PostgreSQL cascades `storages` → `items` (existing FKs). The use case lives in Application (`DeleteAccountUseCase`), the repository gains `GetByIdAsync` and `Remove`. | Reuses the schema decision of SPEC-003; one statement, one transaction, no partial state. |
 | D3 | The response of a successful deletion **signs the session out** (expired cookie), like `POST /auth/logout`. | The principal's `sub_local` points to a row that no longer exists; keeping the cookie would leave a zombie session in this browser. |
-| D4 | UI: a second item **Delete account** in the session menu (below *Sign out*), styled as a destructive action; confirmation via the existing `ConfirmDialog` with a title and a message that names what is lost ("all storages and items, irreversible"). **No typed confirmation.** | The existing dialog already focuses the confirm button, traps focus and closes on Escape; a typed confirmation adds friction without adding safety for a one-user, one-click product. |
+| D4 | UI: a second item **Delete account** in the session menu (below *Sign out*), styled as a destructive action; confirmation via the `ConfirmDialog`, extended with an optional **typed challenge**: the user must type their own e-mail address (the one shown in the session menu) before the confirm button becomes active. Accounts without an e-mail type their display name instead. Comparison is case-insensitive and ignores surrounding whitespace. | Marcel Steiner, 2026-09-23: "abtippen der eigenen emailadresse würde ich machen". Typing the address makes the irreversible step deliberate and ties it to the identity being deleted; the fallback keeps the flow possible for provider accounts that deliver no e-mail (SPEC-003 EC-02). |
 | D5 | After success the client clears the user signal and navigates to `/login?account=deleted`; the sign-in page shows one line "Your account and all your data have been deleted." | Users need feedback that the action happened; the login page is where they land anyway. |
 | D6 | Sessions of the deleted account **on other devices** are not revoked eagerly (that would need a per-request database check the BFF design deliberately avoids — SPEC-003 "pure claim read"). Instead: reads with a stale session return empty lists (ownership filter), and the one write that can fail on the missing owner (`POST /api/v1/storages`, FK violation) is mapped to `401` with `errorCode: auth.session.stale` and the session cookie expired, which the client's 401 handling turns into a redirect to sign-in. | Correct behaviour with zero per-request cost; the window is bounded by the cookie lifetime. |
 | D7 | A later sign-in with the same provider account creates a **new, empty** user (existing `ProvisionUserUseCase` behaviour). Nothing is remembered. | "No data about me remains" includes the identity row. |
@@ -75,8 +75,10 @@ short confirmation notice.
 - [ ] AC-08: WHEN the session menu is open THE client SHALL offer *Delete account* as a
       destructive menu item below *Sign out*, keyboard-navigable like the existing item.
 - [ ] AC-09: WHEN the user chooses *Delete account* THE client SHALL show a confirmation
-      dialog naming the consequence ("all your storages and items, irreversible") and SHALL
-      call `DELETE /api/v1/account` only after the confirm button.
+      dialog naming the consequence ("all your storages and items, irreversible") with a
+      text field; THE confirm button SHALL stay disabled until the field matches the user's
+      e-mail address (or display name when no e-mail exists), case-insensitively and trimmed;
+      THE client SHALL call `DELETE /api/v1/account` only after that confirm button.
 - [ ] AC-10: WHEN the deletion succeeded THE client SHALL clear the session state and
       navigate to the sign-in page, which SHALL show a one-line confirmation notice.
 - [ ] AC-11 (Error): WHEN the deletion request fails THE client SHALL keep the session state
@@ -106,8 +108,12 @@ short confirmation notice.
 
 - Session menu: second `menuitem` "Delete account" (`auth.session.deleteAccount`), visually
   separated from *Sign out* and coloured as destructive (existing `btn-danger` tone).
-- Confirmation: `ConfirmDialog` with `auth.deleteAccount.title` /
-  `auth.deleteAccount.message`; confirm label stays the generic `actions.delete`.
+- Confirmation: `ConfirmDialog` gains an optional `challenge` input (expected text) plus a
+  labelled text field (`auth.deleteAccount.challengeLabel`, showing the expected value);
+  while the field does not match, the confirm button is `disabled`. Used here with
+  `auth.deleteAccount.title` / `auth.deleteAccount.message`; confirm label stays the generic
+  `actions.delete`. Existing callers (storage / item deletion) pass no challenge and behave
+  exactly as before.
 - Sign-in page: notice `auth.deleteAccount.done` when the route carries
   `account=deleted`; rendered as a status line (`role="status"`), no toast library.
 - Strings in all four locales; no hard-coded text.
@@ -157,7 +163,7 @@ short confirmation notice.
 | AC-05 | service test: delete user, keep the old client, `POST /api/v1/storages` → 401 `auth.session.stale`, cookie expired | ⬜ |
 | AC-06 | service test: provision same (issuer, subject) again → new id, zero storages | ⬜ |
 | AC-07 | contract gate in CI (drift + report mode), `OpenApiContractTests` | ⬜ |
-| AC-08–AC-11 | vitest: session-menu (item, keyboard), app flow (dialog → service call → navigation), login-page notice; auth.service delete method | ⬜ |
+| AC-08–AC-11 | vitest: session-menu (item, keyboard), confirm-dialog challenge (disabled until match, case/whitespace), app flow (dialog → service call → navigation), login-page notice; auth.service delete method | ⬜ |
 | AC-12 | existing `i18n.spec.ts` key-parity test | ⬜ |
 | End to end (G3) | Marcel deletes a test account on `prod-oracle` and signs in again to an empty app | ⬜ |
 
