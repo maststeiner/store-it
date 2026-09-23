@@ -47,17 +47,51 @@
       >
         ✎
       </button>
-      <button
-        type="button"
-        class="icon-btn"
-        (click)="deleteOpen.set(true)"
-        [title]="'actions.delete' | translate"
-        [attr.aria-label]="'actions.delete' | translate"
-      >
-        🗑
-      </button>
+      @if (storage(); as s) {
+        <button
+          type="button"
+          class="icon-btn"
+          [class.active]="sharingOpen()"
+          (click)="sharingOpen.set(!sharingOpen())"
+          [attr.aria-expanded]="sharingOpen()"
+          [title]="(s.isOwner ? 'sharing.share' : 'sharing.members.title') | translate"
+          [attr.aria-label]="(s.isOwner ? 'sharing.share' : 'sharing.members.title') | translate"
+        >
+          👥
+        </button>
+        @if (s.isOwner) {
+          <button
+            type="button"
+            class="icon-btn"
+            (click)="deleteOpen.set(true)"
+            [title]="'actions.delete' | translate"
+            [attr.aria-label]="'actions.delete' | translate"
+          >
+            🗑
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="icon-btn"
+            (click)="leaveOpen.set(true)"
+            [title]="'sharing.leave' | translate"
+            [attr.aria-label]="'sharing.leave' | translate"
+          >
+            ↩
+          </button>
+        }
+      }
     }
   </div>
+
+  @if (storage(); as s) {
+    @if (!s.isOwner) {
+      <p class="storage-owner">{{ 'sharing.sharedBy' | translate: { name: s.ownerName } }}</p>
+    }
+    @if (sharingOpen()) {
+      <app-sharing-panel [storageId]="storageId" [isOwner]="s.isOwner" />
+    }
+  }
 
   @if (loadError(); as error) {
     <p class="form-error" role="alert">{{ error }}</p>
@@ -249,6 +283,16 @@
       [message]="'storages.deleteConfirm' | translate: { name: storage()?.name ?? '' }"
       (confirmed)="confirmDelete()"
       (cancelled)="deleteOpen.set(false)"
+    />
+  }
+
+  @if (leaveOpen()) {
+    <app-confirm-dialog
+      [title]="'sharing.leaveTitle' | translate"
+      [message]="'sharing.leaveConfirm' | translate: { name: storage()?.name ?? '' }"
+      [confirmLabel]="'sharing.leave' | translate"
+      (confirmed)="confirmLeave()"
+      (cancelled)="leaveOpen.set(false)"
     />
   }
 </section>

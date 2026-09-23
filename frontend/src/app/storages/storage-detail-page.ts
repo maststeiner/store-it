@@ -5,11 +5,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ItemRequest, ItemResponse, StorageResponse, Unit } from '../api/models';
 import { UNIT } from '../api/models/unit-array';
-import { ItemsService, StoragesService } from '../api/services';
+import { ItemsService, SharingService, StoragesService } from '../api/services';
 import { ErrorMessages } from '../core/error-messages';
 import { LanguageService } from '../core/language.service';
 import { TranslatePipe } from '../core/translate';
 import { ConfirmDialog } from '../shared/confirm-dialog';
+import { SharingPanel } from './sharing-panel';
 
 interface ItemFormModel {
   name: string;
@@ -25,12 +26,13 @@ function emptyForm(): ItemFormModel {
 
 @Component({
   selector: 'app-storage-detail-page',
-  imports: [FormsModule, TranslatePipe, DatePipe, RouterLink, ConfirmDialog],
+  imports: [FormsModule, TranslatePipe, DatePipe, RouterLink, ConfirmDialog, SharingPanel],
   templateUrl: './storage-detail-page.html',
 })
 export class StorageDetailPage implements OnInit {
   private readonly storagesApi = inject(StoragesService);
   private readonly itemsApi = inject(ItemsService);
+  private readonly sharingApi = inject(SharingService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly errors = inject(ErrorMessages);
@@ -79,6 +81,10 @@ export class StorageDetailPage implements OnInit {
   protected readonly renameError = signal<string | null>(null);
 
   protected readonly deleteOpen = signal(false);
+  /** SPEC-007: the owner's share view / the member list (D7), toggled from the header. */
+  protected readonly sharingOpen = signal(false);
+  /** SPEC-007 D4: members leave; the owner deletes. */
+  protected readonly leaveOpen = signal(false);
 
   ngOnInit(): void {
     this.loadStorage();
@@ -176,6 +182,19 @@ export class StorageDetailPage implements OnInit {
       },
       error: (error: unknown) => {
         this.deleteOpen.set(false);
+        this.loadError.set(this.errors.messageFor(error));
+      },
+    });
+  }
+
+  protected confirmLeave(): void {
+    this.sharingApi.leaveStorage({ 'X-XSRF-TOKEN': '', storageId: this.storageId }).subscribe({
+      next: () => {
+        this.leaveOpen.set(false);
+        this.router.navigate(['/storages']);
+      },
+      error: (error: unknown) => {
+        this.leaveOpen.set(false);
         this.loadError.set(this.errors.messageFor(error));
       },
     });

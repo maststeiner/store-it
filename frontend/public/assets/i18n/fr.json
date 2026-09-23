@@ -102,7 +102,9 @@
     "storage": {
       "name": {
         "empty": "Veuillez saisir un nom pour le rangement."
-      }
+      },
+      "ownerOnly": "Seul le propriétaire du stock peut faire cela.",
+      "ownerCannotLeave": "En tant que propriétaire, vous ne pouvez pas quitter le stock. Transmettez-le ou supprimez-le."
     },
     "item": {
       "name": {
@@ -118,6 +120,47 @@
     },
     "request": {
       "invalid": "Saisie invalide. Veuillez vérifier les champs."
+    },
+    "invite": {
+      "invalid": "L’invitation est invalide ou a expiré."
+    }
+  },
+  "sharing": {
+    "share": "Partager",
+    "leave": "Quitter",
+    "leaveTitle": "Quitter le stock",
+    "leaveConfirm": "Quitter « {{name}} » ? Le stock reste disponible pour les autres ; vous ne le verrez plus.",
+    "sharedBy": "Partagé par {{name}}",
+    "sharedBadge": "Stock partagé",
+    "title": "Partage",
+    "link": {
+      "create": "Créer un lien d’invitation",
+      "renew": "Créer un nouveau lien",
+      "deactivate": "Désactiver le lien",
+      "copy": "Copier",
+      "copied": "Copié",
+      "label": "Lien d’invitation",
+      "created": "Lien créé. Envoyez-le par WhatsApp, e-mail ou comme vous le souhaitez – il n’est affiché qu’ici.",
+      "validUntil": "Valable jusqu’au {{date}}.",
+      "active": "Un lien d’invitation est actif jusqu’au {{date}}. Un nouveau lien le remplace.",
+      "none": "Aucun lien d’invitation actif.",
+      "warning": "Toute personne connectée qui ouvre le lien pendant sa validité peut rejoindre le stock. Désactivez le lien ou retirez des membres si nécessaire."
+    },
+    "members": {
+      "title": "Membres",
+      "owner": "Propriétaire",
+      "remove": "Retirer",
+      "removeNamed": "Retirer {{name}}",
+      "none": "Personne d’autre que vous pour l’instant."
+    },
+    "join": {
+      "title": "Invitation à un stock",
+      "text": "{{owner}} partage le stock « {{storage}} » avec vous.",
+      "join": "Rejoindre",
+      "loading": "Vérification de l’invitation …",
+      "invalidTitle": "Ce lien n’est plus valable",
+      "invalidText": "L’invitation a expiré ou a été désactivée. Demandez un nouveau lien.",
+      "backToList": "Vers mes stocks"
     }
   }
 }

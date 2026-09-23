@@ -42,6 +42,63 @@ public sealed class StorageConfiguration : IEntityTypeConfiguration<Storage>
             .Navigation(s => s.Items)
             .HasField("_items")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        // SPEC-007 / ADR-008: members are aggregate children like items — they live and die
+        // with the storage (cascade) and are reachable only through it.
+        builder
+            .HasMany(s => s.Members)
+            .WithOne()
+            .HasForeignKey(m => m.StorageId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .Navigation(s => s.Members)
+            .HasField("_members")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+/// <summary>SPEC-007: membership rows; composite key, index for the access filter.</summary>
+public sealed class StorageMemberConfiguration : IEntityTypeConfiguration<StorageMember>
+{
+    public void Configure(EntityTypeBuilder<StorageMember> builder)
+    {
+        builder.ToTable("storage_members");
+        builder.HasKey(m => new { m.StorageId, m.UserId });
+        builder.Property(m => m.JoinedAt).IsRequired();
+
+        // Deleting a user account (SPEC-006) ends their memberships (SPEC-007 D5 / AC-21).
+        builder
+            .HasOne<User>()
+            .WithMany()
+            .HasForeignKey(m => m.UserId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // The global filter asks "is the current user a member of this storage?" per storage.
+        builder.HasIndex(m => new { m.UserId, m.StorageId });
+    }
+}
+
+/// <summary>SPEC-007 D2: one invitation per storage, token stored hashed.</summary>
+public sealed class StorageInvitationConfiguration : IEntityTypeConfiguration<StorageInvitation>
+{
+    public void Configure(EntityTypeBuilder<StorageInvitation> builder)
+    {
+        builder.ToTable("storage_invitations");
+        builder.HasKey(i => i.StorageId);
+        builder.Property(i => i.TokenHash).IsRequired().HasMaxLength(64);
+        builder.HasIndex(i => i.TokenHash).IsUnique();
+        builder.Property(i => i.CreatedAt).IsRequired();
+        builder.Property(i => i.ExpiresAt).IsRequired();
+
+        builder
+            .HasOne<Storage>()
+            .WithOne()
+            .HasForeignKey<StorageInvitation>(i => i.StorageId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 

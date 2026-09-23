@@ -18,6 +18,15 @@ public sealed class UserRepository(StoreItDbContext dbContext) : IUserRepository
 
     public void Add(User user) => dbContext.Users.Add(user);
 
+    public async Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(
+        IReadOnlyCollection<Guid> userIds,
+        CancellationToken cancellationToken
+    ) =>
+        await dbContext
+            .Users.Where(u => userIds.Contains(u.Id))
+            .Select(u => new { u.Id, u.DisplayName })
+            .ToDictionaryAsync(u => u.Id, u => u.DisplayName, cancellationToken);
+
     // SPEC-006: a set-based delete — no load, no tracked entity, so a concurrent second delete
     // affects 0 rows and simply succeeds instead of raising DbUpdateConcurrencyException. The
     // FK from storages (and from items to storages) is ON DELETE CASCADE, so PostgreSQL removes

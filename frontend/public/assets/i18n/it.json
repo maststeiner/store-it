@@ -102,7 +102,9 @@
     "storage": {
       "name": {
         "empty": "Inserisci un nome per la dispensa."
-      }
+      },
+      "ownerOnly": "Solo il proprietario del deposito può farlo.",
+      "ownerCannotLeave": "Come proprietario non puoi abbandonare il deposito. Trasferiscilo o eliminalo."
     },
     "item": {
       "name": {
@@ -118,6 +120,47 @@
     },
     "request": {
       "invalid": "Dati non validi. Controlla i campi."
+    },
+    "invite": {
+      "invalid": "L’invito non è valido o è scaduto."
+    }
+  },
+  "sharing": {
+    "share": "Condividi",
+    "leave": "Abbandona",
+    "leaveTitle": "Abbandonare il deposito",
+    "leaveConfirm": "Abbandonare «{{name}}»? Il deposito resta agli altri; tu non lo vedrai più.",
+    "sharedBy": "Condiviso da {{name}}",
+    "sharedBadge": "Deposito condiviso",
+    "title": "Condivisione",
+    "link": {
+      "create": "Crea link di invito",
+      "renew": "Crea un nuovo link",
+      "deactivate": "Disattiva link",
+      "copy": "Copia",
+      "copied": "Copiato",
+      "label": "Link di invito",
+      "created": "Link creato. Invialo via WhatsApp, e-mail o come preferisci: viene mostrato solo qui.",
+      "validUntil": "Valido fino al {{date}}.",
+      "active": "Un link di invito è attivo fino al {{date}}. Un nuovo link lo sostituisce.",
+      "none": "Nessun link di invito attivo.",
+      "warning": "Chi apre il link entro la validità ed è autenticato può unirsi. Se necessario disattiva il link o rimuovi i membri."
+    },
+    "members": {
+      "title": "Membri",
+      "owner": "Proprietario",
+      "remove": "Rimuovi",
+      "removeNamed": "Rimuovi {{name}}",
+      "none": "Ancora nessuno oltre a te."
+    },
+    "join": {
+      "title": "Invito a un deposito",
+      "text": "{{owner}} condivide con te il deposito «{{storage}}».",
+      "join": "Unisciti",
+      "loading": "Verifica dell’invito …",
+      "invalidTitle": "Questo link non è più valido",
+      "invalidText": "L’invito è scaduto o è stato disattivato. Chiedi un nuovo link.",
+      "backToList": "Ai miei depositi"
     }
   }
 }

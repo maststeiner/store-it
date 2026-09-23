@@ -1,9 +1,9 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 
-import { ItemResponse } from '../api/models';
+import { ItemResponse, StorageResponse } from '../api/models';
 import { apiErrorInterceptor } from '../core/api-error.interceptor';
 import { TranslateService } from '../core/translate';
 import { StorageDetailPage } from './storage-detail-page';
@@ -39,6 +39,15 @@ const TRANSLATIONS = {
     namePlaceholder: 'Name',
   },
   errors: { generic: 'Something went wrong.', item: { dates: { missing: 'One date required.' } } },
+  sharing: {
+    share: 'Share',
+    leave: 'Leave',
+    leaveTitle: 'Leave storage',
+    leaveConfirm: 'Leave "{{name}}"?',
+    sharedBy: 'Shared by {{name}}',
+    members: { title: 'Members', owner: 'Owner', remove: 'Remove', none: 'Nobody but you yet.' },
+    link: { none: 'No active invitation link.', create: 'Create invitation link', warning: 'w' },
+  },
 };
 
 function item(partial: Partial<ItemResponse>): ItemResponse {
@@ -75,13 +84,17 @@ describe('StorageDetailPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  function flushInitialLoad(items: ItemResponse[]) {
+  function flushInitialLoad(items: ItemResponse[], sharing: Partial<StorageResponse> = {}) {
     http.expectOne('/api/v1/storages/s1').flush({
       id: 's1',
       name: 'Freezer',
       itemCount: items.length,
       expiredCount: 0,
       expiringSoonCount: 0,
+      isOwner: true,
+      memberCount: 0,
+      ownerName: 'Me',
+      ...sharing,
     });
     http.expectOne('/api/v1/storages/s1/items').flush(items);
   }
@@ -290,5 +303,87 @@ describe('StorageDetailPage', () => {
     await fixture.whenStable();
 
     expect(element.querySelector('app-confirm-dialog')).toBeNull();
+  });
+
+  // SPEC-007 D4 / AC-15: owner vs member controls
+  describe('sharing (SPEC-007)', () => {
+    it('Owner_SeesShareAndDelete_NoLeaveAndNoOwnerLine', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true, memberCount: 2, ownerName: 'Me' });
+      await fixture.whenStable();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const labels = Array.from(element.querySelectorAll('.detail-head .icon-btn')).map((b) =>
+        b.getAttribute('aria-label'),
+      );
+      expect(labels).toEqual(['Rename', 'Share', 'Delete']);
+      expect(element.querySelector('.storage-owner')).toBeNull();
+    });
+
+    it('Member_SeesOwnerLineMembersAndLeave_NoDelete', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: false, memberCount: 1, ownerName: 'Olga Owner' });
+      await fixture.whenStable();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const labels = Array.from(element.querySelectorAll('.detail-head .icon-btn')).map((b) =>
+        b.getAttribute('aria-label'),
+      );
+      expect(labels).toEqual(['Rename', 'Members', 'Leave']);
+      expect(element.querySelector('.storage-owner')?.textContent).toContain(
+        'Shared by Olga Owner',
+      );
+    });
+
+    it('Member_Leaves_AfterConfirmationAndNavigatesToTheList', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: false, ownerName: 'Olga Owner' });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      const router = TestBed.inject(Router);
+      const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Leave"]') as HTMLButtonElement
+      ).click();
+      await fixture.whenStable();
+      expect(element.querySelector('.dialog .btn-danger')?.textContent?.trim()).toBe('Leave');
+      (element.querySelector('.dialog .btn-danger') as HTMLButtonElement).click();
+
+      const leave = http.expectOne('/api/v1/storages/s1/membership');
+      expect(leave.request.method).toBe('DELETE');
+      leave.flush(null);
+      await fixture.whenStable();
+
+      expect(navigate).toHaveBeenCalledWith(['/storages']);
+    });
+
+    it('Owner_OpensSharing_ShowsThePanelWithMembersAndLink', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Share"]') as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      http
+        .expectOne('/api/v1/storages/s1/members')
+        .flush([{ userId: 'u1', displayName: 'Me', isOwner: true, joinedAt: null }]);
+      http.expectOne('/api/v1/storages/s1/invitation').flush({ active: false, expiresAt: null });
+      await fixture.whenStable();
+
+      expect(element.querySelector('app-sharing-panel')).not.toBeNull();
+      expect(element.querySelector('.sharing-panel')?.textContent).toContain(
+        'No active invitation link.',
+      );
+      expect(element.querySelector('.sharing-panel')?.textContent).toContain('Nobody but you yet.');
+    });
   });
 });
