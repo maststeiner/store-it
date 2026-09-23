@@ -233,7 +233,7 @@ instead of each keeping our own copy.**
 | AC-22 | `GetAccount_CountsOwnedSharedAndMemberships`; `app.spec` (`DeleteAccount_WithSharedOwnedStorages_WarnsInTheDialog`, `…WithoutSharedStorages_ShowsNoWarning`) | ✅ 2026-09-23 |
 | AC-23 | `sharing-panel.spec.Owner_MakesMemberOwner_ConfirmsThenTransfersAndNotifiesTheHost` | ✅ 2026-09-23 |
 | AC-24 | SPEC-006 amendment A1 written; privacy text unchanged (still literally true) | ✅ 2026-09-23 |
-| Local runs (PR 2) | backend 205 tests (126 service incl. 5 new, 70 domain incl. 2 new, 9 architecture), CSharpier; frontend 141 vitest (9 new), lint, prettier, `ng build`; contract + client regenerated | ✅ 2026-09-23 |
+| Local runs (PR 2) | backend 205 tests (126 service incl. 5 new, 70 domain incl. 2 new, 9 architecture), CSharpier; frontend 153 vitest (21 new), lint, prettier, `ng build`; contract + client regenerated | ✅ 2026-09-23 |
 | End to end (G3) | Marcel and Patrizia share a storage on `prod-oracle` via a link, both edit it, one leaves; owner hands over and deletes (PR 2) | ⬜ |
 
 ## Gate Status

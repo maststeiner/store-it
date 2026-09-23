@@ -125,4 +125,78 @@ describe('StorageDeleteDialog (SPEC-007 AC-20)', () => {
 
     expect(cancelled).toHaveBeenCalledTimes(1);
   });
+
+  it('Members_WhenTheRequestFails_ShowsTheErrorAndKeepsHandOverDisabled', async () => {
+    const fixture = TestBed.createComponent(StorageDeleteDialog);
+    fixture.componentRef.setInput('storageId', 's1');
+    fixture.componentRef.setInput('storageName', 'Cellar');
+    const el = fixture.nativeElement as HTMLElement;
+    document.body.appendChild(el);
+    fixture.detectChanges();
+    http
+      .expectOne('/api/v1/storages/s1/members')
+      .flush('boom', { status: 500, statusText: 'Internal Server Error' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(el.querySelector('.form-error')?.textContent).toContain('Something went wrong.');
+    // No members → hand over impossible; the confirm button stays disabled.
+    expect((el.querySelector('.btn-danger') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('Confirm_WithoutAnyMember_EmitsNothingInHandOverMode', async () => {
+    const fixture = TestBed.createComponent(StorageDeleteDialog);
+    fixture.componentRef.setInput('storageId', 's1');
+    fixture.componentRef.setInput('storageName', 'Cellar');
+    const el = fixture.nativeElement as HTMLElement;
+    document.body.appendChild(el);
+    fixture.detectChanges();
+    http.expectOne('/api/v1/storages/s1/members').flush([MEMBERS[0]]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const handOver = vi.fn();
+    const deleteAll = vi.fn();
+    fixture.componentInstance.handOver.subscribe(handOver);
+    fixture.componentInstance.deleteForEveryone.subscribe(deleteAll);
+
+    const confirm = el.querySelector('.btn-danger') as HTMLButtonElement;
+    expect(confirm.disabled).toBe(true);
+    confirm.click();
+
+    expect(handOver).not.toHaveBeenCalled();
+    expect(deleteAll).not.toHaveBeenCalled();
+  });
+
+  it('Tab_AtTheEdges_CyclesFocusInsideTheDialog', async () => {
+    const { el } = await render();
+    const focusables = Array.from(
+      el.querySelectorAll<HTMLElement>(
+        '.dialog button:not([disabled]), .dialog input, .dialog select',
+      ),
+    );
+    const first = focusables[0];
+    const last = focusables.at(-1)!;
+
+    last.focus();
+    const forward = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    document.dispatchEvent(forward);
+    expect(document.activeElement).toBe(first);
+    expect(forward.defaultPrevented).toBe(true);
+
+    const backward = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(backward);
+    expect(document.activeElement).toBe(last);
+    expect(backward.defaultPrevented).toBe(true);
+
+    // In the middle, Tab is left to the browser.
+    focusables[1].focus();
+    const middle = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+    document.dispatchEvent(middle);
+    expect(middle.defaultPrevented).toBe(false);
+  });
 });

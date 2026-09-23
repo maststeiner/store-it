@@ -42,11 +42,14 @@ shared storages, the account-deletion warning, and SPEC-006 amendment A1.
 |---|--------------|--------|
 | 1 | "pr done mit 2 fortfahren" | PR 1 merged; start PR 2 from `develop`. |
 | 2 | "a" — hand over **and leave** in the owner's delete dialog | AC-20 wording sharpened; the alternative (stay as member) remains available as *Make owner*. |
+| 3 | "test ist in Ordnung" — two-account test on the container stack (make owner, hand over and leave, deletion warning) | Human test of PR 2 passed. |
 
 ## Verification
 
 See the spec table (AC-18 – AC-24). Local: backend 205 tests green, CSharpier; frontend 141 vitest
-green, lint, prettier, `ng build`; contract + generated client updated.
+green, lint, prettier, `ng build`; contract + generated client updated. First CI run: SonarCloud
+frontend gate failed on new-code coverage (66 % < 80 %) — error paths, focus trap and clipboard of
+the new dialog/panel were untested; 12 tests added (153 total), new-code coverage now ≈ 93 %.
 
 ## Outcome
 

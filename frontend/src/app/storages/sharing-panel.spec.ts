@@ -212,4 +212,132 @@ describe('SharingPanel (SPEC-007 AC-16)', () => {
     expect(changed).toHaveBeenCalledTimes(1);
     expect(el.querySelector('app-confirm-dialog')).toBeNull();
   });
+
+  describe('error paths and clipboard', () => {
+    it('Members_WhenTheRequestFails_ShowsTheError', async () => {
+      const fixture = TestBed.createComponent(SharingPanel);
+      fixture.componentRef.setInput('storageId', 's1');
+      fixture.componentRef.setInput('isOwner', false);
+      fixture.detectChanges();
+      http
+        .expectOne('/api/v1/storages/s1/members')
+        .flush('boom', { status: 500, statusText: 'Internal Server Error' });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(
+        (fixture.nativeElement as HTMLElement).querySelector('.form-error')?.textContent,
+      ).toContain('Something went wrong.');
+    });
+
+    it('CreateLink_WhenTheRequestFails_ShowsTheErrorAndReenablesTheButton', async () => {
+      const { fixture, el } = await render(true);
+      const create = el.querySelector('.sharing-invite .btn-primary') as HTMLButtonElement;
+
+      create.click();
+      http
+        .expectOne('/api/v1/storages/s1/invitation')
+        .flush('boom', { status: 500, statusText: 'Internal Server Error' });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(el.querySelector('.form-error')?.textContent).toContain('Something went wrong.');
+      expect(create.disabled).toBe(false);
+      expect(el.querySelector('.sharing-link')).toBeNull();
+    });
+
+    it('DeactivateLink_WhenTheRequestFails_ShowsTheError', async () => {
+      const { fixture, el } = await render(true);
+      (el.querySelector('.sharing-invite .btn-primary') as HTMLButtonElement).click();
+      http
+        .expectOne('/api/v1/storages/s1/invitation')
+        .flush({ token: 't', expiresAt: '2026-09-30T12:00:00Z' });
+      http
+        .expectOne('/api/v1/storages/s1/invitation')
+        .flush({ active: true, expiresAt: '2026-09-30T12:00:00Z' });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      (el.querySelector('.sharing-invite .btn-ghost') as HTMLButtonElement).click();
+      http
+        .expectOne('/api/v1/storages/s1/invitation')
+        .flush('boom', { status: 500, statusText: 'Internal Server Error' });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(el.querySelector('.form-error')?.textContent).toContain('Something went wrong.');
+      expect(el.querySelector('.sharing-link')).not.toBeNull();
+    });
+
+    it('RemoveMember_WhenTheRequestFails_ShowsTheError', async () => {
+      const { fixture, el } = await render(true);
+
+      (
+        el.querySelector('.member-row button[aria-label="Remove Max Member"]') as HTMLButtonElement
+      ).click();
+      http
+        .expectOne('/api/v1/storages/s1/members/u2')
+        .flush('boom', { status: 500, statusText: 'Internal Server Error' });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(el.querySelector('.form-error')?.textContent).toContain('Something went wrong.');
+      expect(el.querySelectorAll('.member-row')).toHaveLength(2);
+    });
+
+    it('MakeOwner_WhenTheRequestFails_ClosesTheDialogAndShowsTheError', async () => {
+      const { fixture, el } = await render(true);
+      const changed = vi.fn();
+      fixture.componentInstance.ownershipChanged.subscribe(changed);
+      (
+        el.querySelector(
+          '.member-row button[aria-label="Make Max Member the owner"]',
+        ) as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      (el.querySelector('.dialog .btn-danger') as HTMLButtonElement).click();
+      http
+        .expectOne('/api/v1/storages/s1/owner')
+        .flush(
+          { title: 'member.notFound', errorCode: 'member.notFound', status: 404 },
+          { status: 404, statusText: 'Not Found' },
+        );
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(el.querySelector('app-confirm-dialog')).toBeNull();
+      expect(el.querySelector('.form-error')).not.toBeNull();
+      expect(changed).not.toHaveBeenCalled();
+    });
+
+    it('CopyLink_WritesTheUrlToTheClipboardAndFallsBackQuietly', async () => {
+      const { fixture, el } = await render(true);
+      (el.querySelector('.sharing-invite .btn-primary') as HTMLButtonElement).click();
+      http
+        .expectOne('/api/v1/storages/s1/invitation')
+        .flush({ token: 'tok', expiresAt: '2026-09-30T12:00:00Z' });
+      http
+        .expectOne('/api/v1/storages/s1/invitation')
+        .flush({ active: true, expiresAt: '2026-09-30T12:00:00Z' });
+      fixture.detectChanges();
+      await fixture.whenStable();
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+
+      const copy = el.querySelector('.sharing-link-row .btn-primary') as HTMLButtonElement;
+      copy.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/join#tok`);
+      expect(copy.textContent?.trim()).toBe('Copied');
+
+      writeText.mockRejectedValue(new Error('denied'));
+      copy.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(copy.textContent?.trim()).toBe('Copy');
+    });
+  });
 });
