@@ -39,7 +39,7 @@ short confirmation notice.
 | # | Decision | Rationale |
 |---|----------|-----------|
 | D1 | Endpoint `DELETE /api/v1/account`, operationId `deleteAccount`, `204 No Content`; same group rules as the storages tree: `RequireAuthorization` + CSRF filter → `401` / `403`. | Under `/api/v1` because it is an authenticated, versioned resource of the signed-in user — not part of the anonymous `/auth` BFF group. Additive → no `/api/v2`. |
-| D2 | Deletion = remove the `users` row; PostgreSQL cascades `storages` → `items` (existing FKs). The use case lives in Application (`DeleteAccountUseCase`), the repository gains `GetByIdAsync` and `Remove`. | Reuses the schema decision of SPEC-003; one statement, one transaction, no partial state. |
+| D2 | Deletion = remove the `users` row; PostgreSQL cascades `storages` → `items` (existing FKs). The use case lives in Application (`DeleteAccountUseCase`), the repository gains `DeleteByIdAsync` (a set-based delete: a concurrent second delete affects 0 rows and succeeds). | Reuses the schema decision of SPEC-003; one statement, one transaction, no partial state. |
 | D3 | The response of a successful deletion **signs the session out** (expired cookie), like `POST /auth/logout`. | The principal's `sub_local` points to a row that no longer exists; keeping the cookie would leave a zombie session in this browser. |
 | D4 | UI: a second item **Delete account** in the session menu (below *Sign out*), styled as a destructive action; confirmation via the `ConfirmDialog`, extended with an optional **typed challenge**: the user must type their own e-mail address (the one shown in the session menu) before the confirm button becomes active. Accounts without an e-mail type their display name instead. Comparison is case-insensitive and ignores surrounding whitespace. | Marcel Steiner, 2026-09-23: "abtippen der eigenen emailadresse würde ich machen". Typing the address makes the irreversible step deliberate and ties it to the identity being deleted; the fallback keeps the flow possible for provider accounts that deliver no e-mail (SPEC-003 EC-02). |
 | D5 | After success the client clears the user signal and navigates to `/login?account=deleted`; the sign-in page shows one line "Your account and all your data have been deleted." | Users need feedback that the action happened; the login page is where they land anyway. |
@@ -135,7 +135,7 @@ short confirmation notice.
 ## Technical Constraints (from Architect Agent)
 
 - [x] Layering: `DeleteAccountUseCase(IUserRepository, ICurrentUser)` in `StoreIt.Application`;
-      `GetByIdAsync` / `Remove` added to `IUserRepository` and `UserRepository`; endpoint in
+      `DeleteByIdAsync` (set-based `ExecuteDelete`, no existence check) added to `IUserRepository` / `UserRepository`; endpoint in
       `StoreIt.Api/AccountEndpoints.cs`; no EF types outside Infrastructure (ADR-001, checked by
       `StoreIt.Architecture.Tests`). The CSRF filter moved from `StorageEndpoints` into
       `CsrfEndpointFilter` so both groups share one implementation.
@@ -159,9 +159,9 @@ short confirmation notice.
 | AC-01 | `AccountEndpointsTests.DeleteAccount_RemovesUserWithStoragesAndItems_Returns204AndEndsSession` — two storages + items as user A, `DELETE` → 204, `users` row and all rows with `OwnerId` gone (DbContext, `IgnoreQueryFilters`) | ✅ 2026-09-23 |
 | AC-02 | same test: `Set-Cookie` expires `.AspNetCore.Cookies` | ✅ 2026-09-23 |
 | AC-03 | `DeleteAccount_Anonymous_Returns401`, `DeleteAccount_WithoutCsrfToken_Returns403` (`csrf.invalid`) | ✅ 2026-09-23 |
-| AC-04 | `DeleteAccount_LeavesOtherUsersDataUntouched` | ✅ 2026-09-23 |
+| AC-04 | `DeleteAccount_WithAnotherUsersData_LeavesThatDataUntouched` | ✅ 2026-09-23 |
 | AC-05 | `StaleSession_CreateStorage_Returns401AuthSessionStaleAndEndsSession` (stale `sub_local` via the Test scheme's `X-Test-LocalId`), `StaleSession_ListStorages_ReturnsEmptyList` | ✅ 2026-09-23 |
-| AC-06 | `SignInAfterDeletion_ProvisionsFreshEmptyUser` (new id, zero storages); EC-01 by `DeleteAccount_AlreadyDeleted_IsIdempotent` | ✅ 2026-09-23 |
+| AC-06 | `SignIn_AfterDeletion_ProvisionsFreshEmptyUser` (new id, zero storages); EC-01 by `DeleteAccount_AlreadyDeleted_IsIdempotent` | ✅ 2026-09-23 |
 | AC-07 | `OpenApiContractTests` asserts `deleteAccount`; CI contract gate: drift clean, breaking check in 0.x report mode shows the addition only | ✅ 2026-09-23 (gate result on the PR) |
 | AC-08 | `session-menu.spec`: `Menu_WhenOpened_ListsSignOutThenDeleteAccountAsDestructive`, keyboard table test over both items, `DeleteAccount_WhenChosen_EmitsAndClosesTheMenu` | ✅ 2026-09-23 |
 | AC-09 | `confirm-dialog.spec` (challenge: disabled until match, case/whitespace, wrong input emits nothing, absent challenge unchanged); `app.spec`: `DeleteAccount_WhenChosenFromTheMenu_AsksForTheEmailAddress`, `…WhenEmailTypedAndConfirmed_CallsTheService`, `…WhenCancelled_CallsNothing` | ✅ 2026-09-23 |

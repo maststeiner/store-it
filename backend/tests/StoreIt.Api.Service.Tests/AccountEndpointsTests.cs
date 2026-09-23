@@ -83,7 +83,7 @@ public class AccountEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
     // --- AC-04: nobody else's data moves ---
 
     [Fact]
-    public async Task DeleteAccount_LeavesOtherUsersDataUntouched()
+    public async Task DeleteAccount_WithAnotherUsersData_LeavesThatDataUntouched()
     {
         var leaving = factory.CreateClientAs("account-leaving");
         var staying = factory.CreateClientAs("account-staying");
@@ -166,7 +166,7 @@ public class AccountEndpointsTests(ApiTestFixture factory) : IClassFixture<ApiTe
     // --- AC-06 (D7): the same provider identity comes back as a new, empty user ---
 
     [Fact]
-    public async Task SignInAfterDeletion_ProvisionsFreshEmptyUser()
+    public async Task SignIn_AfterDeletion_ProvisionsFreshEmptyUser()
     {
         var client = factory.CreateClientAs("account-returning");
         var firstId = await client.MeIdAsync();

@@ -24,6 +24,7 @@ const BASE_TRANSLATIONS = {
       title: 'Delete your account?',
       message: 'Everything goes.',
       challengeLabel: 'Type your e-mail address to confirm',
+      challengeLabelName: 'Type your display name to confirm',
       done: 'Deleted.',
     },
   },
@@ -194,6 +195,29 @@ describe('App — session menu', () => {
       ).toBe('alice@example.com');
       expect((dialog.querySelector('.btn-danger') as HTMLButtonElement).disabled).toBe(true);
       expect(deleteAccount).not.toHaveBeenCalled();
+    });
+
+    it('DeleteAccount_WhenTheAccountHasNoEmail_AsksForTheDisplayNameInstead', async () => {
+      await configure({ displayName: 'Alice Example', email: null });
+      const fixture = TestBed.createComponent(App);
+      const element = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(element);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      (element.querySelector('.session-chip') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      (element.querySelectorAll('[role="menuitem"]')[1] as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const dialog = element.querySelector('app-confirm-dialog') as HTMLElement;
+      expect(dialog.querySelector('label[for="confirm-dialog-challenge"]')?.textContent).toContain(
+        'Type your display name to confirm',
+      );
+      expect(
+        (dialog.querySelector('#confirm-dialog-challenge') as HTMLInputElement).placeholder,
+      ).toBe('Alice Example');
     });
 
     it('DeleteAccount_WhenEmailTypedAndConfirmed_CallsTheService', async () => {

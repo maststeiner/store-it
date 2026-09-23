@@ -90,7 +90,8 @@
       "title": "Delete your account?",
       "message": "Your account and all your storages and items will be permanently deleted. This cannot be undone.",
       "challengeLabel": "Type your e-mail address to confirm",
-      "done": "Your account and all your data have been deleted."
+      "done": "Your account and all your data have been deleted.",
+      "challengeLabelName": "Type your display name to confirm"
     }
   },
   "errors": {

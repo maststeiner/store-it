@@ -38,7 +38,7 @@
     [title]="'auth.deleteAccount.title' | translate"
     [message]="'auth.deleteAccount.message' | translate"
     [challenge]="deleteAccountChallenge()"
-    [challengeLabel]="'auth.deleteAccount.challengeLabel' | translate"
+    [challengeLabel]="deleteAccountChallengeLabelKey() | translate"
     (confirmed)="confirmDeleteAccount()"
     (cancelled)="deleteAccountOpen.set(false)"
   />

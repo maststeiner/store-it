@@ -40,6 +40,12 @@ export class App implements OnInit {
     const user = this.auth.user();
     return user?.email?.trim() || user?.displayName?.trim() || '';
   });
+  /** The field label names what is actually asked for — e-mail address or display name. */
+  protected readonly deleteAccountChallengeLabelKey = computed(() =>
+    this.auth.user()?.email?.trim()
+      ? 'auth.deleteAccount.challengeLabel'
+      : 'auth.deleteAccount.challengeLabelName',
+  );
 
   /**
    * Startup work belongs in the lifecycle hook, not the constructor: the constructor is for

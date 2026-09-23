@@ -69,11 +69,12 @@ public sealed class OwnerNoLongerExistsException()
 /// SPEC-006 AC-01: delete the current user's account. The database cascades the deletion
 /// to the storages and items the user owns (SPEC-003 schema), so one statement removes
 /// everything in one transaction. Idempotent (EC-01): an account that is already gone —
-/// two tabs confirming at once — counts as deleted.
+/// two tabs confirming at once, even concurrently — counts as deleted, because the port
+/// deletes by id without a prior existence check.
 /// </summary>
 public sealed class DeleteAccountUseCase(IUserRepository repository, ICurrentUser currentUser)
 {
-    public async Task ExecuteAsync(CancellationToken cancellationToken)
+    public Task ExecuteAsync(CancellationToken cancellationToken)
     {
         var userId =
             currentUser.UserId
@@ -81,13 +82,6 @@ public sealed class DeleteAccountUseCase(IUserRepository repository, ICurrentUse
                 "DeleteAccountUseCase requires an authenticated user."
             );
 
-        var user = await repository.GetByIdAsync(userId, cancellationToken);
-        if (user is null)
-        {
-            return;
-        }
-
-        repository.Remove(user);
-        await repository.SaveChangesAsync(cancellationToken);
+        return repository.DeleteByIdAsync(userId, cancellationToken);
     }
 }

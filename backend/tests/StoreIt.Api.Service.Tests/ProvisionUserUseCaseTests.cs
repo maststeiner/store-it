@@ -34,10 +34,11 @@ public sealed class ProvisionUserUseCaseTests
             _winnerAfterRace = winner;
         }
 
-        public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
-            Task.FromResult(_store.FirstOrDefault(u => u.Id == id));
-
-        public void Remove(User user) => _store.Remove(user);
+        public Task DeleteByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            _store.RemoveAll(u => u.Id == id);
+            return Task.CompletedTask;
+        }
 
         public Task<User?> GetBySubjectAsync(
             string issuer,

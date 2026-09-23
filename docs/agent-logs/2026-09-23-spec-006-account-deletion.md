@@ -63,6 +63,19 @@ See the spec's table. Local: backend 176 tests green (105 service incl. 8 new), 
 frontend 113 vitest green (14 new), lint, prettier, `ng build`. Contract and client regenerated
 and committed; the PR's own `2 · API contract gate` run shows the additive change in report mode.
 
+## Automated review (CodeRabbit, G2)
+
+Four findings on the first push, all valid and fixed in the follow-up commit:
+
+1. **Concurrent double submit could 500** — load-then-remove races two tabs into a
+   `DbUpdateConcurrencyException`. Replaced by a set-based `DeleteByIdAsync`
+   (`ExecuteDelete`), no existence check; 0 affected rows is success. Use case is now one call.
+2. Two service tests renamed to `Method_Scenario_ExpectedResult` (spec table updated).
+3. German strings switched to the formal "Sie" register used elsewhere in the app.
+4. The challenge label said "e-mail address" even for accounts that type their display name —
+   label now follows the same condition as the value (`challengeLabelName` in four locales,
+   component test added).
+
 ## Outcome
 
 - **Result:** PR opened against `develop`.

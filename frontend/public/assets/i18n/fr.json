@@ -90,7 +90,8 @@
       "title": "Supprimer votre compte ?",
       "message": "Votre compte ainsi que tous vos stocks et articles seront définitivement supprimés. Cette action est irréversible.",
       "challengeLabel": "Saisissez votre adresse e-mail pour confirmer",
-      "done": "Votre compte et toutes vos données ont été supprimés."
+      "done": "Votre compte et toutes vos données ont été supprimés.",
+      "challengeLabelName": "Saisissez votre nom affiché pour confirmer"
     }
   },
   "errors": {

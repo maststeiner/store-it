@@ -13,13 +13,14 @@ public interface IUserRepository
         CancellationToken cancellationToken
     );
 
-    /// <summary>The user with the internal id, or <c>null</c> (SPEC-006: deleted accounts).</summary>
-    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
-
     void Add(User user);
 
-    /// <summary>SPEC-006: remove the account; storages and items go with it (database cascade).</summary>
-    void Remove(User user);
+    /// <summary>
+    /// SPEC-006: delete the account if it exists — one statement, storages and items go with it
+    /// (database cascade). Deleting a row that is already gone is a successful no-op (EC-01),
+    /// so two tabs confirming at once never turn into a concurrency error.
+    /// </summary>
+    Task DeleteByIdAsync(Guid id, CancellationToken cancellationToken);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
