@@ -32,12 +32,12 @@ instead of each keeping our own copy.**
 |---|----------|
 | D1 | One level of access. Members change items and the storage name; owner-only: delete for everyone, members, invitation link, ownership transfer. |
 | D2 | Invitation by link, 7 days valid, multi-use, one active link per storage, a new link replaces the old, the owner can deactivate it. |
-| D3 | Opening a link shows a join page ("*Owner* shares the storage *Name* with you" + *Join*); unauthenticated visitors sign in first and come back; existing members are sent straight to the storage. |
+| D3 | Opening a link shows a join page ("*Owner* shares the storage *Name* with you" + *Join*); unauthenticated visitors sign in first and come back; existing members are sent straight to the storage. The token travels in the URL **fragment** (`/join#<token>`), so it never reaches the server's access logs — only the web client reads it and sends it to the API in a request body. |
 | D4 | Members see **Leave**; the owner sees **Delete** and, when members exist, chooses between *hand over to …* and *delete for everyone*. |
 | D5 | Account deletion deletes owned storages for everyone and leaves the others; the dialog states how many owned storages still have members. No automatic handover. |
 | D6 | People are shown by display name only — no e-mail addresses in member lists or on the join page. |
-| D7 (proposed) | Members can **see** the member list (who else is in), only the owner can change it. |
-| D8 (proposed) | Shared storages appear in the ordinary list, alphabetically, with a "shared" mark; for members the mark carries the owner's display name. |
+| D7 | Members can **see** the member list (display names only), only the owner can change it. |
+| D8 | Shared storages appear in the ordinary list, alphabetically, marked with a **shared icon** (accessible label); the owner's display name is shown on the detail page, not in the list. |
 
 ---
 
@@ -68,8 +68,8 @@ instead of each keeping our own copy.**
       active and its expiry — never the token again.
 - [ ] AC-07: WHEN the owner deactivates the invitation THE system SHALL make the token unusable
       immediately.
-- [ ] AC-08: WHEN a signed-in user previews a token THE system SHALL return the storage name and
-      the owner's display name for a valid token, and `404` with `errorCode: invite.invalid`
+- [ ] AC-08: WHEN a signed-in user previews a token (sent in the request body, never in the URL)
+      THE system SHALL return the storage name and the owner's display name for a valid token, and `404` with `errorCode: invite.invalid`
       for an unknown, expired or deactivated one — same answer for all three, so a token
       cannot be probed for its state.
 - [ ] AC-09: WHEN a signed-in user accepts a valid token THE system SHALL add them as a member
@@ -91,14 +91,14 @@ instead of each keeping our own copy.**
 
 **Web client (PR 1)**
 
-- [ ] AC-15: The storage list marks shared storages (D8); the detail page of a shared storage
-      shows the owner's name and offers *Leave* to members and *Share* to the owner.
+- [ ] AC-15: The storage list marks shared storages with an icon (D8); the detail page of a shared
+      storage shows the owner's name and offers *Leave* to members and *Share* to the owner.
 - [ ] AC-16: The owner's *Share* view creates the link, shows it with a copy button and the
       expiry, and offers *Deactivate*; the member list shows display names and, for the owner,
       *Remove* per member.
-- [ ] AC-17: The route `/join/:token` shows the join page (D3); *Join* opens the storage; an
-      invalid token shows a plain message with a link back to the list. All strings in
-      de/en/fr/it.
+- [ ] AC-17: The route `/join` reads the token from the URL fragment (`/join#<token>`, D3) and
+      shows the join page; *Join* opens the storage; a missing or invalid token shows a plain
+      message with a link back to the list. All strings in de/en/fr/it.
 
 ### PR 2 — ownership
 
@@ -136,15 +136,18 @@ instead of each keeping our own copy.**
 - EC-08: **Stale session** (SPEC-006 D6) of a deleted account touching a shared storage: reads
   see nothing (not owner, not member), writes to items answer 404; creating a storage still maps
   to `401 auth.session.stale`.
-- EC-09: **Join page while signed out** — `/join/<token>` is a protected route: the guard sends
-  the visitor to sign-in with `returnUrl=/join/<token>` (existing mechanism), sign-in returns
-  them there.
+- EC-09: **Join page while signed out** — `/join` is a protected route: the guard sends the
+  visitor to sign-in with `returnUrl=/join#<token>` (existing mechanism; the fragment must
+  survive the round trip, `appLocalPath` keeps it), sign-in returns them there.
+- EC-10: **Token exposure** — the token appears only in the owner's share view, in the medium
+  the owner chose, and in the recipient's browser (address bar, history). Neither Caddy, nginx
+  nor the API log it: fragment in the URL, request body towards the API, hash in the database.
 
 ---
 
 ## UI Requirements (web)
 
-- List: shared mark (icon + "shared by *Name*" for members, "shared with N" for owners).
+- List: shared icon with an accessible label ("shared"); nothing else changes in the row.
 - Detail page header: owner name for members; actions *Share* (owner) / *Leave* (member) next to
   the existing rename/delete controls; *Delete* only for the owner.
 - Share view (owner): invitation card (create / link + copy + expiry / deactivate), member list
@@ -181,7 +184,7 @@ instead of each keeping our own copy.**
       `AddMember`, `RemoveMember`, `TransferOwnership`; invitations are an Infrastructure/API
       concern (token generation + hashing in the API layer, storage via a repository port).
 - [ ] API (additive, `/api/v1`): `GET/POST/DELETE /storages/{id}/invitation`,
-      `GET /invitations/{token}`, `POST /invitations/{token}/accept`,
+      `POST /invitations/preview` and `POST /invitations/accept` (token in the JSON body),
       `GET /storages/{id}/members`, `DELETE /storages/{id}/members/{userId}`,
       `DELETE /storages/{id}/membership` (leave); PR 2: `PUT /storages/{id}/owner`,
       `GET /account` (`ownedSharedStorages` count). `StorageResponse` gains `isOwner`,

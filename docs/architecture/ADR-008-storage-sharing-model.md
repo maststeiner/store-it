@@ -33,12 +33,14 @@ sent over any medium, a storage always has one owner, and the owner can remove m
    `OwnerId == me` to `OwnerId == me OR EXISTS member(me)`; a by-id request from a non-member
    still answers 404, never 403 (no existence leak, as SPEC-003 AC-10).
 3. **Invitation by link, not by e-mail lookup.** The owner creates an invitation for a
-   storage; the app shows a URL carrying an opaque random token (`/join/<token>`). One active
+   storage; the app shows a URL carrying an opaque random token in the **fragment**
+   (`/join#<token>`), so no server — Caddy, nginx or the API — ever logs it. One active
    invitation per storage: creating a new one replaces the old; the owner can deactivate it.
    The token is valid for **7 days** and may be used by any number of signed-in users while
    valid. The database stores only a **hash** of the token (SHA-256); the plain token exists
-   once, in the owner's browser. Redeeming requires a signed-in user and an explicit "join"
-   click on a page that names the storage and its owner.
+   once, in the owner's browser. The web client sends the token to the API in a request body.
+   Redeeming requires a signed-in user and an explicit "join" click on a page that names the
+   storage and its owner.
 4. **Leaving vs. deleting.** A member leaves a storage (their membership row is removed; the
    storage is untouched). The owner deletes a storage; if it has members, the owner chooses
    between deleting it for everyone and handing ownership to a member first. A storage is
@@ -53,6 +55,7 @@ sent over any medium, a storage always has one owner, and the owner can remove m
    of owned storages that still have members so the person can hand them over first.
 7. **Identity shown to others: display name only.** Member lists and the join page show
    `DisplayName`, never the e-mail address (it is personal data the household does not need).
+   Members may see the member list; only the owner changes it.
 
 ---
 
