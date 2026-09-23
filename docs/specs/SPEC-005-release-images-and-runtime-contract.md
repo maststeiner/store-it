@@ -207,7 +207,7 @@ intent; they fix statements that were imprecise when frozen.
 | AC-11 | Only `nginx.conf` changed for the local stack, and only the header value when an upstream sends `https`; the no-header path is byte-identical in behaviour (tested above). `stack-up.sh` untouched | ✅ 2026-09-21 (by test of the changed path; full stack run left to G3) |
 | AC-12 | Rule added to `docs/guidelines/coding-guidelines.md` (*Project-Specific Rules*), pointer row in `CLAUDE.md` | ✅ 2026-09-21 |
 | AC-13 | tech-stack *Runtime* row, `ARCHITECTURE.md` §7 + §9, `README.md` *Deploying*, threat model R-07 updated + R-21 added + owner-responsibility bullets | ✅ 2026-09-21 |
-| End to end (G3) | One release observed: tag → workflow → `store-it-deploy` host pulls → sign-in on the public URL | 🟡 tag → workflow → images done (`v0.1.1`); host pull and sign-in await the first `prod-oracle` provisioning |
+| End to end (G3) | One release observed: tag → workflow → `store-it-deploy` host pulls → sign-in on the public URL. `v0.1.1` images (run above) → first `prod-oracle` host bootstrapped and started by `store-it-update.service` on 2026-09-23 (`compose pull` of the three `latest` images, `migrate` exit 0, `backend` healthy, `web`, Caddy with a Let's Encrypt certificate) → `/health` = `Healthy` over TLS → `GET /auth/login/microsoft` = 302 to the tenant authority with `redirect_uri=https://…/auth/callback/microsoft` (AC-09 proven in production: the forwarded-proto chain Caddy → nginx → API yields `https`) → **sign-in in the browser on the public URL succeeded** (Marcel Steiner) | ✅ 2026-09-23 |
 
 ## Gate Status
 
@@ -223,7 +223,8 @@ one PR (as SPEC-004/#83); human attestation ticked by Marcel Steiner on 2026-09-
 (14 jobs incl. mutation testing after the test-hardening commit), SonarCloud gates passed;
 rebase-merged into `develop` on 2026-09-21. Released via #152 (`v0.1.0`, image build failed —
 #155) and #159 (`v0.1.1`, [run 35772279968](https://github.com/maststeiner/store-it/actions/runs/35772279968)
-green, images on GHCR). The human end-to-end test on the running software (sign-in on the public
-URL) is part of the first deployment and is recorded in the verification table when it happens.
+green, images on GHCR). The human end-to-end test on the running software — sign-in on the public
+URL of the first `prod-oracle` deployment — passed on 2026-09-23 (verification table, last row);
+the host-side steps are recorded in the `store-it-deploy` runbook and its `deployments/prod-oracle/README.md`.
 Agent logs: [`2026-09-17-adr-005-hosting-decision.md`](../agent-logs/2026-09-17-adr-005-hosting-decision.md),
 [`2026-09-21-release-v0.1.0-dotnet-images.md`](../agent-logs/2026-09-21-release-v0.1.0-dotnet-images.md).
