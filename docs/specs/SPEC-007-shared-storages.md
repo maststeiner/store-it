@@ -1,6 +1,6 @@
 # Spec: Shared storages — several household members work on one storage
 
-> **Status:** Draft
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-23
 > **Sprint:** 2026-S39
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's direction (issue #81)
 > **Last updated:** 2026-09-23
@@ -212,6 +212,6 @@ instead of each keeping our own copy.**
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-09-23 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |

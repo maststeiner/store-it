@@ -1,6 +1,6 @@
 # ADR-008: Storage sharing — one owner, flat membership, link invitations
 
-> **Status:** Proposed
+> **Status:** Accepted (Marcel Steiner, 2026-09-23)
 > **Date:** 2026-09-23
 > **Deciders:** Marcel Steiner
 
