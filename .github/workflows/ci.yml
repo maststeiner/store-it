@@ -304,8 +304,10 @@ jobs:
       - name: Drift check (contract committed and current)
         run: git diff --exit-code -- openapi/
       # ADR-006 stage 2 / ADR-007 — breaking changes vs. the last RELEASED contract
-      # (the latest SemVer tag), not the integration branch. Until the first release
-      # is tagged, /api/v1 is pre-release and breaking changes are allowed.
+      # (the latest SemVer tag on main), not the integration branch. SemVer 0.x (ADR-007
+      # decision 2, amendment A1): while no vMAJOR.MINOR.PATCH tag with MAJOR >= 1 exists,
+      # /api/v1 is pre-release — breaking changes are reported in the job summary but
+      # do not fail the job. From v1.0.0 on they fail the PR.
       - name: Install oasdiff
         if: github.event_name == 'pull_request'
         run: |
@@ -314,19 +316,35 @@ jobs:
       - name: Breaking-change check (vs. last released tag)
         if: github.event_name == 'pull_request'
         run: |
-          # Baseline = the latest release tag: a strict vMAJOR.MINOR.PATCH tag
-          # reachable from main (ADR-007). Until the first release, /api/v1 is
-          # pre-release and breaking changes are allowed.
-          LAST_TAG="$(git tag --list 'v*.*.*' --merged origin/main --sort=-v:refname \
-            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
-          if [ -z "$LAST_TAG" ]; then
+          # Strict vMAJOR.MINOR.PATCH tags reachable from main, newest first (ADR-007).
+          TAGS="$(git tag --list 'v*.*.*' --merged origin/main --sort=-v:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true)"
+          STABLE_TAG="$(printf '%s\n' "$TAGS" | grep -E '^v[1-9][0-9]*\.' | head -n1 || true)"
+          LATEST_TAG="$(printf '%s\n' "$TAGS" | head -n1)"
+          if [ -n "$STABLE_TAG" ]; then
+            BASE_TAG="$STABLE_TAG"; MODE=enforce
+          elif [ -n "$LATEST_TAG" ]; then
+            BASE_TAG="$LATEST_TAG"; MODE=report
+          else
             echo "No release tag yet — /api/v1 is pre-release, breaking changes allowed (ADR-007). Skipping."
-          elif git show "${LAST_TAG}:backend/openapi/StoreIt.Api.json" > /tmp/base-spec.json 2>/dev/null; then
-            echo "Comparing against the released contract at ${LAST_TAG}."
+            exit 0
+          fi
+          if ! git show "${BASE_TAG}:backend/openapi/StoreIt.Api.json" > /tmp/base-spec.json 2>/dev/null; then
+            echo "::error::Release ${BASE_TAG} has no committed contract (backend/openapi/StoreIt.Api.json). Every release must carry its contract baseline (ADR-007)."
+            exit 1
+          fi
+          if [ "$MODE" = enforce ]; then
+            echo "Comparing against the released contract at ${BASE_TAG} (stable — breaking changes fail)."
             /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json --fail-on ERR
           else
-            echo "::error::Release ${LAST_TAG} has no committed contract (backend/openapi/StoreIt.Api.json). Every release must carry its contract baseline (ADR-007)."
-            exit 1
+            echo "Comparing against ${BASE_TAG} (SemVer 0.x — breaking changes are reported, not enforced; ADR-007 A1)."
+            {
+              echo "## API contract vs. ${BASE_TAG} (0.x: report only)"
+              echo
+              /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json -f markdown
+            } >> "$GITHUB_STEP_SUMMARY"
+            # Annotations as warnings: visible in the PR, red only from v1.0.0 on.
+            /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json -f githubactions | sed "s/^::error/::warning/"
           fi
 
   dependency-review:
