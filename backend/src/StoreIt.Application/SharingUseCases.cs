@@ -297,3 +297,50 @@ public sealed class LeaveStorageUseCase(IStorageRepository storages, ICurrentUse
         }
     }
 }
+
+/// <summary>AC-18/AC-19: the owner hands the storage to a member and becomes a member.</summary>
+public sealed class TransferOwnershipUseCase(
+    IStorageRepository storages,
+    ICurrentUser currentUser,
+    TimeProvider timeProvider
+)
+{
+    public async Task ExecuteAsync(
+        Guid storageId,
+        Guid newOwnerId,
+        CancellationToken cancellationToken
+    )
+    {
+        var storage = await storages.GetRequiredAsync(storageId, cancellationToken);
+        storage.EnsureOwner(currentUser.RequireUser());
+
+        if (!storage.TransferOwnership(newOwnerId, timeProvider.GetUtcNow()))
+        {
+            throw new MemberNotFoundException(storageId, newOwnerId);
+        }
+
+        await storages.SaveChangesAsync(cancellationToken);
+    }
+}
+
+/// <summary>SPEC-007 AC-22: what the account-deletion dialog needs to warn about (D5).</summary>
+public sealed record AccountSummary(int OwnedStorages, int OwnedSharedStorages, int Memberships);
+
+/// <summary>
+/// AC-22: counts for the signed-in user — owned storages, owned storages that still have
+/// members (deleted for everyone on account deletion), memberships elsewhere (ended).
+/// </summary>
+public sealed class GetAccountSummaryUseCase(IStorageRepository storages, ICurrentUser currentUser)
+{
+    public async Task<AccountSummary> ExecuteAsync(CancellationToken cancellationToken)
+    {
+        var userId = currentUser.RequireUser();
+        var all = await storages.GetAllAsync(cancellationToken);
+        var owned = all.Where(s => s.IsOwner(userId)).ToList();
+        return new AccountSummary(
+            owned.Count,
+            owned.Count(s => s.Members.Count > 0),
+            all.Count(s => !s.IsOwner(userId))
+        );
+    }
+}

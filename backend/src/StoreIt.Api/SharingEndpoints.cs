@@ -26,6 +26,7 @@ public static class SharingEndpoints
         MapGetMembers(storage);
         MapRemoveMember(storage);
         MapLeaveStorage(storage);
+        MapTransferOwnership(storage);
 
         var invitations = app.MapGroup("/api/v1/invitations")
             .WithTags("Sharing")
@@ -240,6 +241,38 @@ public static class SharingEndpoints
             .WithName("leaveStorage")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status409Conflict);
+    }
+
+    private static void MapTransferOwnership(RouteGroupBuilder group)
+    {
+        group
+            .MapPut(
+                "/owner",
+                async Task<Results<NoContent, ProblemHttpResult>> (
+                    string storageId,
+                    TransferOwnershipRequest request,
+                    TransferOwnershipUseCase useCase,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (
+                        !StorageEndpoints.TryParseRouteId(
+                            storageId,
+                            nameof(storageId),
+                            out var id,
+                            out var problem
+                        )
+                    )
+                    {
+                        return problem;
+                    }
+
+                    await useCase.ExecuteAsync(id, request.UserId, ct);
+                    return TypedResults.NoContent();
+                }
+            )
+            .WithName("transferOwnership")
+            .ProducesProblem(StatusCodes.Status400BadRequest);
     }
 
     private static void MapPreviewInvitation(RouteGroupBuilder group)

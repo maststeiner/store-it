@@ -103,3 +103,17 @@ public sealed record ItemRequest(
     DateOnly? ExpiryDate,
     DateOnly? ProductionDate
 );
+
+/// <summary>SPEC-007 AC-18: body of <c>PUT /api/v1/storages/{storageId}/owner</c>.</summary>
+public sealed record TransferOwnershipRequest(Guid UserId);
+
+/// <summary>SPEC-007 AC-22: <c>GET /api/v1/account</c>.</summary>
+public sealed record AccountSummaryResponse(
+    int OwnedStorages,
+    int OwnedSharedStorages,
+    int Memberships
+)
+{
+    public static AccountSummaryResponse From(AccountSummary summary) =>
+        new(summary.OwnedStorages, summary.OwnedSharedStorages, summary.Memberships);
+}

@@ -24,6 +24,7 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
         // SPEC-007 sharing
         [typeof(StorageOwnerOnlyException)] = (StatusCodes.Status403Forbidden, "storage.ownerOnly"),
         [typeof(InvitationInvalidException)] = (StatusCodes.Status404NotFound, "invite.invalid"),
+        [typeof(MemberNotFoundException)] = (StatusCodes.Status404NotFound, "member.notFound"),
         [typeof(OwnerCannotLeaveException)] = (
             StatusCodes.Status409Conflict,
             "storage.ownerCannotLeave"
