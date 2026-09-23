@@ -187,6 +187,16 @@ app-session-menu {
 .session-menu-item:hover {
   background: var(--panel-tint);
 }
+.session-menu-item-danger {
+  color: var(--expired);
+}
+.header-alert {
+  max-width: 1060px;
+  margin: 12px auto 0;
+  padding: 0 40px;
+  color: var(--expired);
+  font-weight: 600;
+}
 
 main {
   max-width: 1060px;
@@ -605,6 +615,20 @@ h1 {
   margin: 0 0 20px;
   color: var(--text-soft);
 }
+.dialog-challenge {
+  margin: 0 0 20px;
+}
+.dialog-challenge label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+.btn-danger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
@@ -660,6 +684,14 @@ h1 {
   margin-bottom: 8px;
 }
 
+.login-notice {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--panel-tint);
+  color: var(--text);
+  font-size: 0.95rem;
+}
 .login-subtitle {
   color: var(--text-soft);
   margin: 0 0 32px;

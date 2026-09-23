@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using StoreIt.Application;
@@ -35,6 +36,13 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
                 "item.notFound",
                 exception.Message
             ),
+            // SPEC-006 AC-05: the session belongs to an account deleted from another
+            // device — end it here instead of answering 500 on the FK violation.
+            OwnerNoLongerExistsException => (
+                StatusCodes.Status401Unauthorized,
+                "auth.session.stale",
+                exception.Message
+            ),
             // Malformed request bodies (e.g. unit outside the fixed enum list) are
             // client errors, not server errors (AC-06)
             BadHttpRequestException badRequest => (
@@ -48,6 +56,11 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
         if (mapping is null)
         {
             return false;
+        }
+
+        if (exception is OwnerNoLongerExistsException)
+        {
+            await httpContext.SignOutAsync(AuthenticationSetup.CookieScheme);
         }
 
         httpContext.Response.StatusCode = mapping.Value.status;

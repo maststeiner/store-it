@@ -83,7 +83,14 @@
     },
     "session": {
       "menu": "Menu account — accesso effettuato come {{name}}",
-      "logout": "Esci"
+      "logout": "Esci",
+      "deleteAccount": "Elimina account"
+    },
+    "deleteAccount": {
+      "title": "Eliminare il tuo account?",
+      "message": "Il tuo account e tutti i tuoi depositi e articoli verranno eliminati definitivamente. L'operazione non può essere annullata.",
+      "challengeLabel": "Inserisci il tuo indirizzo e-mail per confermare",
+      "done": "Il tuo account e tutti i tuoi dati sono stati eliminati."
     }
   },
   "errors": {

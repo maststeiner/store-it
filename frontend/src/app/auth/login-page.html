@@ -2,6 +2,9 @@
   <div class="login-card">
     <h1>{{ 'auth.login.title' | translate }}</h1>
     <p class="login-subtitle">{{ 'auth.login.subtitle' | translate }}</p>
+    @if (accountDeleted) {
+      <p class="login-notice" role="status">{{ 'auth.deleteAccount.done' | translate }}</p>
+    }
     <div class="login-actions">
       <button class="btn-provider" type="button" (click)="signIn('microsoft')">
         <svg

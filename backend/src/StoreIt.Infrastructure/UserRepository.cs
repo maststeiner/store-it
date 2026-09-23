@@ -16,7 +16,14 @@ public sealed class UserRepository(StoreItDbContext dbContext) : IUserRepository
             cancellationToken
         );
 
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        dbContext.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
     public void Add(User user) => dbContext.Users.Add(user);
+
+    // SPEC-006: the FK from storages (and from items to storages) is ON DELETE CASCADE, so
+    // PostgreSQL removes the user's data in the same statement — no need to load it here.
+    public void Remove(User user) => dbContext.Users.Remove(user);
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {

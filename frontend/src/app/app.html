@@ -20,10 +20,29 @@
       }
     </select>
     @if (auth.user(); as u) {
-      <app-session-menu [user]="u" (signOut)="auth.logout()" />
+      <app-session-menu
+        [user]="u"
+        (signOut)="auth.logout()"
+        (deleteAccount)="openDeleteAccount()"
+      />
     }
   </div>
 </header>
+
+@if (deleteAccountError(); as error) {
+  <p class="header-alert" role="alert">{{ error }}</p>
+}
+
+@if (deleteAccountOpen()) {
+  <app-confirm-dialog
+    [title]="'auth.deleteAccount.title' | translate"
+    [message]="'auth.deleteAccount.message' | translate"
+    [challenge]="deleteAccountChallenge()"
+    [challengeLabel]="'auth.deleteAccount.challengeLabel' | translate"
+    (confirmed)="confirmDeleteAccount()"
+    (cancelled)="deleteAccountOpen.set(false)"
+  />
+}
 
 <main>
   <router-outlet />

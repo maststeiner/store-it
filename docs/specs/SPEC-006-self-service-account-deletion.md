@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-23
 > **Sprint:** 2026-S39
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request (issue #168)
-> **Last updated:** 2026-09-23
+> **Last updated:** 2026-09-23 (implemented, verification filled)
 
 ---
 
@@ -134,19 +134,19 @@ short confirmation notice.
 
 ## Technical Constraints (from Architect Agent)
 
-<!-- To be confirmed after Gate 1 -->
-
-- [ ] Layering: use case in `StoreIt.Application` (`DeleteAccountUseCase(IUserRepository,
-      ICurrentUser)`), repository methods in `IUserRepository` / `UserRepository`, endpoint in
-      `StoreIt.Api` (`AccountEndpoints`), no EF types outside Infrastructure (ADR-001).
-- [ ] AC-05 mapping: `StorageRepository.SaveChangesAsync` translates the FK violation
-      (`23503` on `storages.OwnerId`) into an Application exception
-      (`OwnerNoLongerExistsException`); `DomainExceptionHandler` maps it to `401` +
-      `auth.session.stale` and signs the cookie scheme out.
-- [ ] Contract: `backend/openapi/StoreIt.Api.json` regenerated (`dotnet build`), web client
-      regenerated (`npm run generate:api`), both committed (drift gates).
-- [ ] Dependencies: none new.
-- [ ] ADR required: no (uses ADR-001, ADR-004, ADR-006 as they stand).
+- [x] Layering: `DeleteAccountUseCase(IUserRepository, ICurrentUser)` in `StoreIt.Application`;
+      `GetByIdAsync` / `Remove` added to `IUserRepository` and `UserRepository`; endpoint in
+      `StoreIt.Api/AccountEndpoints.cs`; no EF types outside Infrastructure (ADR-001, checked by
+      `StoreIt.Architecture.Tests`). The CSRF filter moved from `StorageEndpoints` into
+      `CsrfEndpointFilter` so both groups share one implementation.
+- [x] AC-05 mapping: `StorageRepository.SaveChangesAsync` translates the `23503` violation of
+      `FK_storages_users_OwnerId` into `OwnerNoLongerExistsException` (Application);
+      `DomainExceptionHandler` maps it to `401` + `auth.session.stale` and signs the cookie
+      scheme out.
+- [x] Contract: `backend/openapi/StoreIt.Api.json` regenerated (`deleteAccount`, tag `Account`),
+      web client regenerated (`src/app/api/fn/account`, `AccountService`), both committed.
+- [x] Dependencies: none new.
+- [x] ADR required: no.
 
 ---
 
@@ -156,18 +156,20 @@ short confirmation notice.
 
 | AC | How verified | Status |
 |----|--------------|--------|
-| AC-01 | service test: create storages+items as user A, `DELETE /api/v1/account` → 204, rows gone (DbContext count) | ⬜ |
-| AC-02 | service test: `Set-Cookie` expires `.AspNetCore.Cookies` | ⬜ |
-| AC-03 | service tests: anonymous → 401; no CSRF → 403 `csrf.invalid` | ⬜ |
-| AC-04 | service test: user B's storages unchanged after A's deletion | ⬜ |
-| AC-05 | service test: delete user, keep the old client, `POST /api/v1/storages` → 401 `auth.session.stale`, cookie expired | ⬜ |
-| AC-06 | service test: provision same (issuer, subject) again → new id, zero storages | ⬜ |
-| AC-07 | contract gate in CI (drift + report mode), `OpenApiContractTests` | ⬜ |
-| AC-08–AC-11 | vitest: session-menu (item, keyboard), confirm-dialog challenge (disabled until match, case/whitespace), app flow (dialog → service call → navigation), login-page notice; auth.service delete method | ⬜ |
-| AC-12 | existing `i18n.spec.ts` key-parity test | ⬜ |
-| End to end (G3) | Marcel deletes a test account on `prod-oracle` and signs in again to an empty app | ⬜ |
-
----
+| AC-01 | `AccountEndpointsTests.DeleteAccount_RemovesUserWithStoragesAndItems_Returns204AndEndsSession` — two storages + items as user A, `DELETE` → 204, `users` row and all rows with `OwnerId` gone (DbContext, `IgnoreQueryFilters`) | ✅ 2026-09-23 |
+| AC-02 | same test: `Set-Cookie` expires `.AspNetCore.Cookies` | ✅ 2026-09-23 |
+| AC-03 | `DeleteAccount_Anonymous_Returns401`, `DeleteAccount_WithoutCsrfToken_Returns403` (`csrf.invalid`) | ✅ 2026-09-23 |
+| AC-04 | `DeleteAccount_LeavesOtherUsersDataUntouched` | ✅ 2026-09-23 |
+| AC-05 | `StaleSession_CreateStorage_Returns401AuthSessionStaleAndEndsSession` (stale `sub_local` via the Test scheme's `X-Test-LocalId`), `StaleSession_ListStorages_ReturnsEmptyList` | ✅ 2026-09-23 |
+| AC-06 | `SignInAfterDeletion_ProvisionsFreshEmptyUser` (new id, zero storages); EC-01 by `DeleteAccount_AlreadyDeleted_IsIdempotent` | ✅ 2026-09-23 |
+| AC-07 | `OpenApiContractTests` asserts `deleteAccount`; CI contract gate: drift clean, breaking check in 0.x report mode shows the addition only | ✅ 2026-09-23 (gate result on the PR) |
+| AC-08 | `session-menu.spec`: `Menu_WhenOpened_ListsSignOutThenDeleteAccountAsDestructive`, keyboard table test over both items, `DeleteAccount_WhenChosen_EmitsAndClosesTheMenu` | ✅ 2026-09-23 |
+| AC-09 | `confirm-dialog.spec` (challenge: disabled until match, case/whitespace, wrong input emits nothing, absent challenge unchanged); `app.spec`: `DeleteAccount_WhenChosenFromTheMenu_AsksForTheEmailAddress`, `…WhenEmailTypedAndConfirmed_CallsTheService`, `…WhenCancelled_CallsNothing` | ✅ 2026-09-23 |
+| AC-10 | `auth.service.spec.deleteAccount_Success_ClearsUserAndRedirectsToLoginWithNotice`; `login-page.spec`: notice with `account=deleted`, none otherwise | ✅ 2026-09-23 |
+| AC-11 | `auth.service.spec.deleteAccount_ServerError_KeepsSessionAndSurfacesError`; `app.spec.DeleteAccount_WhenTheRequestFails_ShowsTheErrorAndKeepsTheSession` | ✅ 2026-09-23 |
+| AC-12 | `i18n.spec` key-parity over de/en/fr/it (5 new keys) | ✅ 2026-09-23 |
+| Local runs | backend: 105 service + 62 domain + 9 architecture tests green, CSharpier clean; frontend: 113 vitest green, coverage 91.9 % statements, lint + prettier clean, `ng build` ok | ✅ 2026-09-23 |
+| End to end (G3) | Marcel deletes a test account on `prod-oracle` (after the next release) and signs in again to an empty app; Playwright E2E deliberately not extended — the flow is covered by service tests and component tests, the human test on the public URL is the spec's G3 | ⬜ |
 
 ## Gate Status
 

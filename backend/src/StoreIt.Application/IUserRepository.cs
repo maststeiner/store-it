@@ -13,7 +13,13 @@ public interface IUserRepository
         CancellationToken cancellationToken
     );
 
+    /// <summary>The user with the internal id, or <c>null</c> (SPEC-006: deleted accounts).</summary>
+    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
     void Add(User user);
+
+    /// <summary>SPEC-006: remove the account; storages and items go with it (database cascade).</summary>
+    void Remove(User user);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -21,6 +21,28 @@ public sealed class StorageRepository(StoreItDbContext dbContext) : IStorageRepo
 
     public void Remove(Storage storage) => dbContext.Storages.Remove(storage);
 
-    public Task SaveChangesAsync(CancellationToken cancellationToken) =>
-        dbContext.SaveChangesAsync(cancellationToken);
+    public async Task SaveChangesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException
+                    is Npgsql.PostgresException
+                    {
+                        SqlState: "23503",
+                        ConstraintName: OwnerForeignKey
+                    }
+            )
+        {
+            // SPEC-006 D6: the session's user was deleted meanwhile (another device kept
+            // its cookie). Only the owner FK maps to "stale session"; an item whose storage
+            // vanished still surfaces through the aggregate load as a 404.
+            throw new OwnerNoLongerExistsException();
+        }
+    }
+
+    /// <summary>Constraint name EF Core generated for <c>storages.OwnerId → users.Id</c>.</summary>
+    private const string OwnerForeignKey = "FK_storages_users_OwnerId";
 }

@@ -27,3 +27,5 @@ export type { UpdateItem$Params as UpdateItem$Params } from './fn/items/update-i
 export { updateItem as updateItem } from './fn/items/update-item';
 export type { DeleteItem$Params as DeleteItem$Params } from './fn/items/delete-item';
 export { deleteItem as deleteItem } from './fn/items/delete-item';
+export type { DeleteAccount$Params as DeleteAccount$Params } from './fn/account/delete-account';
+export { deleteAccount as deleteAccount } from './fn/account/delete-account';

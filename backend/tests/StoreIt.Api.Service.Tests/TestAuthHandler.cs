@@ -30,6 +30,13 @@ public sealed class TestAuthHandler(
     private const string EmailHeader = "X-Test-Email";
     private const string NameHeader = "X-Test-Name";
 
+    /// <summary>
+    /// SPEC-006 AC-05 / EC-01: stamp this internal id as <c>sub_local</c> WITHOUT provisioning —
+    /// simulates a cookie whose user row was deleted meanwhile (production never re-provisions
+    /// on a cookie request either; only the Test scheme does, on every call).
+    /// </summary>
+    public const string LocalIdHeader = "X-Test-LocalId";
+
     private const string DefaultIssuer = "https://test.local";
 
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
@@ -65,15 +72,22 @@ public sealed class TestAuthHandler(
 
         var identity = new ClaimsIdentity(claims, SchemeName);
 
-        // Mirror OnTokenValidated: provision the local user and stamp its id.
-        var user = await provision.ExecuteAsync(
-            issuer,
-            subject,
-            email,
-            name,
-            Context.RequestAborted
-        );
-        identity.AddClaim(new Claim(CurrentUser.LocalIdClaim, user.Id.ToString()));
+        if (Header(LocalIdHeader) is { } staleLocalId)
+        {
+            identity.AddClaim(new Claim(CurrentUser.LocalIdClaim, staleLocalId));
+        }
+        else
+        {
+            // Mirror OnTokenValidated: provision the local user and stamp its id.
+            var user = await provision.ExecuteAsync(
+                issuer,
+                subject,
+                email,
+                name,
+                Context.RequestAborted
+            );
+            identity.AddClaim(new Claim(CurrentUser.LocalIdClaim, user.Id.ToString()));
+        }
 
         var principal = new ClaimsPrincipal(identity);
         var ticket = new AuthenticationTicket(principal, SchemeName);

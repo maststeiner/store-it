@@ -83,7 +83,14 @@
     },
     "session": {
       "menu": "Kontomenü — angemeldet als {{name}}",
-      "logout": "Abmelden"
+      "logout": "Abmelden",
+      "deleteAccount": "Konto löschen"
+    },
+    "deleteAccount": {
+      "title": "Konto löschen?",
+      "message": "Dein Konto und alle deine Lager und Gegenstände werden endgültig gelöscht. Das kann nicht rückgängig gemacht werden.",
+      "challengeLabel": "Zur Bestätigung deine E-Mail-Adresse eingeben",
+      "done": "Dein Konto und alle deine Daten wurden gelöscht."
     }
   },
   "errors": {

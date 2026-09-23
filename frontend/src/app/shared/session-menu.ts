@@ -17,7 +17,7 @@ import { TranslatePipe } from '../core/translate';
 
 /**
  * Header control for the signed-in session: an initials chip that opens a menu
- * carrying the full identity and the sign-out action.
+ * carrying the full identity, the sign-out action and account deletion (SPEC-006).
  *
  * The identity deliberately lives behind a click rather than a hover tooltip —
  * tooltips do not exist on touch devices, rarely surface on keyboard focus and
@@ -63,6 +63,17 @@ import { TranslatePipe } from '../core/translate';
         >
           {{ 'auth.session.logout' | translate }}
         </button>
+        <button
+          #item
+          type="button"
+          role="menuitem"
+          tabindex="-1"
+          class="session-menu-item session-menu-item-danger"
+          (click)="emitDeleteAccount()"
+          (keydown)="onMenuKeydown($event)"
+        >
+          {{ 'auth.session.deleteAccount' | translate }}
+        </button>
       </div>
     }
   `,
@@ -70,6 +81,8 @@ import { TranslatePipe } from '../core/translate';
 export class SessionMenu {
   readonly user = input.required<AuthUser>();
   readonly signOut = output<void>();
+  /** SPEC-006: the user wants to delete the account — the host confirms before acting. */
+  readonly deleteAccount = output<void>();
 
   protected readonly open = signal(false);
 
@@ -117,6 +130,11 @@ export class SessionMenu {
   protected emitSignOut(): void {
     this.open.set(false);
     this.signOut.emit();
+  }
+
+  protected emitDeleteAccount(): void {
+    this.open.set(false);
+    this.deleteAccount.emit();
   }
 
   protected onMenuKeydown(event: KeyboardEvent): void {
