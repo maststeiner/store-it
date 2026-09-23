@@ -34,6 +34,12 @@ public sealed class ProvisionUserUseCaseTests
             _winnerAfterRace = winner;
         }
 
+        public Task DeleteByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            _store.RemoveAll(u => u.Id == id);
+            return Task.CompletedTask;
+        }
+
         public Task<User?> GetBySubjectAsync(
             string issuer,
             string subject,

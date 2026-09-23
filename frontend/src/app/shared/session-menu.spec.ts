@@ -11,7 +11,11 @@ describe('SessionMenu', () => {
     await TestBed.configureTestingModule({ imports: [SessionMenu] }).compileComponents();
     TestBed.inject(TranslateService).setTranslation('en', {
       auth: {
-        session: { menu: 'Account menu — signed in as {{name}}', logout: 'Sign out' },
+        session: {
+          menu: 'Account menu — signed in as {{name}}',
+          logout: 'Sign out',
+          deleteAccount: 'Delete account',
+        },
       },
     });
   });
@@ -116,20 +120,51 @@ describe('SessionMenu', () => {
     expect(document.activeElement).toBe(el.querySelector('.session-chip'));
   });
 
-  it.each(['ArrowDown', 'ArrowUp', 'Home', 'End'])(
-    'Menu_When%sPressed_KeepsFocusOnAnItemAndSuppressesScrolling',
-    async (key) => {
-      const { fixture, el } = await render();
-      const menu = await openMenu(fixture, el);
-      const item = menu.querySelector('[role="menuitem"]') as HTMLElement;
+  // Two items (SPEC-006 added "Delete account"): from the first item, ArrowDown and End land
+  // on the last, ArrowUp wraps to the last, Home stays on the first — and none scrolls the page.
+  it.each([
+    ['ArrowDown', 1],
+    ['ArrowUp', 1],
+    ['Home', 0],
+    ['End', 1],
+  ])('Menu_When%sPressed_MovesFocusToItem%iAndSuppressesScrolling', async (key, expected) => {
+    const { fixture, el } = await render();
+    const menu = await openMenu(fixture, el);
+    const items = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
 
-      const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
-      item.dispatchEvent(event);
+    const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    items[0].dispatchEvent(event);
 
-      expect(document.activeElement).toBe(item);
-      expect(event.defaultPrevented).toBe(true);
-    },
-  );
+    expect(document.activeElement).toBe(items[expected]);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('Menu_WhenOpened_ListsSignOutThenDeleteAccountAsDestructive', async () => {
+    const { fixture, el } = await render();
+    const menu = await openMenu(fixture, el);
+    const items = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+
+    expect(items.map((item) => item.textContent?.trim())).toEqual(['Sign out', 'Delete account']);
+    expect(items[1].classList.contains('session-menu-item-danger')).toBe(true);
+    expect(items[0].classList.contains('session-menu-item-danger')).toBe(false);
+  });
+
+  it('DeleteAccount_WhenChosen_EmitsAndClosesTheMenu', async () => {
+    const { fixture, el } = await render();
+    const deleteAccount = vi.fn();
+    const signOut = vi.fn();
+    fixture.componentInstance.deleteAccount.subscribe(deleteAccount);
+    fixture.componentInstance.signOut.subscribe(signOut);
+    const menu = await openMenu(fixture, el);
+
+    (menu.querySelectorAll<HTMLElement>('[role="menuitem"]')[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(deleteAccount).toHaveBeenCalledTimes(1);
+    expect(signOut).not.toHaveBeenCalled();
+    expect(el.querySelector('.session-menu')).toBeNull();
+  });
 
   it('Menu_WhenAnUnrelatedKeyPressed_LeavesTheEventAlone', async () => {
     const { fixture, el } = await render();

@@ -75,6 +75,7 @@ app.MapHealthChecks("/health").AllowAnonymous();
 app.MapOpenApi().AllowAnonymous();
 app.MapAuthEndpoints(); // the /auth group is already .AllowAnonymous()
 app.MapStorageEndpointsV1();
+app.MapAccountEndpointsV1(); // SPEC-006
 
 // ⚠️  DEVELOPMENT ONLY — never reachable in Staging or Production.
 // Provides a POST /auth/dev-login shortcut for Playwright E2E tests so they can

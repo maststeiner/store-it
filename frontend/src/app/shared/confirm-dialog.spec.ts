@@ -17,10 +17,16 @@ describe('ConfirmDialog', () => {
   });
 
   // Attach to the document so focus() actually moves document.activeElement (jsdom).
-  async function render(): Promise<{ fixture: ComponentFixture<ConfirmDialog>; el: HTMLElement }> {
+  async function render(
+    challenge?: string,
+  ): Promise<{ fixture: ComponentFixture<ConfirmDialog>; el: HTMLElement }> {
     const fixture = TestBed.createComponent(ConfirmDialog);
     fixture.componentRef.setInput('title', 'Delete storage');
     fixture.componentRef.setInput('message', 'Really delete it?');
+    if (challenge !== undefined) {
+      fixture.componentRef.setInput('challenge', challenge);
+      fixture.componentRef.setInput('challengeLabel', 'Type your e-mail address to confirm');
+    }
     const el = fixture.nativeElement as HTMLElement;
     document.body.appendChild(el);
     fixture.detectChanges();
@@ -74,5 +80,61 @@ describe('ConfirmDialog', () => {
     cancel.focus();
     keydown('Tab', { shiftKey: true });
     expect(document.activeElement).toBe(confirm);
+  });
+
+  // SPEC-006 D4 / AC-09: an optional typed challenge gates the confirm button.
+  describe('with a typed challenge', () => {
+    async function type(fixture: ComponentFixture<ConfirmDialog>, el: HTMLElement, value: string) {
+      const input = el.querySelector('#confirm-dialog-challenge') as HTMLInputElement;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
+
+    it('Challenge_WhenSet_ShowsALabelledFieldAndDisablesConfirm', async () => {
+      const { el } = await render('Alice@Example.com');
+      const input = el.querySelector('#confirm-dialog-challenge') as HTMLInputElement;
+
+      expect(input).not.toBeNull();
+      expect(el.querySelector('label[for="confirm-dialog-challenge"]')?.textContent).toContain(
+        'Type your e-mail address to confirm',
+      );
+      expect((el.querySelector('.btn-danger') as HTMLButtonElement).disabled).toBe(true);
+      expect(document.activeElement).toBe(input);
+    });
+
+    it('Challenge_WhenTypedWrong_KeepsConfirmDisabledAndEmitsNothing', async () => {
+      const { fixture, el } = await render('alice@example.com');
+      const confirmed = vi.fn();
+      fixture.componentInstance.confirmed.subscribe(confirmed);
+
+      await type(fixture, el, 'alice@example.co');
+      const button = el.querySelector('.btn-danger') as HTMLButtonElement;
+      button.click();
+
+      expect(button.disabled).toBe(true);
+      expect(confirmed).not.toHaveBeenCalled();
+    });
+
+    it('Challenge_WhenTypedIgnoringCaseAndWhitespace_EnablesConfirmAndEmits', async () => {
+      const { fixture, el } = await render('alice@example.com');
+      const confirmed = vi.fn();
+      fixture.componentInstance.confirmed.subscribe(confirmed);
+
+      await type(fixture, el, '  Alice@Example.COM ');
+      const button = el.querySelector('.btn-danger') as HTMLButtonElement;
+      expect(button.disabled).toBe(false);
+      button.click();
+
+      expect(confirmed).toHaveBeenCalledTimes(1);
+    });
+
+    it('Challenge_WhenAbsent_LeavesTheDialogAsBefore', async () => {
+      const { el } = await render();
+
+      expect(el.querySelector('#confirm-dialog-challenge')).toBeNull();
+      expect((el.querySelector('.btn-danger') as HTMLButtonElement).disabled).toBe(false);
+    });
   });
 });

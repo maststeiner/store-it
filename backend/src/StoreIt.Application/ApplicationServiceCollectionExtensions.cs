@@ -19,6 +19,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<DeleteItemUseCase>();
 
         services.AddScoped<ProvisionUserUseCase>();
+        services.AddScoped<DeleteAccountUseCase>();
 
         return services;
     }

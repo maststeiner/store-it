@@ -15,6 +15,7 @@ const TRANSLATIONS = {
       microsoft: 'Sign in with Microsoft',
       google: 'Sign in with Google',
     },
+    deleteAccount: { done: 'Your account and all your data have been deleted.' },
   },
 };
 
@@ -65,6 +66,29 @@ describe('LoginPage', () => {
   function answerAnonymous() {
     ctrl.expectOne('/auth/me').flush(null, { status: 401, statusText: 'Unauthorized' });
   }
+
+  // SPEC-006 D5 / AC-10: the notice appears only right after a deletion.
+  it('shows the deletion notice when arriving with account=deleted', async () => {
+    ctrl = await setup({ account: 'deleted' });
+    const fixture = TestBed.createComponent(LoginPage);
+    fixture.detectChanges();
+    answerAnonymous();
+    await fixture.whenStable();
+
+    const notice = (fixture.nativeElement as HTMLElement).querySelector('.login-notice');
+    expect(notice?.getAttribute('role')).toBe('status');
+    expect(notice?.textContent).toContain('Your account and all your data have been deleted.');
+  });
+
+  it('shows no deletion notice on an ordinary visit', async () => {
+    ctrl = await setup();
+    const fixture = TestBed.createComponent(LoginPage);
+    fixture.detectChanges();
+    answerAnonymous();
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.login-notice')).toBeNull();
+  });
 
   it('renders both provider buttons with translated labels', async () => {
     ctrl = await setup();

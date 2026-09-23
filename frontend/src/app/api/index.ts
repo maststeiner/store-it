@@ -19,6 +19,7 @@ export { BaseService } from './base-service';
 export { AuthService } from './services/auth.service';
 export { StoragesService } from './services/storages.service';
 export { ItemsService } from './services/items.service';
+export { AccountService } from './services/account.service';
 
 export type { Login$Params as Login$Params } from './fn/auth/login';
 export { login as login } from './fn/auth/login';
@@ -46,3 +47,5 @@ export type { UpdateItem$Params as UpdateItem$Params } from './fn/items/update-i
 export { updateItem as updateItem } from './fn/items/update-item';
 export type { DeleteItem$Params as DeleteItem$Params } from './fn/items/delete-item';
 export { deleteItem as deleteItem } from './fn/items/delete-item';
+export type { DeleteAccount$Params as DeleteAccount$Params } from './fn/account/delete-account';
+export { deleteAccount as deleteAccount } from './fn/account/delete-account';

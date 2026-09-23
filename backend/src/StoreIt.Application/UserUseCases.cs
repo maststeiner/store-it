@@ -55,3 +55,33 @@ public sealed class ProvisionUserUseCase(IUserRepository repository, TimeProvide
         return user;
     }
 }
+
+/// <summary>
+/// SPEC-006 D6 / AC-05: a write arrived with a session whose user row no longer exists
+/// (the account was deleted while another device kept its cookie). Raised by the
+/// Infrastructure layer when the owner foreign key is violated; the API maps it to 401
+/// and ends the stale session. Application stays free of EF/Npgsql types.
+/// </summary>
+public sealed class OwnerNoLongerExistsException()
+    : Exception("The signed-in account no longer exists.");
+
+/// <summary>
+/// SPEC-006 AC-01: delete the current user's account. The database cascades the deletion
+/// to the storages and items the user owns (SPEC-003 schema), so one statement removes
+/// everything in one transaction. Idempotent (EC-01): an account that is already gone —
+/// two tabs confirming at once, even concurrently — counts as deleted, because the port
+/// deletes by id without a prior existence check.
+/// </summary>
+public sealed class DeleteAccountUseCase(IUserRepository repository, ICurrentUser currentUser)
+{
+    public Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        var userId =
+            currentUser.UserId
+            ?? throw new InvalidOperationException(
+                "DeleteAccountUseCase requires an authenticated user."
+            );
+
+        return repository.DeleteByIdAsync(userId, cancellationToken);
+    }
+}
