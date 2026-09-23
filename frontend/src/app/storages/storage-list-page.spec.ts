@@ -23,6 +23,7 @@ const TRANSLATIONS = {
     deleteConfirm: 'Delete "{{name}}"?',
   },
   items: { count: { one: '1 item', other: '{{count}} items' } },
+  sharing: { sharedBadge: 'Shared storage' },
   actions: { create: 'Create', save: 'Save', cancel: 'Cancel', rename: 'Rename', delete: 'Delete' },
   errors: { generic: 'Something went wrong.', storage: { name: { empty: 'Name required.' } } },
 };
@@ -51,9 +52,14 @@ describe('StorageListPage', () => {
       itemCount: number;
       expiredCount: number;
       expiringSoonCount: number;
+      isOwner?: boolean;
+      memberCount?: number;
+      ownerName?: string;
     }[],
   ) {
-    http.expectOne('/api/v1/storages').flush(storages);
+    http
+      .expectOne('/api/v1/storages')
+      .flush(storages.map((s) => ({ isOwner: true, memberCount: 0, ownerName: 'Me', ...s })));
   }
 
   it('renders one card per storage with name and item count', async () => {
@@ -195,5 +201,40 @@ describe('StorageListPage', () => {
 
     expect(element.querySelector('app-confirm-dialog')).toBeNull();
     expect(element.querySelectorAll('.storage-card:not(.ghost)')).toHaveLength(0);
+  });
+
+  // SPEC-007 D8 / AC-15: a shared icon, nothing else in the row
+  it('marks shared storages with the badge and leaves private ones plain', async () => {
+    const fixture = TestBed.createComponent(StorageListPage);
+    fixture.detectChanges();
+    flushStorages([
+      { id: 's1', name: 'Mine', itemCount: 0, expiredCount: 0, expiringSoonCount: 0 },
+      {
+        id: 's2',
+        name: 'Ours',
+        itemCount: 0,
+        expiredCount: 0,
+        expiringSoonCount: 0,
+        memberCount: 2,
+      },
+      {
+        id: 's3',
+        name: 'Theirs',
+        itemCount: 0,
+        expiredCount: 0,
+        expiringSoonCount: 0,
+        isOwner: false,
+        ownerName: 'Olga',
+      },
+    ]);
+    await fixture.whenStable();
+
+    const cards = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.storage-card .card-open'),
+    );
+    const badge = (card: Element) => card.querySelector('.shared-badge');
+    expect(badge(cards[0])).toBeNull();
+    expect(badge(cards[1])?.getAttribute('aria-label')).toBe('Shared storage');
+    expect(badge(cards[2])?.getAttribute('aria-label')).toBe('Shared storage');
   });
 });

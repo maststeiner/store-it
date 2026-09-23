@@ -1,0 +1,85 @@
+<section class="sharing-panel" aria-labelledby="sharing-title">
+  <h2 id="sharing-title" class="sharing-title">{{ 'sharing.title' | translate }}</h2>
+
+  @if (isOwner()) {
+    <div class="sharing-invite">
+      @if (link(); as url) {
+        <p class="sharing-hint">{{ 'sharing.link.created' | translate }}</p>
+        <div class="sharing-link-row">
+          <input
+            class="inline-input sharing-link"
+            type="text"
+            readonly
+            [value]="url"
+            [attr.aria-label]="'sharing.link.label' | translate"
+            (focus)="$any($event.target).select()"
+          />
+          <button type="button" class="btn-primary" (click)="copyLink()">
+            {{ (copied() ? 'sharing.link.copied' : 'sharing.link.copy') | translate }}
+          </button>
+        </div>
+        @if (linkExpiresAt(); as expires) {
+          <p class="sharing-meta">
+            {{
+              'sharing.link.validUntil'
+                | translate: { date: (expires | date: 'mediumDate' : undefined : locale()) }
+            }}
+          </p>
+        }
+      } @else if (invitation()?.active) {
+        <p class="sharing-hint">
+          {{
+            'sharing.link.active'
+              | translate
+                : { date: (invitation()?.expiresAt | date: 'mediumDate' : undefined : locale()) }
+          }}
+        </p>
+      } @else {
+        <p class="sharing-hint">{{ 'sharing.link.none' | translate }}</p>
+      }
+      <div class="inline-actions">
+        <button type="button" class="btn-primary" (click)="createLink()">
+          {{ (invitation()?.active ? 'sharing.link.renew' : 'sharing.link.create') | translate }}
+        </button>
+        @if (invitation()?.active) {
+          <button type="button" class="btn-ghost" (click)="deactivateLink()">
+            {{ 'sharing.link.deactivate' | translate }}
+          </button>
+        }
+      </div>
+      <p class="sharing-warning">{{ 'sharing.link.warning' | translate }}</p>
+    </div>
+  }
+
+  @if (error(); as message) {
+    <p class="form-error" role="alert">{{ message }}</p>
+  }
+
+  <h3 class="sharing-subtitle">{{ 'sharing.members.title' | translate }}</h3>
+  @if (members(); as list) {
+    <ul class="member-list">
+      @for (member of list; track member.userId) {
+        <li class="member-row">
+          <span class="member-name">{{ member.displayName }}</span>
+          @if (member.isOwner) {
+            <span class="member-role">{{ 'sharing.members.owner' | translate }}</span>
+          } @else if (isOwner()) {
+            <button
+              type="button"
+              class="btn-ghost btn-small"
+              (click)="removeMember(member)"
+              [attr.aria-label]="
+                'sharing.members.removeNamed' | translate: { name: member.displayName }
+              "
+            >
+              {{ 'sharing.members.remove' | translate }}
+            </button>
+          }
+        </li>
+      }
+    </ul>
+    @if (others().length === 0) {
+      <p class="sharing-meta">{{ 'sharing.members.none' | translate }}</p>
+    }
+  }
+</section>

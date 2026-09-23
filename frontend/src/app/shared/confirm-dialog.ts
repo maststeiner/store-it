@@ -53,7 +53,7 @@ import { TranslatePipe } from '../core/translate';
             [disabled]="!canConfirm()"
             (click)="confirm()"
           >
-            {{ 'actions.delete' | translate }}
+            {{ confirmLabel() || ('actions.delete' | translate) }}
           </button>
         </div>
       </div>
@@ -71,6 +71,8 @@ export class ConfirmDialog implements AfterViewInit {
   readonly challenge = input<string | null>(null);
   /** Label of the challenge field, e.g. "Type your e-mail address to confirm". */
   readonly challengeLabel = input<string>('');
+  /** Confirm button text; defaults to the generic *Delete* (SPEC-007: *Leave* for memberships). */
+  readonly confirmLabel = input<string>('');
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();
 
