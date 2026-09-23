@@ -107,12 +107,17 @@ then decided for Oracle Cloud Always Free and asked to prepare everything for it
 | 6 | 2026-09-21: D2/D3/D6/D7 answered one by one (defaults confirmed) after asking to be walked through them | Recorded as "Decisions taken" in SPEC-005; freeze still to be asked separately. |
 | 5 | 2026-09-18: "ADR-005 akzeptiert." | Status set to Accepted; ARCHITECTURE.md §9 row updated. The wider doc updates (tech stack, §7, README, threat model) stay with SPEC-005 AC-13 — the spec is not frozen yet. |
 | 4 | 2026-09-18: "würde es auch gehen, wenn ich die Datenbank bei mir auf einem NAS laufen lassen würde?" → "ok, dann lassen wir es so" | Assessed: DB-only on the NAS combines both sites' failure modes plus latency; whole stack on the NAS is a viable alternative deployment. Marcel keeps the Oracle plan; both options recorded in the ADR rationale table. |
+| 8 | 2026-09-23: "schritt um schritt durch leiten" — asked to be walked through the first deployment one step at a time; declined an SSH key for the agent on the production VM ("bei schritt drei weiter machen") | Every host command was run by Marcel; the agent verified from outside (TLS, `/health`, login redirect). VM access stays with the human. |
 | 3 | "für das deployment ein eigenes Repo machen mit der Konfiguration … Auch wenn dann mehrere deployments gemacht werden möchten" | First draft had `compose.prod.yaml`, runbook and hostnames inside `store-it`. Added ADR constraint 5 and decision 1 (two repositories), rescoped SPEC-005 to images + runtime contract, created the private `store-it-deploy` skeleton. |
 
 ## Outcome
 
 - **Result:** ADR-005 Accepted (2026-09-18), SPEC-005 frozen (2026-09-21), application side
-  implemented in PR #145 (ready for review); `store-it-deploy` complete on `main`. Open: G2
-  review, merge, first `v*` tag, Oracle provisioning, G3 end-to-end test.
+  implemented in PR #145 (merged 2026-09-21); `store-it-deploy` complete on `main`. Released as
+  `v0.1.1` (2026-09-22, #159; the `v0.1.0` attempt failed on the .NET 11 base images, #155).
+  **First deployment `prod-oracle` live on 2026-09-23:** bootstrap, secrets, OIDC redirect URI,
+  first timer run, certificate, sign-in on the public URL — G3 end-to-end test passed. Nothing
+  installation-specific entered this repository (AC-10); hostname, IP and provider details live
+  in `store-it-deploy`.
 - **Deviations from spec:** amendment A1 (`Host` instead of `X-Forwarded-Host`); otherwise none.
 - **Harness follow-up:** none.
