@@ -69,7 +69,18 @@
           >
             <div class="storage-icon" aria-hidden="true">🥫</div>
             <div>
-              <div class="storage-name">{{ storage.name }}</div>
+              <div class="storage-name">
+                {{ storage.name }}
+                @if (!storage.isOwner || storage.memberCount > 0) {
+                  <span
+                    class="shared-badge"
+                    role="img"
+                    [attr.aria-label]="'sharing.sharedBadge' | translate"
+                    [title]="'sharing.sharedBadge' | translate"
+                    >👥</span
+                  >
+                }
+              </div>
               <div class="storage-meta">
                 {{
                   (storage.itemCount === 1 ? 'items.count.one' : 'items.count.other')

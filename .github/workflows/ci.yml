@@ -206,6 +206,53 @@ jobs:
           path: frontend/playwright-report/
           if-no-files-found: ignore
 
+  # ────────────────────────────────────────────
+  # 1c · Container images build (#156, SPEC-004 decision 7 amended 2026-09-23)
+  # ────────────────────────────────────────────
+  # The same Dockerfiles produce the release images (SPEC-005). Build them on every run —
+  # build only: no push, no run, amd64 only — so a broken base image or build stage fails a
+  # PR instead of the release (v0.1.0 failed exactly like that, #155). Cache scopes are the
+  # release workflow's, so a release after a green develop build reuses the layers.
+  images-build:
+    name: 1c · Container images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build backend (runtime)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: backend
+          target: runtime
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=backend-amd64
+          cache-to: type=gha,mode=max,scope=backend-amd64
+
+      # Same Dockerfile and cache scope → the `build` stage is reused (release.yml does the same).
+      - name: Build migrate
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: backend
+          target: migrate
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=backend-amd64
+          cache-to: type=gha,mode=max,scope=backend-amd64
+
+      - name: Build web
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: frontend
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=web-amd64
+          cache-to: type=gha,mode=max,scope=web-amd64
+
   security:
     name: 2 · Security scan & SBOM
     runs-on: ubuntu-latest
@@ -257,8 +304,10 @@ jobs:
       - name: Drift check (contract committed and current)
         run: git diff --exit-code -- openapi/
       # ADR-006 stage 2 / ADR-007 — breaking changes vs. the last RELEASED contract
-      # (the latest SemVer tag), not the integration branch. Until the first release
-      # is tagged, /api/v1 is pre-release and breaking changes are allowed.
+      # (the latest SemVer tag on main), not the integration branch. SemVer 0.x (ADR-007
+      # decision 2, amendment A1): while no vMAJOR.MINOR.PATCH tag with MAJOR >= 1 exists,
+      # /api/v1 is pre-release — breaking changes are reported in the job summary but
+      # do not fail the job. From v1.0.0 on they fail the PR.
       - name: Install oasdiff
         if: github.event_name == 'pull_request'
         run: |
@@ -267,19 +316,35 @@ jobs:
       - name: Breaking-change check (vs. last released tag)
         if: github.event_name == 'pull_request'
         run: |
-          # Baseline = the latest release tag: a strict vMAJOR.MINOR.PATCH tag
-          # reachable from main (ADR-007). Until the first release, /api/v1 is
-          # pre-release and breaking changes are allowed.
-          LAST_TAG="$(git tag --list 'v*.*.*' --merged origin/main --sort=-v:refname \
-            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
-          if [ -z "$LAST_TAG" ]; then
+          # Strict vMAJOR.MINOR.PATCH tags reachable from main, newest first (ADR-007).
+          TAGS="$(git tag --list 'v*.*.*' --merged origin/main --sort=-v:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' || true)"
+          STABLE_TAG="$(printf '%s\n' "$TAGS" | grep -E '^v[1-9][0-9]*\.' | head -n1 || true)"
+          LATEST_TAG="$(printf '%s\n' "$TAGS" | head -n1)"
+          if [ -n "$STABLE_TAG" ]; then
+            BASE_TAG="$STABLE_TAG"; MODE=enforce
+          elif [ -n "$LATEST_TAG" ]; then
+            BASE_TAG="$LATEST_TAG"; MODE=report
+          else
             echo "No release tag yet — /api/v1 is pre-release, breaking changes allowed (ADR-007). Skipping."
-          elif git show "${LAST_TAG}:backend/openapi/StoreIt.Api.json" > /tmp/base-spec.json 2>/dev/null; then
-            echo "Comparing against the released contract at ${LAST_TAG}."
+            exit 0
+          fi
+          if ! git show "${BASE_TAG}:backend/openapi/StoreIt.Api.json" > /tmp/base-spec.json 2>/dev/null; then
+            echo "::error::Release ${BASE_TAG} has no committed contract (backend/openapi/StoreIt.Api.json). Every release must carry its contract baseline (ADR-007)."
+            exit 1
+          fi
+          if [ "$MODE" = enforce ]; then
+            echo "Comparing against the released contract at ${BASE_TAG} (stable — breaking changes fail)."
             /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json --fail-on ERR
           else
-            echo "::error::Release ${LAST_TAG} has no committed contract (backend/openapi/StoreIt.Api.json). Every release must carry its contract baseline (ADR-007)."
-            exit 1
+            echo "Comparing against ${BASE_TAG} (SemVer 0.x — breaking changes are reported, not enforced; ADR-007 A1)."
+            {
+              echo "## API contract vs. ${BASE_TAG} (0.x: report only)"
+              echo
+              /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json -f markdown
+            } >> "$GITHUB_STEP_SUMMARY"
+            # Annotations as warnings: visible in the PR, red only from v1.0.0 on.
+            /tmp/oasdiff breaking /tmp/base-spec.json openapi/StoreIt.Api.json -f githubactions | sed "s/^::error/::warning/"
           fi
 
   dependency-review:

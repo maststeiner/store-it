@@ -163,7 +163,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 ## 8. Cross-cutting Concepts
 
 ### Security
-- Authentication + authorization required for every **protected** API call (`/api/v1/**`); `/health` and the `/auth/*` endpoints are anonymous by design (SPEC-003 allowlist). A storage is only accessible to its owner (per-storage ownership; sharing/membership is a later extension).
+- Authentication + authorization required for every **protected** API call (`/api/v1/**`); `/health` and the `/auth/*` endpoints are anonymous by design (SPEC-003 allowlist). A storage is accessible to its owner and to its members (SPEC-007 / ADR-008: flat membership via invitation links). Members read the member list; owner-only are deleting the storage, removing members, the invitation link and the hand-over.
 - Identity via external OIDC providers with a BFF session — see [ADR-004](ADR-004-identity-auth.md).
 
 ### Error Handling & Logging
@@ -196,6 +196,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 | [ADR-004](ADR-004-identity-auth.md) | Identity / auth solution (direct OIDC federation, BFF) | Accepted | 2026-07-30 |
 | [ADR-006](ADR-006-api-versioning-contract-gate.md) | API versioning and contract gate | Accepted | 2026-07-18 |
 | [ADR-007](ADR-007-release-versioning.md) | Release process, SemVer tagging, breaking-change baseline | Accepted | 2026-07-31 |
+| [ADR-008](ADR-008-storage-sharing-model.md) | Storage sharing: one owner, flat membership, link invitations | Accepted | 2026-09-23 |
 | [ADR-005](ADR-005-hosting-deployment.md) | Hosting and deployment — separate deployment repository, one free Oracle Cloud VM, Docker Compose, pull-based updates | Accepted | 2026-09-18 |
 
 ---
@@ -207,7 +208,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 | Usability | Add an item (web form) | ≤ 15 seconds, one screen |
 | Reliability | Expiry list is consistent with stored items | Zero tolerance — covered by service tests |
 | Evolvability | New client (iOS) consumes the API | No API changes needed that break the web client |
-| Security | User requests another owner's storage by id | 404 — existence not disclosed (owner-only model, SPEC-003); membership-based 403 is a future sharing scenario | covered by service tests |
+| Security | User requests a storage they neither own nor belong to, by id | 404 — existence not disclosed (SPEC-003, unchanged by sharing); a member calling an owner-only operation gets 403 `storage.ownerOnly` (SPEC-007) | covered by service tests |
 
 ---
 

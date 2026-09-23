@@ -17,6 +17,10 @@ export class LoginPage implements OnInit {
   /** The route authGuard bounced the visitor off, and where sign-in sends them back. */
   private readonly returnUrl = appLocalPath(this.route.snapshot.queryParamMap.get('returnUrl'));
 
+  /** SPEC-006 D5: the visitor arrives here right after deleting their account. */
+  protected readonly accountDeleted =
+    this.route.snapshot.queryParamMap.get('account') === 'deleted';
+
   ngOnInit(): void {
     void this.skipWhenAlreadySignedIn();
   }

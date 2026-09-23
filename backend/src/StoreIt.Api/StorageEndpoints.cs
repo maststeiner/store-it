@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Http.HttpResults;
 using StoreIt.Application;
 
@@ -38,7 +37,7 @@ public static class StorageEndpoints
             .RequireAuthorization()
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
-            .AddEndpointFilter(CsrfValidationFilter);
+            .AddEndpointFilter(CsrfEndpointFilter.Validate);
 
         MapGetStorages(storages);
         MapGetStorage(storages);
@@ -338,7 +337,7 @@ public static class StorageEndpoints
     /// endpoint (issue #69). Parsing explicitly answers 400 ProblemDetails API-wide and
     /// independently of the hosting environment. The raw value is never echoed back.
     /// </summary>
-    private static bool TryParseRouteId(
+    internal static bool TryParseRouteId(
         string value,
         string parameterName,
         out Guid id,
@@ -358,61 +357,5 @@ public static class StorageEndpoints
             extensions: new Dictionary<string, object?> { ["errorCode"] = InvalidRouteIdErrorCode }
         );
         return false;
-    }
-
-    /// <summary>
-    /// Locale-neutral error code for a failed CSRF double-submit check (arc42 §8).
-    /// </summary>
-    private const string CsrfInvalidErrorCode = "csrf.invalid";
-
-    /// <summary>
-    /// RFC-7231 safe HTTP methods: they neither mutate state nor require a CSRF token.
-    /// Everything else (POST/PUT/DELETE/PATCH/…) must present a valid double-submit token.
-    /// </summary>
-    private static readonly HashSet<string> SafeMethods = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "GET",
-        "HEAD",
-        "OPTIONS",
-        "TRACE",
-    };
-
-    /// <summary>
-    /// SPEC-003 (Task 8a): CSRF endpoint filter for the storages group.
-    /// Validates the double-submit token (X-XSRF-TOKEN header matched against the HttpOnly
-    /// antiforgery cookie) for every method EXCEPT the RFC-7231 safe ones (GET/HEAD/OPTIONS/
-    /// TRACE). Using a safe-method allowlist means a future mutating verb (e.g. PATCH) is
-    /// protected by default instead of silently skipped. Returns a 403 ProblemDetails
-    /// (matching the group's <c>.ProducesProblem(403)</c> contract) when the token is
-    /// missing or invalid.
-    /// </summary>
-    private static async ValueTask<object?> CsrfValidationFilter(
-        EndpointFilterInvocationContext ctx,
-        EndpointFilterDelegate next
-    )
-    {
-        var method = ctx.HttpContext.Request.Method;
-        if (!SafeMethods.Contains(method))
-        {
-            var antiforgery = ctx.HttpContext.RequestServices.GetRequiredService<IAntiforgery>();
-            try
-            {
-                await antiforgery.ValidateRequestAsync(ctx.HttpContext);
-            }
-            catch (AntiforgeryValidationException)
-            {
-                return Results.Problem(
-                    statusCode: StatusCodes.Status403Forbidden,
-                    title: CsrfInvalidErrorCode,
-                    detail: "The anti-forgery (CSRF) token is missing or invalid.",
-                    extensions: new Dictionary<string, object?>
-                    {
-                        ["errorCode"] = CsrfInvalidErrorCode,
-                    }
-                );
-            }
-        }
-
-        return await next(ctx);
     }
 }

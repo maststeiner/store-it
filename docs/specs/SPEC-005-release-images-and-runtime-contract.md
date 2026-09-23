@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-21
 > **Sprint:** 2026-S38
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request
-> **Last updated:** 2026-09-21 (A1)
+> **Last updated:** 2026-09-22 (verification after v0.1.1)
 
 ---
 
@@ -199,7 +199,7 @@ intent; they fix statements that were imprecise when frozen.
 
 | AC | How verified | Status |
 |----|--------------|--------|
-| AC-01 – AC-07 | `release.yml` written and linted (actionlint 1.7.12, clean); native runners per arch, push-by-digest, manifests only in the final job (AC-06), labels + index annotations (AC-07). **Runtime proof needs the first `v*` tag** — recorded here after the run. | 🟡 pending first release |
+| AC-01 – AC-07 | **Proven by the first successful release, `v0.1.1`** ([run 35772279968](https://github.com/maststeiner/store-it/actions/runs/35772279968), 2026-09-22, 3.5 min): three multi-arch indexes on GHCR, each with `linux/amd64` + `linux/arm64` (plus buildx attestation manifests shown as `unknown/unknown`), tags `v0.1.1` and `latest` pointing at the same index digest, OCI labels on the platform images and index annotations (`source`, `revision` = merge commit `61e8363`, `version`). AC-06 was exercised for real first: the `v0.1.0` attempt ([run 35649150975](https://github.com/maststeiner/store-it/actions/runs/35649150975)) failed on arm64 (.NET 11 base images vs. `net10.0`, #155), fail-fast cancelled amd64, the manifest job was skipped — **nothing was published under `v0.1.0`**. AC-04: no image was published by any PR or `develop`/`main` run (GHCR shows only `v0.1.1` and `latest`). AC-05: `GITHUB_TOKEN` only, no secret configured. | ✅ 2026-09-22 |
 | AC-08 | `docs/operations/runtime-contract.md` written from `compose.stack.yaml`, `.env.example`, `appsettings.json`, both Dockerfiles, `nginx.conf`, `StartupConfigurationCheck` and `AuthenticationSetup`; the `store-it-deploy` compose was written against it | ✅ 2026-09-21 |
 | AC-09 | `ForwardedHeadersTests.Login_BehindTlsTerminator_BuildsHttpsRedirectUri` (+ `…KeepsTheRequestScheme` as the control) — real host, `ForwardedHeaders_Enabled=true`, static OIDC discovery; plus `LoginChallengeTests` (challenge shape: code flow, PKCE, scopes, client id) and `SafeReturnUrlTests`, added after the CI mutation gate showed the new coverage exposing weak assertions; 97/97 service tests green locally, Stryker on the two auth files 63 % (survivors are unobservable option flags and endpoint names) | ✅ 2026-09-21 |
 | AC-09a | nginx `map` in `frontend/nginx.conf`; functional test with the `nginx:1.31-alpine` image against an echo backend: no header → `proto=http`, `X-Forwarded-Proto: https` → `proto=https`, `X-Forwarded-Proto: evil` → `proto=http`, SPA fallback 200; `nginx -t` ok | ✅ 2026-09-21 |
@@ -207,12 +207,24 @@ intent; they fix statements that were imprecise when frozen.
 | AC-11 | Only `nginx.conf` changed for the local stack, and only the header value when an upstream sends `https`; the no-header path is byte-identical in behaviour (tested above). `stack-up.sh` untouched | ✅ 2026-09-21 (by test of the changed path; full stack run left to G3) |
 | AC-12 | Rule added to `docs/guidelines/coding-guidelines.md` (*Project-Specific Rules*), pointer row in `CLAUDE.md` | ✅ 2026-09-21 |
 | AC-13 | tech-stack *Runtime* row, `ARCHITECTURE.md` §7 + §9, `README.md` *Deploying*, threat model R-07 updated + R-21 added + owner-responsibility bullets | ✅ 2026-09-21 |
-| End to end (G3) | One release observed: tag → workflow → `store-it-deploy` host pulls → sign-in on the public URL | ⬜ human |
+| End to end (G3) | One release observed: tag → workflow → `store-it-deploy` host pulls → sign-in on the public URL. `v0.1.1` images (run above) → first `prod-oracle` host bootstrapped and started by `store-it-update.service` on 2026-09-23 (`compose pull` of the three `latest` images, `migrate` exit 0, `backend` healthy, `web`, Caddy with a Let's Encrypt certificate) → `/health` = `Healthy` over TLS → `GET /auth/login/microsoft` = 302 to the tenant authority with `redirect_uri=https://…/auth/callback/microsoft` (AC-09 proven in production: the forwarded-proto chain Caddy → nginx → API yields `https`) → **sign-in in the browser on the public URL succeeded** (Marcel Steiner) | ✅ 2026-09-23 |
 
 ## Gate Status
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
 | G1 · Spec Freeze | ✅ | 2026-09-21 | Marcel Steiner |
-| G2 · Review | ⬜ | | |
-| G3 · DoD/Merge | ⬜ | | |
+| G2 · Review | ✅ | 2026-09-21 | Marcel Steiner |
+| G3 · DoD/Merge | ✅ merged to `develop`, released as `v0.1.1` | 2026-09-21 / 2026-09-22 | Marcel Steiner |
+
+Evidence: [PR #145](https://github.com/maststeiner/store-it/pull/145) — spec and implementation in
+one PR (as SPEC-004/#83); human attestation ticked by Marcel Steiner on 2026-09-21, CI run
+[35640300404](https://github.com/maststeiner/store-it/actions/runs/35640300404) fully green
+(14 jobs incl. mutation testing after the test-hardening commit), SonarCloud gates passed;
+rebase-merged into `develop` on 2026-09-21. Released via #152 (`v0.1.0`, image build failed —
+#155) and #159 (`v0.1.1`, [run 35772279968](https://github.com/maststeiner/store-it/actions/runs/35772279968)
+green, images on GHCR). The human end-to-end test on the running software — sign-in on the public
+URL of the first `prod-oracle` deployment — passed on 2026-09-23 (verification table, last row);
+the host-side steps are recorded in the `store-it-deploy` runbook and its `deployments/prod-oracle/README.md`.
+Agent logs: [`2026-09-17-adr-005-hosting-decision.md`](../agent-logs/2026-09-17-adr-005-hosting-decision.md),
+[`2026-09-21-release-v0.1.0-dotnet-images.md`](../agent-logs/2026-09-21-release-v0.1.0-dotnet-images.md).

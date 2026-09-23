@@ -116,6 +116,43 @@ describe('AuthService', () => {
     // The error must be surfaced to the caller.
     expect(caughtError).toBeDefined();
   });
+  // SPEC-006 AC-10 / AC-11
+  it('deleteAccount_Success_ClearsUserAndRedirectsToLoginWithNotice', async () => {
+    const loadPromise = service.loadMe();
+    ctrl.expectOne('/auth/me').flush({ displayName: 'Bob', email: 'bob@example.com' });
+    await loadPromise;
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    const deletePromise = service.deleteAccount();
+    const request = ctrl.expectOne('/api/v1/account');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    await deletePromise;
+
+    expect(service.user()).toBeNull();
+    expect(navigateSpy).toHaveBeenCalledWith('/login?account=deleted');
+  });
+
+  it('deleteAccount_ServerError_KeepsSessionAndSurfacesError', async () => {
+    const loadPromise = service.loadMe();
+    ctrl.expectOne('/auth/me').flush({ displayName: 'Bob', email: 'bob@example.com' });
+    await loadPromise;
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    let caughtError: unknown;
+    const deletePromise = service.deleteAccount().catch((e: unknown) => (caughtError = e));
+    ctrl
+      .expectOne('/api/v1/account')
+      .flush('error', { status: 500, statusText: 'Internal Server Error' });
+    await deletePromise;
+
+    expect(service.user()).not.toBeNull();
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(caughtError).toBeDefined();
+  });
+
   describe('login', () => {
     /**
      * The challenge is a full-page navigation, so the target is asserted through the URL

@@ -1,0 +1,7 @@
+# EF Core migrations are auto-generated — exempt them from analyzer style rules (e.g. CA1861 on
+# the generated multi-column index arrays). This file sits INSIDE the Docker build context
+# (backend/), where the repository-root .editorconfig with the same exemption is not available;
+# without it `dotnet publish` in backend/Dockerfile fails on rules the CI build never sees
+# (found by the 1c image-build gate on SPEC-007 PR 1).
+[*.cs]
+generated_code = true

@@ -83,7 +83,19 @@
     },
     "session": {
       "menu": "Account menu — signed in as {{name}}",
-      "logout": "Sign out"
+      "logout": "Sign out",
+      "deleteAccount": "Delete account"
+    },
+    "deleteAccount": {
+      "title": "Delete your account?",
+      "message": "Your account and all your storages and items will be permanently deleted. This cannot be undone.",
+      "challengeLabel": "Type your e-mail address to confirm",
+      "done": "Your account and all your data have been deleted.",
+      "challengeLabelName": "Type your display name to confirm",
+      "sharedWarning": {
+        "one": "1 shared storage will be deleted for everyone. Hand it over first if it should stay.",
+        "other": "{{count}} shared storages will be deleted for everyone. Hand them over first if they should stay."
+      }
     }
   },
   "errors": {
@@ -94,7 +106,9 @@
     "storage": {
       "name": {
         "empty": "Please enter a name for the storage."
-      }
+      },
+      "ownerOnly": "Only the owner of the storage may do that.",
+      "ownerCannotLeave": "As the owner you cannot leave the storage. Hand it over or delete it."
     },
     "item": {
       "name": {
@@ -110,6 +124,64 @@
     },
     "request": {
       "invalid": "Invalid input. Please check the fields."
+    },
+    "invite": {
+      "invalid": "The invitation is invalid or has expired."
+    },
+    "member": {
+      "notFound": "This person is not a member of the storage."
+    }
+  },
+  "sharing": {
+    "share": "Share",
+    "leave": "Leave",
+    "leaveTitle": "Leave storage",
+    "leaveConfirm": "Leave “{{name}}”? The storage stays with the others; you will no longer see it.",
+    "sharedBy": "Shared by {{name}}",
+    "sharedBadge": "Shared storage",
+    "title": "Sharing",
+    "link": {
+      "create": "Create invitation link",
+      "renew": "Create a new link",
+      "deactivate": "Deactivate link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "label": "Invitation link",
+      "created": "Link created. Send it via WhatsApp, e-mail or however you like – it is shown only here.",
+      "validUntil": "Valid until {{date}}.",
+      "active": "An invitation link is active until {{date}}. A new link replaces it.",
+      "none": "No active invitation link.",
+      "warning": "Anyone who opens the link while it is valid and is signed in can join. Deactivate the link or remove members if needed."
+    },
+    "members": {
+      "title": "Members",
+      "owner": "Owner",
+      "remove": "Remove",
+      "removeNamed": "Remove {{name}}",
+      "none": "Nobody but you yet.",
+      "makeOwner": "Make owner",
+      "makeOwnerNamed": "Make {{name}} the owner"
+    },
+    "join": {
+      "title": "Invitation to a storage",
+      "text": "{{owner}} shares the storage “{{storage}}” with you.",
+      "join": "Join",
+      "loading": "Checking the invitation …",
+      "invalidTitle": "This link is no longer valid",
+      "invalidText": "The invitation has expired or was deactivated. Ask for a new link.",
+      "backToList": "To my storages"
+    },
+    "ownerDelete": {
+      "message": "“{{name}}” is shared with others. What should happen?",
+      "choose": "What should happen to the storage?",
+      "handOver": "Hand over ownership and leave – the others keep the storage.",
+      "newOwner": "New owner",
+      "deleteForEveryone": "Delete for everyone – the storage and all its items are gone.",
+      "confirmHandOver": "Hand over and leave"
+    },
+    "makeOwner": {
+      "title": "Hand over ownership",
+      "message": "{{name}} becomes the owner of this storage. You stay a member and can no longer delete or share it."
     }
   }
 }

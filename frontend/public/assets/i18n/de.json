@@ -83,7 +83,19 @@
     },
     "session": {
       "menu": "Kontomenü — angemeldet als {{name}}",
-      "logout": "Abmelden"
+      "logout": "Abmelden",
+      "deleteAccount": "Konto löschen"
+    },
+    "deleteAccount": {
+      "title": "Konto löschen?",
+      "message": "Ihr Konto und alle Ihre Lager und Gegenstände werden endgültig gelöscht. Das kann nicht rückgängig gemacht werden.",
+      "challengeLabel": "Zur Bestätigung Ihre E-Mail-Adresse eingeben",
+      "done": "Ihr Konto und alle Ihre Daten wurden gelöscht.",
+      "challengeLabelName": "Zur Bestätigung Ihren Anzeigenamen eingeben",
+      "sharedWarning": {
+        "one": "1 geteilter Lagerort wird dabei für alle gelöscht. Übergeben Sie ihn vorher, wenn er bleiben soll.",
+        "other": "{{count}} geteilte Lagerorte werden dabei für alle gelöscht. Übergeben Sie sie vorher, wenn sie bleiben sollen."
+      }
     }
   },
   "errors": {
@@ -94,7 +106,9 @@
     "storage": {
       "name": {
         "empty": "Bitte einen Namen für den Lagerort angeben."
-      }
+      },
+      "ownerOnly": "Das darf nur der Eigentümer des Lagerorts.",
+      "ownerCannotLeave": "Als Eigentümer können Sie den Lagerort nicht verlassen. Übergeben oder löschen Sie ihn."
     },
     "item": {
       "name": {
@@ -110,6 +124,64 @@
     },
     "request": {
       "invalid": "Ungültige Eingabe. Bitte die Felder prüfen."
+    },
+    "invite": {
+      "invalid": "Die Einladung ist ungültig oder abgelaufen."
+    },
+    "member": {
+      "notFound": "Diese Person ist kein Mitglied des Lagerorts."
+    }
+  },
+  "sharing": {
+    "share": "Teilen",
+    "leave": "Verlassen",
+    "leaveTitle": "Lagerort verlassen",
+    "leaveConfirm": "„{{name}}“ verlassen? Der Lagerort bleibt für die anderen bestehen, Sie sehen ihn danach nicht mehr.",
+    "sharedBy": "Geteilt von {{name}}",
+    "sharedBadge": "Geteilter Lagerort",
+    "title": "Teilen",
+    "link": {
+      "create": "Einladungslink erstellen",
+      "renew": "Neuen Link erstellen",
+      "deactivate": "Link deaktivieren",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "label": "Einladungslink",
+      "created": "Link erstellt. Senden Sie ihn per WhatsApp, E-Mail oder wie Sie möchten – er wird nur hier angezeigt.",
+      "validUntil": "Gültig bis {{date}}.",
+      "active": "Ein Einladungslink ist aktiv, gültig bis {{date}}. Ein neuer Link ersetzt ihn.",
+      "none": "Kein aktiver Einladungslink.",
+      "warning": "Wer den Link innerhalb der Gültigkeit öffnet und angemeldet ist, kann beitreten. Bei Bedarf Link deaktivieren oder Mitglieder entfernen."
+    },
+    "members": {
+      "title": "Mitglieder",
+      "owner": "Eigentümer",
+      "remove": "Entfernen",
+      "removeNamed": "{{name}} entfernen",
+      "none": "Noch niemand ausser Ihnen.",
+      "makeOwner": "Zum Eigentümer machen",
+      "makeOwnerNamed": "{{name}} zum Eigentümer machen"
+    },
+    "join": {
+      "title": "Einladung zu einem Lagerort",
+      "text": "{{owner}} teilt den Lagerort „{{storage}}“ mit Ihnen.",
+      "join": "Beitreten",
+      "loading": "Einladung wird geprüft …",
+      "invalidTitle": "Dieser Link ist nicht mehr gültig",
+      "invalidText": "Die Einladung ist abgelaufen oder wurde deaktiviert. Bitten Sie um einen neuen Link.",
+      "backToList": "Zu meinen Lagerorten"
+    },
+    "ownerDelete": {
+      "message": "„{{name}}“ wird mit anderen geteilt. Was soll passieren?",
+      "choose": "Was soll mit dem Lagerort passieren?",
+      "handOver": "Eigentum übergeben und Lagerort verlassen – die anderen behalten ihn.",
+      "newOwner": "Neuer Eigentümer",
+      "deleteForEveryone": "Für alle löschen – der Lagerort und alle Artikel sind dann weg.",
+      "confirmHandOver": "Übergeben und verlassen"
+    },
+    "makeOwner": {
+      "title": "Eigentum übergeben",
+      "message": "{{name}} wird Eigentümer dieses Lagerorts. Sie bleiben Mitglied und können ihn nicht mehr löschen oder teilen."
     }
   }
 }

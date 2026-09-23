@@ -9,7 +9,10 @@ public sealed record StorageResponse(
     string Name,
     int ItemCount,
     int ExpiredCount,
-    int ExpiringSoonCount
+    int ExpiringSoonCount,
+    bool IsOwner,
+    int MemberCount,
+    string OwnerName
 );
 
 public sealed record ItemResponse(

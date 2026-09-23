@@ -6,6 +6,7 @@ namespace StoreIt.Domain;
 public class Storage
 {
     private readonly List<Item> _items = [];
+    private readonly List<StorageMember> _members = [];
 
     public Guid Id { get; private set; }
     public string Name { get; private set; } = null!;
@@ -14,6 +15,9 @@ public class Storage
     public Guid OwnerId { get; private set; }
 
     public IReadOnlyCollection<Item> Items => _items.AsReadOnly();
+
+    /// <summary>SPEC-007: users besides the owner who work on this storage (ADR-008).</summary>
+    public IReadOnlyCollection<StorageMember> Members => _members.AsReadOnly();
 
     private Storage() { } // EF Core
 
@@ -50,6 +54,68 @@ public class Storage
         }
 
         Name = name.Trim();
+    }
+
+    /// <summary>SPEC-007: the one user allowed to delete, share and hand over (ADR-008 D1).</summary>
+    public bool IsOwner(Guid userId) => OwnerId == userId;
+
+    /// <summary>SPEC-007: owner or member — everyone who may read and change the contents.</summary>
+    public bool HasAccess(Guid userId) => IsOwner(userId) || IsMember(userId);
+
+    public bool IsMember(Guid userId) => _members.Any(m => m.UserId == userId);
+
+    /// <summary>
+    /// SPEC-007 AC-09: add a member. Idempotent: the owner and existing members are left as
+    /// they are and <c>false</c> is returned.
+    /// </summary>
+    public bool AddMember(Guid userId, DateTimeOffset joinedAt)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new DomainValidationException(
+                "storage.member.missing",
+                "Member user id must be provided."
+            );
+        }
+
+        if (HasAccess(userId))
+        {
+            return false;
+        }
+
+        _members.Add(new StorageMember(Id, userId, joinedAt));
+        return true;
+    }
+
+    /// <summary>SPEC-007 AC-12/AC-13: end a membership. Returns false when there was none.</summary>
+    public bool RemoveMember(Guid userId)
+    {
+        var member = _members.FirstOrDefault(m => m.UserId == userId);
+        return member is not null && _members.Remove(member);
+    }
+
+    /// <summary>
+    /// SPEC-007 AC-18: hand the storage to a member. The previous owner becomes an ordinary
+    /// member; the storage never has zero or two owners (one column, one transaction).
+    /// Returns false when <paramref name="newOwnerId"/> is not a member.
+    /// </summary>
+    public bool TransferOwnership(Guid newOwnerId, DateTimeOffset now)
+    {
+        if (IsOwner(newOwnerId))
+        {
+            return true;
+        }
+
+        var newOwner = _members.FirstOrDefault(m => m.UserId == newOwnerId);
+        if (newOwner is null)
+        {
+            return false;
+        }
+
+        _members.Remove(newOwner);
+        _members.Add(new StorageMember(Id, OwnerId, now));
+        OwnerId = newOwnerId;
+        return true;
     }
 
     /// <summary>AC-05/AC-06: add an item (validation inside <see cref="Item"/>).</summary>

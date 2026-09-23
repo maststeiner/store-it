@@ -17,7 +17,7 @@ namespace StoreIt.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -77,6 +77,48 @@ namespace StoreIt.Infrastructure.Migrations
                     b.ToTable("storages", (string)null);
                 });
 
+            modelBuilder.Entity("StoreIt.Domain.StorageInvitation", b =>
+                {
+                    b.Property<Guid>("StorageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("StorageId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("storage_invitations", (string)null);
+                });
+
+            modelBuilder.Entity("StoreIt.Domain.StorageMember", b =>
+                {
+                    b.Property<Guid>("StorageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("StorageId", "UserId");
+
+                    b.HasIndex("UserId", "StorageId");
+
+                    b.ToTable("storage_members", (string)null);
+                });
+
             modelBuilder.Entity("StoreIt.Domain.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -130,9 +172,35 @@ namespace StoreIt.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StoreIt.Domain.StorageInvitation", b =>
+                {
+                    b.HasOne("StoreIt.Domain.Storage", null)
+                        .WithOne()
+                        .HasForeignKey("StoreIt.Domain.StorageInvitation", "StorageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("StoreIt.Domain.StorageMember", b =>
+                {
+                    b.HasOne("StoreIt.Domain.Storage", null)
+                        .WithMany("Members")
+                        .HasForeignKey("StorageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StoreIt.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("StoreIt.Domain.Storage", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("Members");
                 });
 #pragma warning restore 612, 618
         }

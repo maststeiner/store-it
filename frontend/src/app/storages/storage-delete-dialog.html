@@ -1,0 +1,68 @@
+<div class="overlay">
+  <div
+    #dialog
+    class="dialog"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="storage-delete-title"
+    aria-describedby="storage-delete-message"
+  >
+    <h2 id="storage-delete-title" class="dialog-title">{{ 'storages.deleteTitle' | translate }}</h2>
+    <p id="storage-delete-message" class="dialog-message">
+      {{ 'sharing.ownerDelete.message' | translate: { name: storageName() } }}
+    </p>
+
+    <fieldset class="dialog-options">
+      <legend class="sr-only">{{ 'sharing.ownerDelete.choose' | translate }}</legend>
+      <label class="dialog-option">
+        <input
+          #firstControl
+          type="radio"
+          name="storage-delete-mode"
+          value="handOver"
+          [checked]="mode() === 'handOver'"
+          (change)="mode.set('handOver')"
+        />
+        <span>{{ 'sharing.ownerDelete.handOver' | translate }}</span>
+      </label>
+      @if (mode() === 'handOver') {
+        <div class="field dialog-select">
+          <label for="storage-delete-new-owner">{{
+            'sharing.ownerDelete.newOwner' | translate
+          }}</label>
+          <select id="storage-delete-new-owner" [(ngModel)]="newOwnerId" name="newOwner">
+            @for (member of others(); track member.userId) {
+              <option [value]="member.userId">{{ member.displayName }}</option>
+            }
+          </select>
+        </div>
+      }
+      <label class="dialog-option">
+        <input
+          type="radio"
+          name="storage-delete-mode"
+          value="delete"
+          [checked]="mode() === 'delete'"
+          (change)="mode.set('delete')"
+        />
+        <span>{{ 'sharing.ownerDelete.deleteForEveryone' | translate }}</span>
+      </label>
+    </fieldset>
+
+    @if (error(); as message) {
+      <p class="form-error" role="alert">{{ message }}</p>
+    }
+
+    <div class="dialog-actions">
+      <button type="button" class="btn-ghost" (click)="cancelled.emit()">
+        {{ 'actions.cancel' | translate }}
+      </button>
+      <button type="button" class="btn-danger" [disabled]="!canConfirm()" (click)="confirm()">
+        {{
+          (mode() === 'delete' ? 'actions.delete' : 'sharing.ownerDelete.confirmHandOver')
+            | translate
+        }}
+      </button>
+    </div>
+  </div>
+</div>

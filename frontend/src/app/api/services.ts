@@ -4,3 +4,5 @@
 export { AuthService } from './services/auth.service';
 export { StoragesService } from './services/storages.service';
 export { ItemsService } from './services/items.service';
+export { AccountService } from './services/account.service';
+export { SharingService } from './services/sharing.service';

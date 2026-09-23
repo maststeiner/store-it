@@ -3,6 +3,8 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import { AccountService } from '../api/services';
+
 export interface AuthUser {
   displayName: string | null;
   email: string | null;
@@ -41,6 +43,7 @@ export function appLocalPath(candidate: string | null | undefined): string {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly accountApi = inject(AccountService);
 
   readonly user = signal<AuthUser | null | undefined>(undefined);
   readonly loadError = signal(false);
@@ -104,5 +107,19 @@ export class AuthService {
     await firstValueFrom(this.http.post('/auth/logout', null, { responseType: 'text' }));
     this.user.set(null);
     void this.router.navigateByUrl('/login');
+  }
+
+  /**
+   * SPEC-006 AC-10/AC-11: DELETE /api/v1/account, then clear the session and land on the
+   * sign-in page with the "deleted" notice. Like logout, state is cleared only after a
+   * successful response — on an error the account (and session) may still exist, so the
+   * error is rethrown for the caller to surface and nothing local changes.
+   */
+  async deleteAccount(): Promise<void> {
+    // The XSRF header is filled by the auth interceptor from the cookie (the generated
+    // client declares it as a required parameter, hence the placeholder).
+    await firstValueFrom(this.accountApi.deleteAccount({ 'X-XSRF-TOKEN': '' }));
+    this.user.set(null);
+    void this.router.navigateByUrl('/login?account=deleted');
   }
 }

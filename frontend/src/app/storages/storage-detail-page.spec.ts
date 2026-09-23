@@ -1,9 +1,9 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 
-import { ItemResponse } from '../api/models';
+import { ItemResponse, StorageResponse } from '../api/models';
 import { apiErrorInterceptor } from '../core/api-error.interceptor';
 import { TranslateService } from '../core/translate';
 import { StorageDetailPage } from './storage-detail-page';
@@ -39,6 +39,31 @@ const TRANSLATIONS = {
     namePlaceholder: 'Name',
   },
   errors: { generic: 'Something went wrong.', item: { dates: { missing: 'One date required.' } } },
+  sharing: {
+    share: 'Share',
+    leave: 'Leave',
+    leaveTitle: 'Leave storage',
+    leaveConfirm: 'Leave "{{name}}"?',
+    sharedBy: 'Shared by {{name}}',
+    members: {
+      title: 'Members',
+      owner: 'Owner',
+      remove: 'Remove',
+      none: 'Nobody but you yet.',
+      makeOwner: 'Make owner',
+      makeOwnerNamed: 'Make {{name}} the owner',
+    },
+    makeOwner: { title: 'Hand over', message: '{{name}} becomes the owner.' },
+    link: { none: 'No active invitation link.', create: 'Create invitation link', warning: 'w' },
+    ownerDelete: {
+      message: '"{{name}}" is shared. What should happen?',
+      choose: 'c',
+      handOver: 'Hand over and leave',
+      newOwner: 'New owner',
+      deleteForEveryone: 'Delete for everyone',
+      confirmHandOver: 'Hand over and leave',
+    },
+  },
 };
 
 function item(partial: Partial<ItemResponse>): ItemResponse {
@@ -75,13 +100,17 @@ describe('StorageDetailPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  function flushInitialLoad(items: ItemResponse[]) {
+  function flushInitialLoad(items: ItemResponse[], sharing: Partial<StorageResponse> = {}) {
     http.expectOne('/api/v1/storages/s1').flush({
       id: 's1',
       name: 'Freezer',
       itemCount: items.length,
       expiredCount: 0,
       expiringSoonCount: 0,
+      isOwner: true,
+      memberCount: 0,
+      ownerName: 'Me',
+      ...sharing,
     });
     http.expectOne('/api/v1/storages/s1/items').flush(items);
   }
@@ -290,5 +319,259 @@ describe('StorageDetailPage', () => {
     await fixture.whenStable();
 
     expect(element.querySelector('app-confirm-dialog')).toBeNull();
+  });
+
+  // SPEC-007 D4 / AC-15: owner vs member controls
+  describe('sharing (SPEC-007)', () => {
+    it('Owner_SeesShareAndDelete_NoLeaveAndNoOwnerLine', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true, memberCount: 2, ownerName: 'Me' });
+      await fixture.whenStable();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const labels = Array.from(element.querySelectorAll('.detail-head .icon-btn')).map((b) =>
+        b.getAttribute('aria-label'),
+      );
+      expect(labels).toEqual(['Rename', 'Share', 'Delete']);
+      expect(element.querySelector('.storage-owner')).toBeNull();
+    });
+
+    it('Member_SeesOwnerLineMembersAndLeave_NoDelete', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: false, memberCount: 1, ownerName: 'Olga Owner' });
+      await fixture.whenStable();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const labels = Array.from(element.querySelectorAll('.detail-head .icon-btn')).map((b) =>
+        b.getAttribute('aria-label'),
+      );
+      expect(labels).toEqual(['Rename', 'Members', 'Leave']);
+      expect(element.querySelector('.storage-owner')?.textContent).toContain(
+        'Shared by Olga Owner',
+      );
+    });
+
+    it('Member_Leaves_AfterConfirmationAndNavigatesToTheList', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: false, ownerName: 'Olga Owner' });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      const router = TestBed.inject(Router);
+      const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Leave"]') as HTMLButtonElement
+      ).click();
+      await fixture.whenStable();
+      expect(element.querySelector('.dialog .btn-danger')?.textContent?.trim()).toBe('Leave');
+      (element.querySelector('.dialog .btn-danger') as HTMLButtonElement).click();
+
+      const leave = http.expectOne('/api/v1/storages/s1/membership');
+      expect(leave.request.method).toBe('DELETE');
+      leave.flush(null);
+      await fixture.whenStable();
+
+      expect(navigate).toHaveBeenCalledWith(['/storages']);
+    });
+
+    it('Owner_OpensSharing_ShowsThePanelWithMembersAndLink', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Share"]') as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      http
+        .expectOne('/api/v1/storages/s1/members')
+        .flush([{ userId: 'u1', displayName: 'Me', isOwner: true, joinedAt: null }]);
+      http.expectOne('/api/v1/storages/s1/invitation').flush({ active: false, expiresAt: null });
+      await fixture.whenStable();
+
+      expect(element.querySelector('app-sharing-panel')).not.toBeNull();
+      expect(element.querySelector('.sharing-panel')?.textContent).toContain(
+        'No active invitation link.',
+      );
+      expect(element.querySelector('.sharing-panel')?.textContent).toContain('Nobody but you yet.');
+    });
+  });
+
+  // SPEC-007 AC-20 (decision "a"): the owner of a shared storage hands over and leaves
+  describe('owner delete with members', () => {
+    it('Delete_WithMembers_OpensTheOwnerDialogInsteadOfThePlainOne', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true, memberCount: 2 });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Delete"]') as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      http.expectOne('/api/v1/storages/s1/members').flush([
+        { userId: 'u1', displayName: 'Me', isOwner: true, joinedAt: null },
+        { userId: 'u2', displayName: 'Max', isOwner: false, joinedAt: '2026-09-23T10:00:00Z' },
+      ]);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element.querySelector('app-storage-delete-dialog')).not.toBeNull();
+      expect(element.querySelector('app-confirm-dialog')).toBeNull();
+    });
+
+    it('HandOver_Confirmed_TransfersThenLeavesAndNavigatesToTheList', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true, memberCount: 1 });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Delete"]') as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      http.expectOne('/api/v1/storages/s1/members').flush([
+        { userId: 'u1', displayName: 'Me', isOwner: true, joinedAt: null },
+        { userId: 'u2', displayName: 'Max', isOwner: false, joinedAt: '2026-09-23T10:00:00Z' },
+      ]);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      (element.querySelector('app-storage-delete-dialog .btn-danger') as HTMLButtonElement).click();
+
+      const put = http.expectOne('/api/v1/storages/s1/owner');
+      expect(put.request.body).toEqual({ userId: 'u2' });
+      put.flush(null);
+      const leave = http.expectOne('/api/v1/storages/s1/membership');
+      expect(leave.request.method).toBe('DELETE');
+      leave.flush(null);
+      await fixture.whenStable();
+
+      expect(navigate).toHaveBeenCalledWith(['/storages']);
+    });
+  });
+
+  describe('hand over failures', () => {
+    async function openOwnerDialog() {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true, memberCount: 1 });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Delete"]') as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      http.expectOne('/api/v1/storages/s1/members').flush([
+        { userId: 'u1', displayName: 'Me', isOwner: true, joinedAt: null },
+        { userId: 'u2', displayName: 'Max', isOwner: false, joinedAt: '2026-09-23T10:00:00Z' },
+      ]);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      (element.querySelector('app-storage-delete-dialog .btn-danger') as HTMLButtonElement).click();
+      return { fixture, element };
+    }
+
+    it('Transfer_Fails_ClosesTheDialogAndShowsTheError', async () => {
+      const { fixture, element } = await openOwnerDialog();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      http
+        .expectOne('/api/v1/storages/s1/owner')
+        .flush('boom', { status: 500, statusText: 'Internal Server Error' });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element.querySelector('app-storage-delete-dialog')).toBeNull();
+      expect(element.querySelector('.form-error')?.textContent).toContain('Something went wrong.');
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('Leave_AfterTransfer_Fails_ReloadsTheStorageAndShowsTheError', async () => {
+      const { fixture, element } = await openOwnerDialog();
+      const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+      http.expectOne('/api/v1/storages/s1/owner').flush(null);
+      http
+        .expectOne('/api/v1/storages/s1/membership')
+        .flush('boom', { status: 500, statusText: 'Internal Server Error' });
+      // The page reloads the storage: now a member of Max's storage.
+      http.expectOne('/api/v1/storages/s1').flush({
+        id: 's1',
+        name: 'Freezer',
+        itemCount: 0,
+        expiredCount: 0,
+        expiringSoonCount: 0,
+        isOwner: false,
+        memberCount: 1,
+        ownerName: 'Max',
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element.querySelector('.form-error')?.textContent).toContain('Something went wrong.');
+      expect(element.querySelector('.storage-owner')?.textContent).toContain('Shared by Max');
+      expect(navigate).not.toHaveBeenCalled();
+    });
+
+    it('OwnershipChanged_FromThePanel_ReloadsTheStorage', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([], { isOwner: true, memberCount: 1 });
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      (
+        element.querySelector('.detail-head .icon-btn[aria-label="Share"]') as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      http.expectOne('/api/v1/storages/s1/members').flush([
+        { userId: 'u1', displayName: 'Me', isOwner: true, joinedAt: null },
+        { userId: 'u2', displayName: 'Max', isOwner: false, joinedAt: '2026-09-23T10:00:00Z' },
+      ]);
+      http.expectOne('/api/v1/storages/s1/invitation').flush({ active: false, expiresAt: null });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const panel = element.querySelector('app-sharing-panel') as HTMLElement;
+      (
+        panel.querySelector(
+          '.member-row button[aria-label="Make Max the owner"]',
+        ) as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      (element.querySelector('app-confirm-dialog .btn-danger') as HTMLButtonElement).click();
+      http.expectOne('/api/v1/storages/s1/owner').flush(null);
+      http.expectOne('/api/v1/storages/s1/members').flush([
+        { userId: 'u2', displayName: 'Max', isOwner: true, joinedAt: null },
+        { userId: 'u1', displayName: 'Me', isOwner: false, joinedAt: '2026-09-23T12:00:00Z' },
+      ]);
+      http.expectOne('/api/v1/storages/s1').flush({
+        id: 's1',
+        name: 'Freezer',
+        itemCount: 0,
+        expiredCount: 0,
+        expiringSoonCount: 0,
+        isOwner: false,
+        memberCount: 1,
+        ownerName: 'Max',
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element.querySelector('.storage-owner')?.textContent).toContain('Shared by Max');
+    });
   });
 });

@@ -5,6 +5,9 @@ export interface StorageResponse {
   expiredCount: number;
   expiringSoonCount: number;
   id: string;
+  isOwner: boolean;
   itemCount: number;
+  memberCount: number;
   name: string;
+  ownerName: string;
 }

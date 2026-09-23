@@ -34,6 +34,22 @@ public sealed class ProvisionUserUseCaseTests
             _winnerAfterRace = winner;
         }
 
+        public Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(
+            IReadOnlyCollection<Guid> userIds,
+            CancellationToken cancellationToken
+        ) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(
+                _store
+                    .Where(u => userIds.Contains(u.Id))
+                    .ToDictionary(u => u.Id, u => u.DisplayName)
+            );
+
+        public Task DeleteByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            _store.RemoveAll(u => u.Id == id);
+            return Task.CompletedTask;
+        }
+
         public Task<User?> GetBySubjectAsync(
             string issuer,
             string subject,

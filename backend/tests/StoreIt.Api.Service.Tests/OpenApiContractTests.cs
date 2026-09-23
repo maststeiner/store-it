@@ -26,6 +26,42 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         Assert.Equal("createStorage", OperationId(paths, "/api/v1/storages", "post"));
         Assert.Equal("renameStorage", OperationId(paths, "/api/v1/storages/{storageId}", "put"));
         Assert.Equal("deleteStorage", OperationId(paths, "/api/v1/storages/{storageId}", "delete"));
+        Assert.Equal("deleteAccount", OperationId(paths, "/api/v1/account", "delete"));
+        // SPEC-007 sharing
+        Assert.Equal(
+            "getInvitation",
+            OperationId(paths, "/api/v1/storages/{storageId}/invitation", "get")
+        );
+        Assert.Equal(
+            "createInvitation",
+            OperationId(paths, "/api/v1/storages/{storageId}/invitation", "post")
+        );
+        Assert.Equal(
+            "deactivateInvitation",
+            OperationId(paths, "/api/v1/storages/{storageId}/invitation", "delete")
+        );
+        Assert.Equal(
+            "getMembers",
+            OperationId(paths, "/api/v1/storages/{storageId}/members", "get")
+        );
+        Assert.Equal(
+            "removeMember",
+            OperationId(paths, "/api/v1/storages/{storageId}/members/{userId}", "delete")
+        );
+        Assert.Equal(
+            "leaveStorage",
+            OperationId(paths, "/api/v1/storages/{storageId}/membership", "delete")
+        );
+        Assert.Equal(
+            "previewInvitation",
+            OperationId(paths, "/api/v1/invitations/preview", "post")
+        );
+        Assert.Equal("acceptInvitation", OperationId(paths, "/api/v1/invitations/accept", "post"));
+        Assert.Equal(
+            "transferOwnership",
+            OperationId(paths, "/api/v1/storages/{storageId}/owner", "put")
+        );
+        Assert.Equal("getAccount", OperationId(paths, "/api/v1/account", "get"));
         Assert.Equal("getItems", OperationId(paths, "/api/v1/storages/{storageId}/items", "get"));
         Assert.Equal("addItem", OperationId(paths, "/api/v1/storages/{storageId}/items", "post"));
         Assert.Equal(
@@ -79,6 +115,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         AssertPlainType(Property(schemas, "StorageResponse", "itemCount"), "integer");
         AssertPlainType(Property(schemas, "StorageResponse", "expiredCount"), "integer");
         AssertPlainType(Property(schemas, "StorageResponse", "expiringSoonCount"), "integer");
+        AssertPlainType(Property(schemas, "StorageResponse", "memberCount"), "integer");
 
         // every public date field stays a nullable ISO date — normalisation must not touch them
         AssertNullableIsoDate(Property(schemas, "ItemResponse", "expiryDate"));
@@ -125,6 +162,14 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         ("/api/v1/storages/{storageId}/items", "post"),
         ("/api/v1/storages/{storageId}/items/{itemId}", "put"),
         ("/api/v1/storages/{storageId}/items/{itemId}", "delete"),
+        // SPEC-007 sharing
+        ("/api/v1/storages/{storageId}/invitation", "get"),
+        ("/api/v1/storages/{storageId}/invitation", "post"),
+        ("/api/v1/storages/{storageId}/invitation", "delete"),
+        ("/api/v1/storages/{storageId}/members", "get"),
+        ("/api/v1/storages/{storageId}/members/{userId}", "delete"),
+        ("/api/v1/storages/{storageId}/membership", "delete"),
+        ("/api/v1/storages/{storageId}/owner", "put"),
     ];
 
     [Fact]
@@ -180,6 +225,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         }
 
         // 5 storageId-only operations + 2 operations carrying storageId and itemId
-        Assert.Equal(9, pathParameters);
+        // 3 storage + 2 items + 2 item-by-id×2 = 9 (SPEC-001/003) + 6 sharing×1 + members/{userId}×2 = 17
+        Assert.Equal(17, pathParameters);
     }
 }

@@ -13,7 +13,7 @@
     "generate:api": "ng-openapi-gen"
   },
   "private": true,
-  "packageManager": "npm@12.0.2",
+  "packageManager": "npm@12.1.0",
   "dependencies": {
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
@@ -35,7 +35,7 @@
     "eslint": "^10.6.0",
     "jsdom": "^30.0.0",
     "ng-openapi-gen": "^1.0.5",
-    "prettier": "3.9.8",
+    "prettier": "3.9.9",
     "typescript": "~6.0.2",
     "typescript-eslint": "8.70.1",
     "vitest": "^4.0.8"
