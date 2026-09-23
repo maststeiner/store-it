@@ -110,6 +110,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         AssertPlainType(Property(schemas, "StorageResponse", "itemCount"), "integer");
         AssertPlainType(Property(schemas, "StorageResponse", "expiredCount"), "integer");
         AssertPlainType(Property(schemas, "StorageResponse", "expiringSoonCount"), "integer");
+        AssertPlainType(Property(schemas, "StorageResponse", "memberCount"), "integer");
 
         // every public date field stays a nullable ISO date — normalisation must not touch them
         AssertNullableIsoDate(Property(schemas, "ItemResponse", "expiryDate"));
@@ -156,6 +157,13 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         ("/api/v1/storages/{storageId}/items", "post"),
         ("/api/v1/storages/{storageId}/items/{itemId}", "put"),
         ("/api/v1/storages/{storageId}/items/{itemId}", "delete"),
+        // SPEC-007 sharing
+        ("/api/v1/storages/{storageId}/invitation", "get"),
+        ("/api/v1/storages/{storageId}/invitation", "post"),
+        ("/api/v1/storages/{storageId}/invitation", "delete"),
+        ("/api/v1/storages/{storageId}/members", "get"),
+        ("/api/v1/storages/{storageId}/members/{userId}", "delete"),
+        ("/api/v1/storages/{storageId}/membership", "delete"),
     ];
 
     [Fact]
@@ -211,6 +219,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         }
 
         // 5 storageId-only operations + 2 operations carrying storageId and itemId
-        Assert.Equal(9, pathParameters);
+        // 3 storage + 2 items + 2 item-by-id×2 = 9 (SPEC-001/003) + 5 sharing×1 + members/{userId}×2 = 16
+        Assert.Equal(16, pathParameters);
     }
 }

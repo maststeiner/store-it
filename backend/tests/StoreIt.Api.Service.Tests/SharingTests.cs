@@ -1,6 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using StoreIt.Application;
+using StoreIt.Domain;
+using StoreIt.Infrastructure;
 using static StoreIt.Api.Service.Tests.ApiTestHelpers;
 
 namespace StoreIt.Api.Service.Tests;
@@ -164,7 +169,7 @@ public class SharingTests(ApiTestFixture factory) : IClassFixture<ApiTestFixture
     // --- AC-02 / AC-03 / AC-04: what members and strangers may do ---
 
     [Fact]
-    public async Task Member_EditsItemsAndRenames_LikeTheOwner()
+    public async Task ItemsAndRename_ByMember_BehaveAsForOwner()
     {
         var (storage, _) = await SharedStorageAsync("Olga's shared pantry");
 
@@ -184,7 +189,7 @@ public class SharingTests(ApiTestFixture factory) : IClassFixture<ApiTestFixture
     }
 
     [Fact]
-    public async Task Stranger_ById_Returns404()
+    public async Task GetStorage_ByStranger_Returns404()
     {
         var (storage, _) = await SharedStorageAsync("Olga's private");
 
@@ -195,18 +200,18 @@ public class SharingTests(ApiTestFixture factory) : IClassFixture<ApiTestFixture
     }
 
     [Fact]
-    public async Task Member_OwnerOnlyOperations_Return403OwnerOnly()
+    public async Task OwnerOnlyOperations_ByMember_Return403OwnerOnly()
     {
         var (storage, _) = await SharedStorageAsync("Olga's owner-only");
 
         var deleteStorage = await Max.DeleteAsync($"/api/v1/storages/{storage.Id}");
         var createLink = await Max.PostAsync($"/api/v1/storages/{storage.Id}/invitation", null);
         var readLink = await Max.GetAsync($"/api/v1/storages/{storage.Id}/invitation");
-        var removeSelf = await Max.DeleteAsync(
+        var removeMember = await Max.DeleteAsync(
             $"/api/v1/storages/{storage.Id}/members/{Guid.NewGuid()}"
         );
 
-        foreach (var response in new[] { deleteStorage, createLink, readLink, removeSelf })
+        foreach (var response in new[] { deleteStorage, createLink, readLink, removeMember })
         {
             Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
             Assert.Equal("storage.ownerOnly", await response.ReadErrorCodeAsync());
@@ -287,6 +292,60 @@ public class SharingTests(ApiTestFixture factory) : IClassFixture<ApiTestFixture
 
         Assert.Equal(HttpStatusCode.Conflict, leave.StatusCode);
         Assert.Equal("storage.ownerCannotLeave", await leave.ReadErrorCodeAsync());
+    }
+
+    // --- EC-08 / AC-09: stale session and concurrent accept never answer 500 ---
+
+    [Fact]
+    public async Task AcceptInvitation_ByDeletedAccount_Returns401AuthSessionStale()
+    {
+        var storage = await Olga.CreateStorageAsync("Olga's link for a ghost");
+        var token = await Olga.CreateInvitationAsync(storage.Id);
+        var ghost = factory.CreateClientAs("share-ghost");
+        var ghostId = Guid.Parse(
+            (await ghost.GetFromJsonAsync<JsonElement>("/auth/me")).GetProperty("id").GetString()!
+        );
+        Assert.Equal(
+            HttpStatusCode.NoContent,
+            (await ghost.DeleteAsync("/api/v1/account")).StatusCode
+        );
+        ghost.DefaultRequestHeaders.Add(TestAuthHandler.LocalIdHeader, ghostId.ToString());
+
+        var response = await ghost.AcceptAsync(token);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("auth.session.stale", await response.ReadErrorCodeAsync());
+    }
+
+    [Fact]
+    public async Task SaveChanges_WhenTheSameMembershipWasInsertedMeanwhile_ReportsAlreadyMember()
+    {
+        var (storage, _) = await SharedStorageAsync("Olga's race");
+        var newcomer = Guid.NewGuid();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StoreItDbContext>();
+        // Provision the newcomer as a real user so the membership FK holds.
+        db.Users.Add(
+            User.Create("https://test.local", "race-user", null, "Racer", DateTimeOffset.UtcNow)
+        );
+        await db.SaveChangesAsync();
+        var racerId = (await db.Users.SingleAsync(u => u.Subject == "race-user")).Id;
+
+        // Two contexts load the same storage; both add the same member; the second insert loses.
+        var repoA = new StorageRepository(db);
+        var storageA = (await repoA.GetByIdIgnoringAccessAsync(storage.Id, default))!;
+        using var scopeB = factory.Services.CreateScope();
+        var dbB = scopeB.ServiceProvider.GetRequiredService<StoreItDbContext>();
+        var repoB = new StorageRepository(dbB);
+        var storageB = (await repoB.GetByIdIgnoringAccessAsync(storage.Id, default))!;
+        storageA.AddMember(racerId, DateTimeOffset.UtcNow);
+        storageB.AddMember(racerId, DateTimeOffset.UtcNow);
+        await repoA.SaveChangesAsync(default);
+
+        await Assert.ThrowsAsync<MemberAlreadyExistsException>(() =>
+            repoB.SaveChangesAsync(default)
+        );
+        _ = newcomer;
     }
 }
 

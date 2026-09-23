@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { InvitationPreviewResponse } from '../api/models';
 import { SharingService } from '../api/services';
+import { takePendingFragment } from '../core/auth.guard';
 import { ErrorMessages } from '../core/error-messages';
 import { TranslatePipe } from '../core/translate';
 
@@ -27,7 +28,11 @@ export class JoinPage implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly joining = signal(false);
 
-  private readonly token = (this.route.snapshot.fragment ?? '').trim();
+  /**
+   * The token comes from the fragment, or — after a sign-in round trip — from the place the
+   * auth guard parked it (EC-09/EC-10). It is read once and never appears in a URL we send.
+   */
+  private readonly token = (this.route.snapshot.fragment ?? takePendingFragment() ?? '').trim();
 
   ngOnInit(): void {
     if (!this.token) {

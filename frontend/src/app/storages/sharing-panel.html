@@ -38,11 +38,11 @@
         <p class="sharing-hint">{{ 'sharing.link.none' | translate }}</p>
       }
       <div class="inline-actions">
-        <button type="button" class="btn-primary" (click)="createLink()">
+        <button type="button" class="btn-primary" [disabled]="busy()" (click)="createLink()">
           {{ (invitation()?.active ? 'sharing.link.renew' : 'sharing.link.create') | translate }}
         </button>
         @if (invitation()?.active) {
-          <button type="button" class="btn-ghost" (click)="deactivateLink()">
+          <button type="button" class="btn-ghost" [disabled]="busy()" (click)="deactivateLink()">
             {{ 'sharing.link.deactivate' | translate }}
           </button>
         }

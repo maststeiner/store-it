@@ -57,7 +57,7 @@ public class StorageSharingTests
     }
 
     [Fact]
-    public void Invitation_IsActive_UntilSevenDays()
+    public void IsActive_WithinSevenDays_ReturnsTrueUntilExpiry()
     {
         var invitation = StorageInvitation.Create(Guid.NewGuid(), "hash", Now);
 
@@ -68,7 +68,7 @@ public class StorageSharingTests
     }
 
     [Fact]
-    public void Invitation_EmptyHash_ThrowsValidation()
+    public void Create_EmptyHash_ThrowsValidation()
     {
         var ex = Assert.Throws<DomainValidationException>(() =>
             StorageInvitation.Create(Guid.NewGuid(), " ", Now)

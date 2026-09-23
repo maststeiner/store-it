@@ -10,7 +10,7 @@ import {
 } from '@angular/router';
 
 import { AuthService, AuthUser } from './auth.service';
-import { authGuard } from './auth.guard';
+import { PENDING_FRAGMENT_KEY, authGuard, takePendingFragment } from './auth.guard';
 
 function fakeRoute(): ActivatedRouteSnapshot {
   return {} as ActivatedRouteSnapshot;
@@ -123,5 +123,20 @@ describe('authGuard', () => {
 
     expect(loadMe).toHaveBeenCalledOnce();
     expect(result).toBe(true);
+  });
+
+  // SPEC-007 EC-10: the invitation token (URL fragment) never reaches the query string.
+  it('parks a fragment in sessionStorage and strips it from returnUrl', async () => {
+    sessionStorage.removeItem(PENDING_FRAGMENT_KEY);
+    const authService = TestBed.inject(AuthService);
+    authService.user.set(null);
+
+    const result = await TestBed.runInInjectionContext(() =>
+      authGuard({} as ActivatedRouteSnapshot, { url: '/join#secret-token' } as RouterStateSnapshot),
+    );
+
+    expect((result as UrlTree).toString()).toBe('/login?returnUrl=%2Fjoin');
+    expect(takePendingFragment()).toBe('secret-token');
+    expect(takePendingFragment()).toBeNull(); // read once
   });
 });

@@ -136,12 +136,15 @@ instead of each keeping our own copy.**
 - EC-08: **Stale session** (SPEC-006 D6) of a deleted account touching a shared storage: reads
   see nothing (not owner, not member), writes to items answer 404; creating a storage still maps
   to `401 auth.session.stale`.
-- EC-09: **Join page while signed out** — `/join` is a protected route: the guard sends the
-  visitor to sign-in with `returnUrl=/join#<token>` (existing mechanism; the fragment must
-  survive the round trip, `appLocalPath` keeps it), sign-in returns them there.
+- EC-09: **Join page while signed out** — `/join` is a protected route. The guard **strips the
+  fragment** before building `returnUrl=/join` (a query parameter travels to the API and into
+  access logs — EC-10) and parks the token in the tab's `sessionStorage`; after sign-in the join
+  page reads it from there, once. Storage unavailable → the visitor opens the link again.
 - EC-10: **Token exposure** — the token appears only in the owner's share view, in the medium
-  the owner chose, and in the recipient's browser (address bar, history). Neither Caddy, nginx
-  nor the API log it: fragment in the URL, request body towards the API, hash in the database.
+  the owner chose, and in the recipient's browser (address bar, history, this tab's
+  `sessionStorage` during a sign-in round trip). Neither Caddy, nginx nor the API log it:
+  fragment in the URL, never in a query string, request body towards the API, hash in the
+  database.
 
 ---
 
@@ -180,9 +183,12 @@ instead of each keeping our own copy.**
 - [x] Access predicate in one place: the `Storage` query filter becomes `OwnerId == me OR
       Members.Any(m => m.UserId == me)`; owner-only operations check `OwnerId == me` in the
       Application layer (`StorageOwnerOnlyException` → 403).
-- [x] Domain: `Storage` gains `Members` (collection of `StorageMember(UserId, JoinedAt)`),
-      `AddMember`, `RemoveMember`, `TransferOwnership`; invitations are an Infrastructure/API
-      concern (token generation + hashing in the API layer, storage via a repository port).
+- [x] Domain: `Storage` gains `Members` (collection of `StorageMember(StorageId, UserId,
+      JoinedAt)`), `AddMember`, `RemoveMember` (PR 1) and `TransferOwnership` (PR 2);
+      `StorageInvitation(StorageId, TokenHash, CreatedAt, ExpiresAt)` is a Domain entity holding
+      only the hash. Plain-token generation and SHA-256 hashing live in Infrastructure
+      (`InvitationTokens`) behind the Application port `IInvitationTokens`; persistence behind
+      `IInvitationRepository`.
 - [x] API (additive, `/api/v1`; PR 1 endpoints implemented, PR 2 pending): `GET/POST/DELETE /storages/{id}/invitation`,
       `POST /invitations/preview` and `POST /invitations/accept` (token in the JSON body),
       `GET /storages/{id}/members`, `DELETE /storages/{id}/members/{userId}`,
@@ -202,14 +208,14 @@ instead of each keeping our own copy.**
 | AC | How verified | Status |
 |----|--------------|--------|
 | AC-01 | `SharingTests.AcceptInvitation_ValidToken_AddsMemberAndListsStorageForBoth` (isOwner, memberCount, ownerName for both sides) | ✅ 2026-09-23 |
-| AC-02 | `Member_EditsItemsAndRenames_LikeTheOwner` | ✅ 2026-09-23 |
-| AC-03 | `Stranger_ById_Returns404` (+ list excludes) | ✅ 2026-09-23 |
-| AC-04 | `Member_OwnerOnlyOperations_Return403OwnerOnly` (delete, create/read link, remove member) | ✅ 2026-09-23 |
-| AC-05 | `CreateInvitation_ByOwner_ReturnsTokenOnceAndSevenDayExpiry` (43+ chars, +7 d), `CreateInvitation_Again_ReplacesTheOldToken`; domain: `StorageSharingTests.Invitation_IsActive_UntilSevenDays` | ✅ 2026-09-23 |
+| AC-02 | `ItemsAndRename_ByMember_BehaveAsForOwner` | ✅ 2026-09-23 |
+| AC-03 | `GetStorage_ByStranger_Returns404` (+ list excludes) | ✅ 2026-09-23 |
+| AC-04 | `OwnerOnlyOperations_ByMember_Return403OwnerOnly` (delete, create/read link, remove member) | ✅ 2026-09-23 |
+| AC-05 | `CreateInvitation_ByOwner_ReturnsTokenOnceAndSevenDayExpiry` (43+ chars, +7 d), `CreateInvitation_Again_ReplacesTheOldToken`; domain: `StorageSharingTests.IsActive_WithinSevenDays_ReturnsTrueUntilExpiry` | ✅ 2026-09-23 |
 | AC-06 | same test: status carries `active`/`expiresAt`, no `token` | ✅ 2026-09-23 |
 | AC-07 | `DeactivateInvitation_ByOwner_MakesTokenUnusableAndStatusInactive` | ✅ 2026-09-23 |
 | AC-08 | `PreviewInvitation_ValidToken_NamesStorageAndOwner` (no e-mail), `PreviewInvitation_UnknownToken_Returns404InviteInvalid`; deactivated/replaced tokens → same 404 (AC-05/AC-07 tests) | ✅ 2026-09-23 |
-| AC-09 | `AcceptInvitation_TwiceAndByOwner_IsIdempotent`; domain: `AddMember_OwnerOrExistingMember_IsIdempotent` | ✅ 2026-09-23 |
+| AC-09 | `AcceptInvitation_TwiceAndByOwner_IsIdempotent`; concurrent double accept: `SaveChanges_WhenTheSameMembershipWasInsertedMeanwhile_ReportsAlreadyMember` (unique-key race → treated as success); domain: `AddMember_OwnerOrExistingMember_IsIdempotent` | ✅ 2026-09-23 |
 | AC-10 | deactivated token accept → 404 (`DeactivateInvitation_…`); expiry boundary in the domain test (the service clock is pinned) | ✅ 2026-09-23 |
 | AC-11 | `GetMembers_ListsOwnerFirstThenMembers_DisplayNamesOnly` | ✅ 2026-09-23 |
 | AC-12 | `RemoveMember_ByOwner_EndsAccess` | ✅ 2026-09-23 |
@@ -217,8 +223,8 @@ instead of each keeping our own copy.**
 | AC-14 | `LeaveStorage_ByOwner_Returns409OwnerCannotLeave` | ✅ 2026-09-23 |
 | AC-15 | `storage-list-page.spec` badge test; `storage-detail-page.spec` sharing block (owner: Rename/Share/Delete; member: Rename/Members/Leave + "Shared by …"; leave → DELETE membership → list) | ✅ 2026-09-23 |
 | AC-16 | `sharing-panel.spec` (owner: members + link state + remove; create link → `origin/join#token`; deactivate; remove member; member: read-only) | ✅ 2026-09-23 |
-| AC-17 | `join-page.spec` (token from fragment → POST body; join → navigate; already member → navigate; 404 → invalid page; no fragment → invalid); `i18n.spec` key parity | ✅ 2026-09-23 |
-| Local runs (PR 1) | backend 196 tests (119 service incl. 14 new, 68 domain incl. 6 new, 9 architecture), CSharpier; frontend 129 vitest (15 new), lint, prettier, `ng build`; contract + client regenerated | ✅ 2026-09-23 |
+| AC-17 | `join-page.spec` (token from fragment → POST body; parked token after sign-in used once; join → navigate; already member → navigate; 404 → invalid page; no fragment → invalid); `auth.guard.spec` (fragment stripped from `returnUrl`, parked); `i18n.spec` key parity | ✅ 2026-09-23 |
+| Local runs (PR 1) | backend 198 tests (121 service incl. 16 new, 68 domain incl. 6 new, 9 architecture), CSharpier, both images build; frontend 132 vitest (18 new), lint, prettier, `ng build`; contract + client regenerated | ✅ 2026-09-23 |
 | AC-18 … AC-24 | PR 2 | ⬜ |
 | End to end (G3) | Marcel and Patrizia share a storage on `prod-oracle` via a link, both edit it, one leaves; owner hands over and deletes (PR 2) | ⬜ |
 

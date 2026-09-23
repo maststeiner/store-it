@@ -148,4 +148,25 @@ describe('SharingPanel (SPEC-007 AC-16)', () => {
     expect(el.querySelectorAll('.member-row')).toHaveLength(1);
     expect(el.textContent).toContain('Nobody but you yet.');
   });
+
+  it('Owner_WhileCreateIsPending_HasBothMutationButtonsDisabled', async () => {
+    const { fixture, el } = await render(true);
+
+    const create = el.querySelector('.sharing-invite .btn-primary') as HTMLButtonElement;
+    create.click();
+    fixture.detectChanges();
+
+    expect(create.disabled).toBe(true);
+    // Only one request in flight — a second click must not have fired another one.
+    create.click();
+    const post = http.expectOne('/api/v1/storages/s1/invitation');
+    post.flush({ token: 't', expiresAt: '2026-09-30T12:00:00Z' });
+    http
+      .expectOne('/api/v1/storages/s1/invitation')
+      .flush({ active: true, expiresAt: '2026-09-30T12:00:00Z' });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(create.disabled).toBe(false);
+  });
 });

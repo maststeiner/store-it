@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 
 import { apiErrorInterceptor } from '../core/api-error.interceptor';
 import { TranslateService } from '../core/translate';
+import { PENDING_FRAGMENT_KEY } from '../core/auth.guard';
 import { JoinPage } from './join-page';
 
 const TRANSLATIONS = {
@@ -123,6 +124,26 @@ describe('JoinPage (SPEC-007 D3 / AC-17)', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain(
       'This link is no longer valid',
     );
+    http.verify();
+  });
+
+  it('ParkedToken_AfterSignIn_IsUsedOnceWithoutAFragment', async () => {
+    sessionStorage.setItem(PENDING_FRAGMENT_KEY, 'parked-token');
+    const http = await setup(null);
+    const fixture = TestBed.createComponent(JoinPage);
+    fixture.detectChanges();
+
+    const preview = http.expectOne('/api/v1/invitations/preview');
+    expect(preview.request.body).toEqual({ token: 'parked-token' });
+    preview.flush({
+      storageId: 's7',
+      storageName: 'Cellar',
+      ownerName: 'Olga',
+      alreadyMember: false,
+    });
+    await fixture.whenStable();
+
+    expect(sessionStorage.getItem(PENDING_FRAGMENT_KEY)).toBeNull();
     http.verify();
   });
 });

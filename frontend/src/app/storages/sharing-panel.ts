@@ -33,6 +33,10 @@ export class SharingPanel implements OnInit {
   protected readonly linkExpiresAt = signal<string | null>(null);
   protected readonly copied = signal(false);
   protected readonly error = signal<string | null>(null);
+  /** A create/deactivate request is in flight: both buttons are disabled meanwhile. */
+  protected readonly busy = signal(false);
+  /** Ignore invitation-status responses older than the latest request. */
+  private statusRequest = 0;
 
   protected readonly others = computed(() => (this.members() ?? []).filter((m) => !m.isOwner));
 
@@ -44,15 +48,23 @@ export class SharingPanel implements OnInit {
   }
 
   protected createLink(): void {
+    if (this.busy()) {
+      return;
+    }
+    this.busy.set(true);
     this.api.createInvitation({ 'X-XSRF-TOKEN': '', storageId: this.storageId() }).subscribe({
       next: (created) => {
         this.link.set(`${window.location.origin}/join#${created.token}`);
         this.linkExpiresAt.set(created.expiresAt);
         this.copied.set(false);
         this.error.set(null);
+        this.busy.set(false);
         this.loadInvitation();
       },
-      error: (error: unknown) => this.error.set(this.errors.messageFor(error)),
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.error.set(this.errors.messageFor(error));
+      },
     });
   }
 
@@ -71,14 +83,22 @@ export class SharingPanel implements OnInit {
   }
 
   protected deactivateLink(): void {
+    if (this.busy()) {
+      return;
+    }
+    this.busy.set(true);
     this.api.deactivateInvitation({ 'X-XSRF-TOKEN': '', storageId: this.storageId() }).subscribe({
       next: () => {
         this.link.set(null);
         this.linkExpiresAt.set(null);
         this.error.set(null);
+        this.busy.set(false);
         this.loadInvitation();
       },
-      error: (error: unknown) => this.error.set(this.errors.messageFor(error)),
+      error: (error: unknown) => {
+        this.busy.set(false);
+        this.error.set(this.errors.messageFor(error));
+      },
     });
   }
 
@@ -99,8 +119,13 @@ export class SharingPanel implements OnInit {
   }
 
   private loadInvitation(): void {
+    const request = ++this.statusRequest;
     this.api.getInvitation({ storageId: this.storageId() }).subscribe({
-      next: (status) => this.invitation.set(status),
+      next: (status) => {
+        if (request === this.statusRequest) {
+          this.invitation.set(status);
+        }
+      },
       error: (error: unknown) => this.error.set(this.errors.messageFor(error)),
     });
   }

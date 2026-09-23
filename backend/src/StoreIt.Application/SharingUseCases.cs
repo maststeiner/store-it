@@ -215,7 +215,14 @@ public sealed class AcceptInvitationUseCase(
 
         if (storage.AddMember(userId, timeProvider.GetUtcNow()))
         {
-            await storages.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await storages.SaveChangesAsync(cancellationToken);
+            }
+            catch (MemberAlreadyExistsException)
+            {
+                // A concurrent accept by the same user won the race — the outcome is the same.
+            }
         }
 
         return storage.Id;

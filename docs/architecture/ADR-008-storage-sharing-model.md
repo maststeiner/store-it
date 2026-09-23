@@ -108,7 +108,8 @@ view" semantics for members.
 
 ## Layering Rules (for the Architecture Conformance Gate)
 
-Unchanged (ADR-001). The access predicate lives in one place — the Infrastructure query filter
-plus an Application-level `IStorageAccess`/owner check for owner-only operations — never in the
-web client. Tokens are generated and hashed in the API/Infrastructure layer; the Domain knows
-memberships and ownership, not tokens.
+Unchanged (ADR-001). The access predicate lives in two places only — the Infrastructure query
+filter (owner or member) and the Application owner check `SharingGuards.EnsureOwner` for
+owner-only operations — never in the web client. Plain tokens are generated and hashed in
+Infrastructure (`InvitationTokens`, behind the Application port `IInvitationTokens`); the Domain
+holds memberships, ownership and the invitation's hash, never a plain token.
