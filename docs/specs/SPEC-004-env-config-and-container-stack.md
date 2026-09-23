@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-08-09
 > **Sprint:** 2026-S32
 > **Author:** Claude Opus 5 (developer agent), from Marcel Steiner's request
-> **Last updated:** 2026-08-09
+> **Last updated:** 2026-09-23 (A8)
 
 ---
 
@@ -84,6 +84,7 @@ acceptance criterion; they fix statements that were wrong or under-specified whe
 | A4 | 2026-08-09 | Option B was still listed as an alternative although option A had been chosen and the technical constraints forbid the new code B would need. Reduced to a note. |
 | A5 | 2026-08-09 | Added EC-11 (dual-stack loopback), found by running the stack: `localhost` resolved to `::1` inside the container and the health check failed with "connection refused" while the service was fine. |
 | A6 | 2026-08-09 | **`ASPNETCORE_ENVIRONMENT` is no longer configurable for this stack.** Decision 4 requires `Production`, but the environment contract allowed an override — and in `Development` the API maps `POST /auth/dev-login`, which issues a session with no credential. A one-line change in an untracked `.env` was too easy a way to drop the security contract. The value is fixed in compose; a Development run is what `scripts/dev.sh` is for. |
+| A8 | 2026-09-23 | **Decision 7 amended: CI now *builds* the images, still never *runs* the stack.** Since SPEC-005 the same Dockerfiles produce the release images, and the accepted consequence ("can rot unnoticed") bit on 2026-09-21: a Renovate major bump of the .NET base images (#130) broke `backend/Dockerfile` eleven days before the first release attempt `v0.1.0` failed on it (#155). New job `1c · Container images build` in `ci.yml` builds `backend/Dockerfile` (targets `runtime` and `migrate`) and `frontend/Dockerfile` on every run — amd64 only, no push, no container started — so the login question that motivated decision 7 stays untouched. Decided by Marcel Steiner (option 1 of #156, 2026-09-23). |
 | A7 | 2026-08-09 | **Project isolation must be explicit, not implied by a separate file.** The stack declares `name: storeit-stack` and a `stack-pgdata` volume, but `name:` is not honoured by every compose implementation, so both scripts now pass `-p storeit-stack`. Verified: a teardown with a volume named like the dev database present leaves it untouched. |
 
 ### A3 — the parts that must be exact

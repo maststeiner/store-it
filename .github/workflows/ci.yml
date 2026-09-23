@@ -206,6 +206,53 @@ jobs:
           path: frontend/playwright-report/
           if-no-files-found: ignore
 
+  # ────────────────────────────────────────────
+  # 1c · Container images build (#156, SPEC-004 decision 7 amended 2026-09-23)
+  # ────────────────────────────────────────────
+  # The same Dockerfiles produce the release images (SPEC-005). Build them on every run —
+  # build only: no push, no run, amd64 only — so a broken base image or build stage fails a
+  # PR instead of the release (v0.1.0 failed exactly like that, #155). Cache scopes are the
+  # release workflow's, so a release after a green develop build reuses the layers.
+  images-build:
+    name: 1c · Container images build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build backend (runtime)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: backend
+          target: runtime
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=backend-amd64
+          cache-to: type=gha,mode=max,scope=backend-amd64
+
+      # Same Dockerfile and cache scope → the `build` stage is reused (release.yml does the same).
+      - name: Build migrate
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: backend
+          target: migrate
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=backend-amd64
+          cache-to: type=gha,mode=max,scope=backend-amd64
+
+      - name: Build web
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: frontend
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha,scope=web-amd64
+          cache-to: type=gha,mode=max,scope=web-amd64
+
   security:
     name: 2 · Security scan & SBOM
     runs-on: ubuntu-latest
