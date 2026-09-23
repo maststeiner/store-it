@@ -163,7 +163,7 @@ TODO — add scenarios for expiry overview and storage sharing when specced.
 ## 8. Cross-cutting Concepts
 
 ### Security
-- Authentication + authorization required for every **protected** API call (`/api/v1/**`); `/health` and the `/auth/*` endpoints are anonymous by design (SPEC-003 allowlist). A storage is only accessible to its owner (per-storage ownership; sharing/membership is a later extension).
+- Authentication + authorization required for every **protected** API call (`/api/v1/**`); `/health` and the `/auth/*` endpoints are anonymous by design (SPEC-003 allowlist). A storage is accessible to its owner and to its members (SPEC-007 / ADR-008: flat membership via invitation links; owner-only: delete, members, link, hand-over).
 - Identity via external OIDC providers with a BFF session — see [ADR-004](ADR-004-identity-auth.md).
 
 ### Error Handling & Logging

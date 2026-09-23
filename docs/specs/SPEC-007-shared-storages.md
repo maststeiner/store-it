@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-23
 > **Sprint:** 2026-S39
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's direction (issue #81)
-> **Last updated:** 2026-09-23
+> **Last updated:** 2026-09-23 (PR 1 implemented)
 
 ---
 
@@ -173,25 +173,25 @@ instead of each keeping our own copy.**
 
 <!-- To be confirmed after Gate 1 -->
 
-- [ ] Data: `storage_members(storage_id FK→storages ON DELETE CASCADE, user_id FK→users ON DELETE
+- [x] Data: `storage_members(storage_id FK→storages ON DELETE CASCADE, user_id FK→users ON DELETE
       CASCADE, joined_at)` with PK `(storage_id, user_id)` and index `(user_id, storage_id)`;
       `storage_invitations(storage_id PK/FK ON DELETE CASCADE, token_hash unique, expires_at,
       created_at)`. One EF migration.
-- [ ] Access predicate in one place: the `Storage` query filter becomes `OwnerId == me OR
+- [x] Access predicate in one place: the `Storage` query filter becomes `OwnerId == me OR
       Members.Any(m => m.UserId == me)`; owner-only operations check `OwnerId == me` in the
       Application layer (`StorageOwnerOnlyException` → 403).
-- [ ] Domain: `Storage` gains `Members` (collection of `StorageMember(UserId, JoinedAt)`),
+- [x] Domain: `Storage` gains `Members` (collection of `StorageMember(UserId, JoinedAt)`),
       `AddMember`, `RemoveMember`, `TransferOwnership`; invitations are an Infrastructure/API
       concern (token generation + hashing in the API layer, storage via a repository port).
-- [ ] API (additive, `/api/v1`): `GET/POST/DELETE /storages/{id}/invitation`,
+- [x] API (additive, `/api/v1`; PR 1 endpoints implemented, PR 2 pending): `GET/POST/DELETE /storages/{id}/invitation`,
       `POST /invitations/preview` and `POST /invitations/accept` (token in the JSON body),
       `GET /storages/{id}/members`, `DELETE /storages/{id}/members/{userId}`,
       `DELETE /storages/{id}/membership` (leave); PR 2: `PUT /storages/{id}/owner`,
       `GET /account` (`ownedSharedStorages` count). `StorageResponse` gains `isOwner`,
       `memberCount`, `ownerName`. Contract + client regenerated.
-- [ ] Layering per ADR-001/ADR-008; architecture tests unchanged.
-- [ ] Dependencies: none new (SHA-256 and `RandomNumberGenerator` are in the BCL).
-- [ ] ADR required: yes → ADR-008.
+- [x] Layering per ADR-001/ADR-008; architecture tests unchanged.
+- [x] Dependencies: none new (SHA-256 and `RandomNumberGenerator` are in the BCL).
+- [x] ADR required: yes → ADR-008 (accepted 2026-09-23).
 
 ---
 
@@ -201,12 +201,26 @@ instead of each keeping our own copy.**
 
 | AC | How verified | Status |
 |----|--------------|--------|
-| AC-01 … AC-14 | service tests over HTTP + PostgreSQL (two/three users via the Test scheme) | ⬜ |
-| AC-15 … AC-17 | vitest component tests; i18n parity | ⬜ |
-| AC-18 … AC-24 | service + component tests (PR 2) | ⬜ |
-| End to end (G3) | Marcel and Patrizia share a storage on `prod-oracle` via a link, both edit it, one leaves; owner hands over and deletes | ⬜ |
-
----
+| AC-01 | `SharingTests.AcceptInvitation_ValidToken_AddsMemberAndListsStorageForBoth` (isOwner, memberCount, ownerName for both sides) | ✅ 2026-09-23 |
+| AC-02 | `Member_EditsItemsAndRenames_LikeTheOwner` | ✅ 2026-09-23 |
+| AC-03 | `Stranger_ById_Returns404` (+ list excludes) | ✅ 2026-09-23 |
+| AC-04 | `Member_OwnerOnlyOperations_Return403OwnerOnly` (delete, create/read link, remove member) | ✅ 2026-09-23 |
+| AC-05 | `CreateInvitation_ByOwner_ReturnsTokenOnceAndSevenDayExpiry` (43+ chars, +7 d), `CreateInvitation_Again_ReplacesTheOldToken`; domain: `StorageSharingTests.Invitation_IsActive_UntilSevenDays` | ✅ 2026-09-23 |
+| AC-06 | same test: status carries `active`/`expiresAt`, no `token` | ✅ 2026-09-23 |
+| AC-07 | `DeactivateInvitation_ByOwner_MakesTokenUnusableAndStatusInactive` | ✅ 2026-09-23 |
+| AC-08 | `PreviewInvitation_ValidToken_NamesStorageAndOwner` (no e-mail), `PreviewInvitation_UnknownToken_Returns404InviteInvalid`; deactivated/replaced tokens → same 404 (AC-05/AC-07 tests) | ✅ 2026-09-23 |
+| AC-09 | `AcceptInvitation_TwiceAndByOwner_IsIdempotent`; domain: `AddMember_OwnerOrExistingMember_IsIdempotent` | ✅ 2026-09-23 |
+| AC-10 | deactivated token accept → 404 (`DeactivateInvitation_…`); expiry boundary in the domain test (the service clock is pinned) | ✅ 2026-09-23 |
+| AC-11 | `GetMembers_ListsOwnerFirstThenMembers_DisplayNamesOnly` | ✅ 2026-09-23 |
+| AC-12 | `RemoveMember_ByOwner_EndsAccess` | ✅ 2026-09-23 |
+| AC-13 | `LeaveStorage_ByMember_KeepsStorageAndItems` | ✅ 2026-09-23 |
+| AC-14 | `LeaveStorage_ByOwner_Returns409OwnerCannotLeave` | ✅ 2026-09-23 |
+| AC-15 | `storage-list-page.spec` badge test; `storage-detail-page.spec` sharing block (owner: Rename/Share/Delete; member: Rename/Members/Leave + "Shared by …"; leave → DELETE membership → list) | ✅ 2026-09-23 |
+| AC-16 | `sharing-panel.spec` (owner: members + link state + remove; create link → `origin/join#token`; deactivate; remove member; member: read-only) | ✅ 2026-09-23 |
+| AC-17 | `join-page.spec` (token from fragment → POST body; join → navigate; already member → navigate; 404 → invalid page; no fragment → invalid); `i18n.spec` key parity | ✅ 2026-09-23 |
+| Local runs (PR 1) | backend 196 tests (119 service incl. 14 new, 68 domain incl. 6 new, 9 architecture), CSharpier; frontend 129 vitest (15 new), lint, prettier, `ng build`; contract + client regenerated | ✅ 2026-09-23 |
+| AC-18 … AC-24 | PR 2 | ⬜ |
+| End to end (G3) | Marcel and Patrizia share a storage on `prod-oracle` via a link, both edit it, one leaves; owner hands over and deletes (PR 2) | ⬜ |
 
 ## Gate Status
 
