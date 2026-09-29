@@ -45,6 +45,16 @@ every dictionary; fix the layout as he asked ("Hinzufügen und Abbrechen unterei
 | 1 | "der button heisst items.new, also keine Übersetzung. Und der Abbrechen Button ist komisch hinter dem Item … Hinzufügen und Abbrechen untereinander" | Bug found by the human test; layout wish. |
 | 2 | "der button heisst immer noch items.new" (after the first fix, which had not reached develop) | Led to the cache buster and to noticing the orphaned commits. |
 
+## UX refinement in the same PR (Marcel, 2026-09-29)
+
+"Bei den Lagerorten gibt es nun zwei Möglichkeiten … Ich würde den Button entfernen. Bei den
+Artikeln hätte ich einen Icon-Button mit einem Plus gemacht neben dem Edit, Teilen und Papierkorb."
+Done: the list keeps only the placeholder card; the detail header gets a ＋ icon button that
+opens and closes the form (`aria-expanded`), the text button is gone; `storages.new` removed from
+the dictionaries, `items.new` is the icon's label. SPEC-001 A4 reworded. The retry test for the
+dictionary loader also had to flush the English fallback request — a failing test slipped into
+one push before that; fixed in the next commit.
+
 ## Verification
 
 nginx headers verified in a container (json → `no-cache` + ETag; js → `immutable`; index.html →

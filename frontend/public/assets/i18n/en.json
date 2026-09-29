@@ -22,7 +22,6 @@
   },
   "storages": {
     "title": "My storages",
-    "new": "+ New storage",
     "createGhost": "+ Create storage",
     "namePlaceholder": "Storage name",
     "count": {
@@ -60,7 +59,7 @@
       "production": "Production date",
       "dateHint": "Provide at least one date (expiry or production)."
     },
-    "new": "+ New item"
+    "new": "New item"
   },
   "groups": {
     "expired": "Expired",

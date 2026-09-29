@@ -47,6 +47,17 @@
       >
         ✎
       </button>
+      <button
+        type="button"
+        class="icon-btn"
+        [class.active]="addOpen()"
+        (click)="addOpen() ? cancelAdd() : openAdd()"
+        [attr.aria-expanded]="addOpen()"
+        [title]="'items.new' | translate"
+        [attr.aria-label]="'items.new' | translate"
+      >
+        ＋
+      </button>
       @if (storage(); as s) {
         <button
           type="button"
@@ -101,13 +112,7 @@
     <p class="form-error" role="alert">{{ error }}</p>
   }
 
-  @if (!addOpen()) {
-    <div class="add-toggle">
-      <button type="button" class="btn-primary" (click)="openAdd()">
-        {{ 'items.new' | translate }}
-      </button>
-    </div>
-  } @else {
+  @if (addOpen()) {
     <form class="add-form" (ngSubmit)="addItem()">
       <div class="field">
         <label for="item-name">{{ 'items.form.name' | translate }}</label>

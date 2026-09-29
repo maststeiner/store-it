@@ -10,7 +10,6 @@ import { StorageListPage } from './storage-list-page';
 const TRANSLATIONS = {
   storages: {
     title: 'My storages',
-    new: '+ New storage',
     createGhost: '+ Create storage',
     namePlaceholder: 'Storage name',
     count: { one: '1 storage', other: '{{count}} storages' },

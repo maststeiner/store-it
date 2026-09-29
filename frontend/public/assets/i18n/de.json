@@ -22,7 +22,6 @@
   },
   "storages": {
     "title": "Meine Lagerorte",
-    "new": "+ Neuer Lagerort",
     "createGhost": "+ Lagerort anlegen",
     "namePlaceholder": "Name des Lagerorts",
     "count": {
@@ -60,7 +59,7 @@
       "production": "Produktionsdatum",
       "dateHint": "Mindestens ein Datum angeben (Ablauf- oder Produktionsdatum)."
     },
-    "new": "+ Neuer Artikel"
+    "new": "Neuer Artikel"
   },
   "groups": {
     "expired": "Abgelaufen",
