@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-23
 > **Sprint:** 2026-S39
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request (issue #168)
-> **Last updated:** 2026-09-23 (A1: shared storages)
+> **Last updated:** 2026-09-29 (G3 passed on prod)
 
 ---
 
@@ -169,7 +169,7 @@ short confirmation notice.
 | AC-11 | `auth.service.spec.deleteAccount_ServerError_KeepsSessionAndSurfacesError`; `app.spec.DeleteAccount_WhenTheRequestFails_ShowsTheErrorAndKeepsTheSession` | ✅ 2026-09-23 |
 | AC-12 | `i18n.spec` key-parity over de/en/fr/it (5 new keys) | ✅ 2026-09-23 |
 | Local runs | backend: 105 service + 62 domain + 9 architecture tests green, CSharpier clean; frontend: 113 vitest green, coverage 91.9 % statements, lint + prettier clean, `ng build` ok | ✅ 2026-09-23 |
-| End to end (G3) | Marcel deletes a test account on `prod-oracle` (after the next release) and signs in again to an empty app; Playwright E2E deliberately not extended — the flow is covered by service tests and component tests, the human test on the public URL is the spec's G3 | ⬜ |
+| End to end (G3) | **Passed on `prod-oracle` (store-it 0.2.0, released 2026-09-23):** Marcel Steiner deleted a test account on the public URL with the typed e-mail confirmation and signed in again to an empty app — reported 2026-09-29 ("Die Tests sind erfolgreich"). Playwright E2E deliberately not extended; the flow is covered by service and component tests. | ✅ 2026-09-29 |
 
 ## Amendments (post-freeze)
 
@@ -182,5 +182,5 @@ short confirmation notice.
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
 | G1 · Spec Freeze | ✅ | 2026-09-23 | Marcel Steiner |
-| G2 · Review | ⬜ | | |
-| G3 · DoD/Merge | ⬜ | | |
+| G2 · Review | ✅ PR #169 (CodeRabbit 4 findings fixed, human review) | 2026-09-23 | Marcel Steiner |
+| G3 · DoD/Merge | ✅ merged to `develop` 2026-09-23, released as `v0.2.0` 2026-09-23, human test on `prod-oracle` 2026-09-29 | 2026-09-23 / 2026-09-29 | Marcel Steiner |

@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-09-23
 > **Sprint:** 2026-S39
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's direction (issue #81)
-> **Last updated:** 2026-09-23 (PR 1 and PR 2 implemented)
+> **Last updated:** 2026-09-29 (G3 passed on prod)
 
 ---
 
@@ -234,12 +234,12 @@ instead of each keeping our own copy.**
 | AC-23 | `sharing-panel.spec.Owner_MakesMemberOwner_ConfirmsThenTransfersAndNotifiesTheHost` | ✅ 2026-09-23 |
 | AC-24 | SPEC-006 amendment A1 written; privacy text unchanged (still literally true) | ✅ 2026-09-23 |
 | Local runs (PR 2) | backend 205 tests (126 service incl. 5 new, 70 domain incl. 2 new, 9 architecture), CSharpier; frontend 153 vitest (21 new), lint, prettier, `ng build`; contract + client regenerated | ✅ 2026-09-23 |
-| End to end (G3) | Marcel and Patrizia share a storage on `prod-oracle` via a link, both edit it, one leaves; owner hands over and deletes (PR 2) | ⬜ |
+| End to end (G3) | **Passed on `prod-oracle` (store-it 0.2.0):** Marcel Steiner and Patrizia shared a storage on the public URL via an invitation link, both edited it, and the leave / hand-over flow worked — reported 2026-09-29 ("Die Tests sind erfolgreich"). | ✅ 2026-09-29 |
 
 ## Gate Status
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
 | G1 · Spec Freeze | ✅ | 2026-09-23 | Marcel Steiner |
-| G2 · Review | ⬜ | | |
-| G3 · DoD/Merge | ⬜ | | |
+| G2 · Review | ✅ PR #171 (CodeRabbit 9 findings fixed) and PR #172 (no findings), human review | 2026-09-23 | Marcel Steiner |
+| G3 · DoD/Merge | ✅ #171 and #172 merged to `develop` 2026-09-23, released as `v0.2.0` 2026-09-23, human test on `prod-oracle` with two people 2026-09-29 | 2026-09-23 / 2026-09-29 | Marcel Steiner |
