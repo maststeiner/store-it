@@ -19,7 +19,7 @@ const TRANSLATIONS = {
     edit: 'Edit',
   },
   items: {
-    new: '+ New item',
+    new: 'New item',
     empty: 'No items yet.',
     producedOn: 'prod. {{date}}',
     form: {
@@ -104,7 +104,9 @@ describe('StorageDetailPage', () => {
   /** #182: the add form is closed by default; open it like a user would. */
   async function openAddForm(fixture: ComponentFixture<StorageDetailPage>): Promise<void> {
     const element = fixture.nativeElement as HTMLElement;
-    (element.querySelector('.add-toggle .btn-primary') as HTMLButtonElement).click();
+    (
+      element.querySelector('.detail-head .icon-btn[aria-label="New item"]') as HTMLButtonElement
+    ).click();
     fixture.detectChanges();
     await fixture.whenStable();
   }
@@ -212,9 +214,7 @@ describe('StorageDetailPage', () => {
     expect((element.textContent ?? '').includes('Peas')).toBe(true);
     // AC-03: the form closed again, the button is back.
     expect(element.querySelector('form.add-form')).toBeNull();
-    expect(element.querySelector('.add-toggle .btn-primary')?.textContent?.trim()).toBe(
-      '+ New item',
-    );
+    expect(element.querySelector('.detail-head .icon-btn[aria-label="New item"]')).not.toBeNull();
   });
 
   it('deletes an item and reloads', async () => {
@@ -350,7 +350,7 @@ describe('StorageDetailPage', () => {
       const labels = Array.from(element.querySelectorAll('.detail-head .icon-btn')).map((b) =>
         b.getAttribute('aria-label'),
       );
-      expect(labels).toEqual(['Rename', 'Share', 'Delete']);
+      expect(labels).toEqual(['Rename', 'New item', 'Share', 'Delete']);
       expect(element.querySelector('.storage-owner')).toBeNull();
     });
 
@@ -364,7 +364,7 @@ describe('StorageDetailPage', () => {
       const labels = Array.from(element.querySelectorAll('.detail-head .icon-btn')).map((b) =>
         b.getAttribute('aria-label'),
       );
-      expect(labels).toEqual(['Rename', 'Members', 'Leave']);
+      expect(labels).toEqual(['Rename', 'New item', 'Members', 'Leave']);
       expect(element.querySelector('.storage-owner')?.textContent).toContain(
         'Shared by Olga Owner',
       );
@@ -602,9 +602,9 @@ describe('StorageDetailPage', () => {
       const element = fixture.nativeElement as HTMLElement;
 
       expect(element.querySelector('form.add-form')).toBeNull();
-      expect(element.querySelector('.add-toggle .btn-primary')?.textContent?.trim()).toBe(
-        '+ New item',
-      );
+      const plus = element.querySelector('.detail-head .icon-btn[aria-label="New item"]');
+      expect(plus).not.toBeNull();
+      expect(plus?.getAttribute('aria-expanded')).toBe('false');
     });
 
     it('AddForm_OnButtonClick_OpensEmptyAndFocusesTheName', async () => {
@@ -618,7 +618,11 @@ describe('StorageDetailPage', () => {
       await openAddForm(fixture);
       await new Promise((resolve) => setTimeout(resolve));
 
-      expect(element.querySelector('.add-toggle')).toBeNull();
+      expect(
+        element
+          .querySelector('.detail-head .icon-btn[aria-label="New item"]')
+          ?.getAttribute('aria-expanded'),
+      ).toBe('true');
       const name = element.querySelector('#item-name') as HTMLInputElement;
       expect(name.value).toBe('');
       expect(document.activeElement).toBe(name);
@@ -645,6 +649,20 @@ describe('StorageDetailPage', () => {
       expect((element.querySelector('#item-name') as HTMLInputElement).value).toBe('');
     });
 
+    it('AddForm_OnPlusClickedAgain_Closes', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([]);
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      await openAddForm(fixture);
+      expect(element.querySelector('form.add-form')).not.toBeNull();
+
+      await openAddForm(fixture); // same button, now closes
+
+      expect(element.querySelector('form.add-form')).toBeNull();
+    });
+
     it('AddForm_OnEscape_Closes', async () => {
       const fixture = TestBed.createComponent(StorageDetailPage);
       fixture.detectChanges();
@@ -658,7 +676,11 @@ describe('StorageDetailPage', () => {
       await fixture.whenStable();
 
       expect(element.querySelector('form.add-form')).toBeNull();
-      expect(element.querySelector('.add-toggle')).not.toBeNull();
+      expect(
+        element
+          .querySelector('.detail-head .icon-btn[aria-label="New item"]')
+          ?.getAttribute('aria-expanded'),
+      ).toBe('false');
     });
   });
 });

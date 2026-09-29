@@ -22,7 +22,6 @@
   },
   "storages": {
     "title": "Mes rangements",
-    "new": "+ Nouveau rangement",
     "createGhost": "+ Créer un rangement",
     "namePlaceholder": "Nom du rangement",
     "count": {
@@ -60,7 +59,7 @@
       "production": "Date de production",
       "dateHint": "Indiquer au moins une date (expiration ou production)."
     },
-    "new": "+ Nouvel article"
+    "new": "Nouvel article"
   },
   "groups": {
     "expired": "Expiré",

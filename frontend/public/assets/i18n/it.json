@@ -22,7 +22,6 @@
   },
   "storages": {
     "title": "Le mie dispense",
-    "new": "+ Nuova dispensa",
     "createGhost": "+ Crea dispensa",
     "namePlaceholder": "Nome della dispensa",
     "count": {
@@ -60,7 +59,7 @@
       "production": "Data di produzione",
       "dateHint": "Indicare almeno una data (scadenza o produzione)."
     },
-    "new": "+ Nuovo articolo"
+    "new": "Nuovo articolo"
   },
   "groups": {
     "expired": "Scaduti",
