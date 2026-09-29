@@ -20,5 +20,5 @@ test('after dev-login the storages overview is reachable', async ({ page }) => {
   await page.goto('/storages');
 
   // The auth guard passes; the overview renders the "+ New storage" button.
-  await expect(page.getByRole('button', { name: /new storage/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /create storage/i })).toBeVisible();
 });
