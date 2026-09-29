@@ -446,6 +446,19 @@ h1 {
   margin-left: 0;
   padding: 10px 16px;
 }
+/* #182: Add and Cancel stacked in the last grid column, aligned with the fields' bottom. */
+.add-form .form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: end;
+}
+.add-form .form-actions .btn-primary,
+.add-form .form-actions .btn-ghost {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: center;
+}
 .form-hint {
   grid-column: 1 / -1;
   margin: 0;
