@@ -17,6 +17,13 @@ export interface TranslationDict {
 }
 
 const FALLBACK_LANGUAGE = 'en';
+/**
+ * Cache buster for the dictionary URLs (#182 follow-up): a browser that cached a dictionary
+ * heuristically (before nginx sent Cache-Control: no-cache) would keep serving the old one for
+ * hours after a release. A per-app-start stamp gives every session a fresh URL; with the
+ * server's ETag the request costs a 304 at most.
+ */
+const LOAD_STAMP = Date.now();
 const PARAM_PATTERN = /\{\{\s*(\w+)\s*\}\}/g;
 
 function lookup(dict: TranslationDict | undefined, key: string): string | null {
@@ -77,7 +84,7 @@ export class TranslateService {
       return;
     }
     this.pending.add(language);
-    this.http.get<TranslationDict>(`./assets/i18n/${language}.json`).subscribe({
+    this.http.get<TranslationDict>(`./assets/i18n/${language}.json?v=${LOAD_STAMP}`).subscribe({
       next: (dict) => {
         this.pending.delete(language);
         this.setTranslation(language, dict);
