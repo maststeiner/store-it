@@ -39,6 +39,8 @@ test('add an item and see it grouped by expiry status', async ({ page }) => {
 
   // Act: add an item that is already expired (yesterday)
   const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  // #182: the add form opens on demand
+  await page.getByRole('button', { name: /new item/i }).click();
   await page.locator('#item-name').fill('Yogurt');
   await page.locator('#item-amount').fill('2');
   await page.locator('#item-expiry').fill(yesterday);
@@ -57,6 +59,8 @@ test('reject an item without any date (server validation surfaces in the UI)', a
   await page.getByRole('button', { name: /create/i }).click();
   await page.getByText(storageName).click();
 
+  // #182: the add form opens on demand
+  await page.getByRole('button', { name: /new item/i }).click();
   await page.locator('#item-name').fill('Flour');
   await page.locator('#item-amount').fill('1');
   await page.getByRole('button', { name: /add/i }).click();
