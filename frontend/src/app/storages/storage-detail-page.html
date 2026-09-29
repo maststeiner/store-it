@@ -101,55 +101,69 @@
     <p class="form-error" role="alert">{{ error }}</p>
   }
 
-  <form class="add-form" (ngSubmit)="addItem()">
-    <div class="field">
-      <label for="item-name">{{ 'items.form.name' | translate }}</label>
-      <input
-        id="item-name"
-        name="name"
-        type="text"
-        [(ngModel)]="form.name"
-        [placeholder]="'items.form.namePlaceholder' | translate"
-      />
+  @if (!addOpen()) {
+    <div class="add-toggle">
+      <button type="button" class="btn-primary" (click)="openAdd()">
+        {{ 'items.new' | translate }}
+      </button>
     </div>
-    <div class="field">
-      <label for="item-amount">{{ 'items.form.amount' | translate }}</label>
-      <input
-        id="item-amount"
-        name="amount"
-        type="number"
-        step="0.1"
-        min="0.1"
-        [(ngModel)]="form.amount"
-      />
-    </div>
-    <div class="field">
-      <label for="item-unit">{{ 'items.form.unit' | translate }}</label>
-      <select id="item-unit" name="unit" [(ngModel)]="form.unit">
-        @for (unit of units; track unit) {
-          <option [value]="unit">{{ 'units.' + unit | translate }}</option>
-        }
-      </select>
-    </div>
-    <div class="field">
-      <label for="item-expiry">{{ 'items.form.expiry' | translate }}</label>
-      <input id="item-expiry" name="expiryDate" type="date" [(ngModel)]="form.expiryDate" />
-    </div>
-    <div class="field">
-      <label for="item-production">{{ 'items.form.production' | translate }}</label>
-      <input
-        id="item-production"
-        name="productionDate"
-        type="date"
-        [(ngModel)]="form.productionDate"
-      />
-    </div>
-    <button type="submit" class="btn-primary">{{ 'actions.add' | translate }}</button>
-    <p class="form-hint">{{ 'items.form.dateHint' | translate }}</p>
-    @if (formError(); as error) {
-      <p class="form-error" role="alert">{{ error }}</p>
-    }
-  </form>
+  } @else {
+    <form class="add-form" (ngSubmit)="addItem()">
+      <div class="field">
+        <label for="item-name">{{ 'items.form.name' | translate }}</label>
+        <input
+          #addNameField
+          id="item-name"
+          name="name"
+          type="text"
+          [(ngModel)]="form.name"
+          [placeholder]="'items.form.namePlaceholder' | translate"
+        />
+      </div>
+      <div class="field">
+        <label for="item-amount">{{ 'items.form.amount' | translate }}</label>
+        <input
+          id="item-amount"
+          name="amount"
+          type="number"
+          step="0.1"
+          min="0.1"
+          [(ngModel)]="form.amount"
+        />
+      </div>
+      <div class="field">
+        <label for="item-unit">{{ 'items.form.unit' | translate }}</label>
+        <select id="item-unit" name="unit" [(ngModel)]="form.unit">
+          @for (unit of units; track unit) {
+            <option [value]="unit">{{ 'units.' + unit | translate }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="item-expiry">{{ 'items.form.expiry' | translate }}</label>
+        <input id="item-expiry" name="expiryDate" type="date" [(ngModel)]="form.expiryDate" />
+      </div>
+      <div class="field">
+        <label for="item-production">{{ 'items.form.production' | translate }}</label>
+        <input
+          id="item-production"
+          name="productionDate"
+          type="date"
+          [(ngModel)]="form.productionDate"
+        />
+      </div>
+      <div class="inline-actions">
+        <button type="submit" class="btn-primary">{{ 'actions.add' | translate }}</button>
+        <button type="button" class="btn-ghost" (click)="cancelAdd()">
+          {{ 'actions.cancel' | translate }}
+        </button>
+      </div>
+      <p class="form-hint">{{ 'items.form.dateHint' | translate }}</p>
+      @if (formError(); as error) {
+        <p class="form-error" role="alert">{{ error }}</p>
+      }
+    </form>
+  }
 
   @if (items()?.length === 0) {
     <p class="empty-hint">{{ 'items.empty' | translate }}</p>

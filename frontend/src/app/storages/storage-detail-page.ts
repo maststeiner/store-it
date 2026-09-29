@@ -1,5 +1,14 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
@@ -78,8 +87,11 @@ export class StorageDetailPage implements OnInit {
     ].filter((group) => group.items.length > 0);
   });
 
+  /** #182: the add form is closed by default and opens behind "+ New item". */
+  protected readonly addOpen = signal(false);
   protected form: ItemFormModel = emptyForm();
   protected readonly formError = signal<string | null>(null);
+  private readonly addNameField = viewChild<ElementRef<HTMLInputElement>>('addNameField');
 
   protected readonly editItemId = signal<string | null>(null);
   protected editModel: ItemFormModel = emptyForm();
@@ -100,16 +112,39 @@ export class StorageDetailPage implements OnInit {
     this.loadItems();
   }
 
+  protected openAdd(): void {
+    this.form = emptyForm();
+    this.formError.set(null);
+    this.addOpen.set(true);
+    // The field exists only after the next render; focus it then (AC-02).
+    setTimeout(() => this.addNameField()?.nativeElement.focus());
+  }
+
+  /** AC-05: Cancel / Escape close the form and discard the input. */
+  protected cancelAdd(): void {
+    this.addOpen.set(false);
+    this.form = emptyForm();
+    this.formError.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    if (this.addOpen()) {
+      this.cancelAdd();
+    }
+  }
+
   protected addItem(): void {
     this.itemsApi
       .addItem({ 'X-XSRF-TOKEN': '', storageId: this.storageId, body: this.toRequest(this.form) })
       .subscribe({
         next: () => {
-          this.form = emptyForm();
-          this.formError.set(null);
+          // AC-03: a successful add closes the form again.
+          this.cancelAdd();
           this.loadItems();
           this.loadStorage();
         },
+        // AC-04: a validation error keeps the form open with the message.
         error: (error: unknown) => this.formError.set(this.errors.messageFor(error)),
       });
   }
@@ -187,7 +222,7 @@ export class StorageDetailPage implements OnInit {
     this.storagesApi.deleteStorage({ 'X-XSRF-TOKEN': '', storageId: this.storageId }).subscribe({
       next: () => {
         this.deleteOpen.set(false);
-        this.router.navigate(['/storages']);
+        void this.router.navigate(['/storages']);
       },
       error: (error: unknown) => {
         this.deleteOpen.set(false);
@@ -214,7 +249,7 @@ export class StorageDetailPage implements OnInit {
             .subscribe({
               next: () => {
                 this.deleteOpen.set(false);
-                this.router.navigate(['/storages']);
+                void this.router.navigate(['/storages']);
               },
               error: (error: unknown) => {
                 this.deleteOpen.set(false);
@@ -239,7 +274,7 @@ export class StorageDetailPage implements OnInit {
     this.sharingApi.leaveStorage({ 'X-XSRF-TOKEN': '', storageId: this.storageId }).subscribe({
       next: () => {
         this.leaveOpen.set(false);
-        this.router.navigate(['/storages']);
+        void this.router.navigate(['/storages']);
       },
       error: (error: unknown) => {
         this.leaveOpen.set(false);
