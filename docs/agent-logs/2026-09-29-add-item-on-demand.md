@@ -39,6 +39,19 @@ Wanted: a button like on the storage list, the form opens on click and disappear
 | 1 | "Ich hätte gerne einen Button, wie bei meinen Lagerorten und der Dialog geht erst auf, wenn ich auf den Button klicke und nach dem Hinzufügen verschwindet er wieder" | The request. |
 | 2 | "1-4 sind so in Ordnung" | Placement above the list, closing rules, closed for empty storages, issue + amendment instead of a spec. |
 
+## Local test round (Marcel, 2026-09-29)
+
+- "button heisst items.new, also keine Übersetzung" — the key is in all four JSON files; the
+  browser had served a **heuristically cached** `de.json` from the previous stack run. Root
+  cause in `frontend/nginx.conf`: the translation files carried no `Cache-Control`, so browsers
+  cache them for hours — after every release returning users see stale texts or raw keys
+  (prod included). Fixed: `no-cache` for `/assets/i18n/*.json` (revalidated by ETag on each
+  load; verified with a throwaway nginx container: json → `no-cache`, js → `immutable`,
+  index.html → `no-store`).
+- "Abbrechen Button ist komisch hinter dem Item … Hinzufügen und Abbrechen untereinander" —
+  the two buttons shared one grid cell side by side; now stacked (`.form-actions`, column,
+  aligned to the fields' bottom).
+
 ## Verification
 
 frontend 157 vitest green (4 new), lint, prettier, `ng build`; no backend change.
