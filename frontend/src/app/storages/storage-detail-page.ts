@@ -222,7 +222,7 @@ export class StorageDetailPage implements OnInit {
     this.storagesApi.deleteStorage({ 'X-XSRF-TOKEN': '', storageId: this.storageId }).subscribe({
       next: () => {
         this.deleteOpen.set(false);
-        this.router.navigate(['/storages']);
+        void this.router.navigate(['/storages']);
       },
       error: (error: unknown) => {
         this.deleteOpen.set(false);
@@ -249,7 +249,7 @@ export class StorageDetailPage implements OnInit {
             .subscribe({
               next: () => {
                 this.deleteOpen.set(false);
-                this.router.navigate(['/storages']);
+                void this.router.navigate(['/storages']);
               },
               error: (error: unknown) => {
                 this.deleteOpen.set(false);
@@ -274,7 +274,7 @@ export class StorageDetailPage implements OnInit {
     this.sharingApi.leaveStorage({ 'X-XSRF-TOKEN': '', storageId: this.storageId }).subscribe({
       next: () => {
         this.leaveOpen.set(false);
-        this.router.navigate(['/storages']);
+        void this.router.navigate(['/storages']);
       },
       error: (error: unknown) => {
         this.leaveOpen.set(false);
