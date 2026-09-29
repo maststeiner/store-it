@@ -1,6 +1,6 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 
 import { ItemResponse, StorageResponse } from '../api/models';
@@ -19,6 +19,7 @@ const TRANSLATIONS = {
     edit: 'Edit',
   },
   items: {
+    new: '+ New item',
     empty: 'No items yet.',
     producedOn: 'prod. {{date}}',
     form: {
@@ -100,6 +101,14 @@ describe('StorageDetailPage', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
+  /** #182: the add form is closed by default; open it like a user would. */
+  async function openAddForm(fixture: ComponentFixture<StorageDetailPage>): Promise<void> {
+    const element = fixture.nativeElement as HTMLElement;
+    (element.querySelector('.add-toggle .btn-primary') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  }
+
   function flushInitialLoad(items: ItemResponse[], sharing: Partial<StorageResponse> = {}) {
     http.expectOne('/api/v1/storages/s1').flush({
       id: 's1',
@@ -151,12 +160,14 @@ describe('StorageDetailPage', () => {
     await fixture.whenStable();
 
     const element = fixture.nativeElement as HTMLElement;
+    await openAddForm(fixture);
     (element.querySelector('form.add-form') as HTMLFormElement).dispatchEvent(new Event('submit'));
     http
       .expectOne('/api/v1/storages/s1/items')
       .flush({ errorCode: 'item.dates.missing' }, { status: 400, statusText: 'Bad Request' });
     await fixture.whenStable();
 
+    // AC-04: the form stays open and shows the message.
     expect(element.querySelector('.add-form .form-error')?.textContent).toContain(
       'One date required.',
     );
@@ -169,6 +180,7 @@ describe('StorageDetailPage', () => {
     await fixture.whenStable();
 
     const element = fixture.nativeElement as HTMLElement;
+    await openAddForm(fixture);
     const name = element.querySelector('#item-name') as HTMLInputElement;
     name.value = 'Peas';
     name.dispatchEvent(new Event('input'));
@@ -198,6 +210,11 @@ describe('StorageDetailPage', () => {
     await fixture.whenStable();
 
     expect((element.textContent ?? '').includes('Peas')).toBe(true);
+    // AC-03: the form closed again, the button is back.
+    expect(element.querySelector('form.add-form')).toBeNull();
+    expect(element.querySelector('.add-toggle .btn-primary')?.textContent?.trim()).toBe(
+      '+ New item',
+    );
   });
 
   it('deletes an item and reloads', async () => {
@@ -572,6 +589,76 @@ describe('StorageDetailPage', () => {
       await fixture.whenStable();
 
       expect(element.querySelector('.storage-owner')?.textContent).toContain('Shared by Max');
+    });
+  });
+
+  // #182: the add form opens on demand
+  describe('add item on demand (#182)', () => {
+    it('AddForm_OnOpen_IsClosedEvenForAnEmptyStorage', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([]);
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+
+      expect(element.querySelector('form.add-form')).toBeNull();
+      expect(element.querySelector('.add-toggle .btn-primary')?.textContent?.trim()).toBe(
+        '+ New item',
+      );
+    });
+
+    it('AddForm_OnButtonClick_OpensEmptyAndFocusesTheName', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      const element = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(element);
+      fixture.detectChanges();
+      flushInitialLoad([]);
+      await fixture.whenStable();
+
+      await openAddForm(fixture);
+      await new Promise((resolve) => setTimeout(resolve));
+
+      expect(element.querySelector('.add-toggle')).toBeNull();
+      const name = element.querySelector('#item-name') as HTMLInputElement;
+      expect(name.value).toBe('');
+      expect(document.activeElement).toBe(name);
+      element.remove();
+    });
+
+    it('AddForm_OnCancel_ClosesAndDiscardsTheInput', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([]);
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      await openAddForm(fixture);
+      const name = element.querySelector('#item-name') as HTMLInputElement;
+      name.value = 'Half typed';
+      name.dispatchEvent(new Event('input'));
+
+      (element.querySelector('.add-form .btn-ghost') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(element.querySelector('form.add-form')).toBeNull();
+
+      await openAddForm(fixture);
+      expect((element.querySelector('#item-name') as HTMLInputElement).value).toBe('');
+    });
+
+    it('AddForm_OnEscape_Closes', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      fixture.detectChanges();
+      flushInitialLoad([]);
+      await fixture.whenStable();
+      const element = fixture.nativeElement as HTMLElement;
+      await openAddForm(fixture);
+
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element.querySelector('form.add-form')).toBeNull();
+      expect(element.querySelector('.add-toggle')).not.toBeNull();
     });
   });
 });

@@ -59,7 +59,8 @@
       "expiry": "Expiry date",
       "production": "Production date",
       "dateHint": "Provide at least one date (expiry or production)."
-    }
+    },
+    "new": "+ New item"
   },
   "groups": {
     "expired": "Expired",
