@@ -16,7 +16,7 @@ Changes after the G1 freeze are recorded here rather than silently editing the f
 | A1 | 2026-07-19 | **AC-01a** added — storage list also returns per-storage `expiredCount` / `expiringSoonCount` (server-computed) for the overview status chips. | Marcel Steiner (PO) |
 | A2 | 2026-07-19 | Technical constraint added — API versioning + OpenAPI contract gate per **ADR-006** (does not change any AC). | Marcel Steiner (PO) |
 | A3 | 2026-07-31 | Editorial — unit display labels in the fixed list normalized to English (`Stück` → `Piece`, `Packung` → `Pack`) to match the enum codes and the English-only repo. No AC or behavior change. | Marcel Steiner (PO) |
-| A4 | 2026-09-29 | **UI** — the add-item form on the storage detail page is closed by default and opens behind a **+ New item** button (like *+ New storage* on the list); it closes after a successful add, stays open on a validation error, and *Cancel*/Escape close it discarding the input. Empty storages start closed too. No AC changes; issue #182 is the frozen input. | Marcel Steiner (PO) |
+| A4 | 2026-09-29 | **UI** — the add-item form on the storage detail page is closed by default and opens behind a **＋ icon button** in the page header (next to rename, share and delete; same control closes it again); it closes after a successful add, stays open on a validation error, and *Cancel*/Escape close it discarding the input. Empty storages start closed too. On the storage list the header text button *+ New storage* was dropped — the placeholder card is the one way to create a storage. No AC changes; issue #182 is the frozen input; refined by Marcel the same day. | Marcel Steiner (PO) |
 
 ---
 

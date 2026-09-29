@@ -48,6 +48,8 @@ describe('TranslateService loading', () => {
 
   it('use_WhenTheDictionaryFailsToLoad_KeepsTheKeyAndAllowsARetry', () => {
     service.use('fr');
+    // A non-English language also loads the English fallback (once).
+    expectDictionaryRequest('en').flush({});
     expectDictionaryRequest('fr').flush('nope', {
       status: 500,
       statusText: 'Internal Server Error',
