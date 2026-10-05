@@ -63,6 +63,8 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
 
         builder.ConfigureTestServices(services =>
         {
+            services.DisableEfServiceProviderCaching(); // see EfServiceProviderCaching.cs
+
             // Replace the app's TimeProvider.System with the pinned clock (runs after the
             // app's registrations, so this wins) — makes status-count math deterministic.
             services.AddSingleton(Clock);

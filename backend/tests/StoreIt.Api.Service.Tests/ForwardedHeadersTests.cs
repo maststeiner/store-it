@@ -105,6 +105,8 @@ public sealed class ForwardedHeadersFixture : WebApplicationFactory<Program>, IA
 
         builder.ConfigureTestServices(services =>
         {
+            services.DisableEfServiceProviderCaching(); // see EfServiceProviderCaching.cs
+
             // Configure (not PostConfigure): it must run before the handler's own
             // post-configuration, which only creates a metadata-fetching manager when
             // none is set yet.
