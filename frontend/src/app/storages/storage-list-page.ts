@@ -39,7 +39,7 @@ export class StorageListPage implements OnInit {
   }
 
   protected open(storage: StorageResponse): void {
-    this.router.navigate(['/storages', storage.id]);
+    void this.router.navigate(['/storages', storage.id]);
   }
 
   protected openCreate(): void {
