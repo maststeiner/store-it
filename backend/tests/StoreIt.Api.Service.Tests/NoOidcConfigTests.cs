@@ -69,7 +69,7 @@ public sealed class NoOidcApiFixture : WebApplicationFactory<Program>, IAsyncLif
         "postgres:18-alpine"
     ).Build();
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _postgres.StartAsync();
 
@@ -98,7 +98,7 @@ public sealed class NoOidcApiFixture : WebApplicationFactory<Program>, IAsyncLif
         });
     }
 
-    async Task IAsyncLifetime.DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();

@@ -38,10 +38,15 @@ jobs:
           dotnet-version: '10.x'
       - name: Build
         run: dotnet build --configuration Release
-      # Coverage gate configured in backend/tests/Directory.Build.props
-      # (threshold 70%, architecture tests excluded)
-      - name: Test + coverage gate
-        run: dotnet test --configuration Release
+      # Coverage gate: coverlet.MTP (xunit.v3 runs on Microsoft.Testing.Platform, selected in
+      # backend/global.json). Threshold 70% lines per behaviour test project; filters live in each
+      # project's testconfig.json. Architecture tests have no coverlet reference and run without a gate.
+      - name: Test + coverage gate (Domain)
+        run: dotnet test --configuration Release --project tests/StoreIt.Domain.Tests/StoreIt.Domain.Tests.csproj --coverlet --coverlet-threshold 70 --coverlet-threshold-type line
+      - name: Test + coverage gate (Api.Service)
+        run: dotnet test --configuration Release --project tests/StoreIt.Api.Service.Tests/StoreIt.Api.Service.Tests.csproj --coverlet --coverlet-threshold 70 --coverlet-threshold-type line
+      - name: Test (Architecture)
+        run: dotnet test --configuration Release --project tests/StoreIt.Architecture.Tests/StoreIt.Architecture.Tests.csproj
 
   backend-mutation-test:
     name: 1a · Backend mutation testing
@@ -412,10 +417,12 @@ jobs:
             /o:"maststeiner" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="$SONAR_TOKEN" \
-            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+            /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.*.xml" \
             /d:sonar.qualitygate.wait=true
           dotnet build --configuration Release
-          dotnet test --configuration Release /p:CoverletOutputFormat=opencover
+          # coverlet.MTP writes TestResults/coverage.opencover.<timestamp>.xml per test project (format set in testconfig.json)
+          dotnet test --configuration Release --no-build --project tests/StoreIt.Domain.Tests/StoreIt.Domain.Tests.csproj --results-directory TestResults --coverlet
+          dotnet test --configuration Release --no-build --project tests/StoreIt.Api.Service.Tests/StoreIt.Api.Service.Tests.csproj --results-directory TestResults --coverlet
           dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
 
   quality-frontend:
@@ -472,9 +479,8 @@ jobs:
         with:
           dotnet-version: '10.x'
       - name: Layering rules (0 violations)
-        # CollectCoverage=false: the coverage gate belongs to job 1; with this filter
-        # other test projects run 0 tests and would fail the threshold spuriously.
-        run: dotnet test --filter "Category=ArchitectureTests" --configuration Release /p:CollectCoverage=false
+        # Only the architecture test project; the coverage gate belongs to job 1.
+        run: dotnet test --configuration Release --project tests/StoreIt.Architecture.Tests/StoreIt.Architecture.Tests.csproj --filter "Category=ArchitectureTests"
 
   # ────────────────────────────────────────────
   # 5 · Format & Lint
