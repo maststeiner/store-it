@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-05 (issue #203)
 > **Sprint:** 2026-S41
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request (issue #203, 2026-10-05)
-> **Last updated:** 2026-10-05 (G1 freeze)
+> **Last updated:** 2026-10-05 (implementation on PR #204, verification table filled)
 
 ---
 
@@ -151,21 +151,26 @@ admins; the backend is the real gate.
 
 ## Technical Constraints (from Architect Agent)
 
-- [ ] Layering: `GetUsageStatisticsUseCase(IUsageStatisticsQuery, TimeProvider)` in
-      `StoreIt.Application`; `IUsageStatisticsQuery` in Application, `UsageStatisticsQuery` in
-      Infrastructure (EF, read-only, `AsNoTracking`); endpoint in new
-      `StoreIt.Api/AdminEndpoints.cs`; `AdminOptions` + policy registration next to
-      `AuthenticationSetup`; no EF types outside Infrastructure (ADR-001, architecture tests).
-- [ ] Configuration: `Admin:Emails` bound via options; `StartupConfigurationCheck` warns when
-      empty; `docs/SETUP.md` / deployment repo document the env variable.
-- [ ] Contract: `backend/openapi/StoreIt.Api.json` regenerated (`getUsageStatistics`, tag
-      `Admin`; `isAdmin` on `UserProfileResponse`), web client regenerated, both committed.
-- [ ] Tests: Application unit tests for the use case with a fake query; Api.Service integration
-      tests for AC-01/AC-02/AC-07/AC-08 (Testcontainers); web unit tests for guard, menu
-      visibility and page rendering; i18n completeness; Stryker on the new Application code.
-- [ ] Dependencies: none new.
-- [ ] ADR required: no (configuration-based allowlist is a local decision; revisit if a real
-      role model ever becomes necessary).
+- [x] Layering: `GetUsageStatisticsUseCase(IUsageStatisticsQuery, TimeProvider)` in
+      `StoreIt.Application` (`UsageStatisticsUseCases.cs`); `IUsageStatisticsQuery` in Application,
+      `UsageStatisticsQuery` (EF, `AsNoTracking`, `IgnoreQueryFilters`) in Infrastructure; endpoint in
+      `StoreIt.Api/AdminEndpoints.cs`; `AdminOptions` / `AdminAccess` / `AdminRequirementHandler` in
+      `StoreIt.Api/AdminAccess.cs`, policy registered in `AuthenticationSetup`; no EF types outside
+      Infrastructure (ADR-001, architecture tests green).
+- [x] Configuration: `Admin:Emails` bound via options; an empty list logs one startup warning
+      (`AdminStartupLog`); documented in `docs/operations/runtime-contract.md`, passed through in
+      `compose.stack.yaml`, listed in `.env.example`. **The production deployment (deploy repo) still
+      needs `Admin__Emails` set — operator step after merge.**
+- [x] Contract: `backend/openapi/StoreIt.Api.json` regenerated (`getUsageStatistics`, tag `Admin`;
+      `isAdmin` on `UserProfileResponse`), web client regenerated (`src/app/api/fn/admin`,
+      `AdminService`), both committed.
+- [x] Tests: `GetUsageStatisticsUseCaseTests` (scripted query port, no database),
+      `AdminEndpointsTests` (401/403/200, case-insensitive allowlist, empty allowlist, `isAdmin`),
+      `AdminStatisticsScenarioTests` (AC-07, own database), `OpenApiContractTests`; web:
+      `admin.guard.spec.ts`, `session-menu.spec.ts` (SPEC-008 block), `admin-statistics-page.spec.ts`,
+      `i18n.spec.ts`.
+- [x] Dependencies: none new.
+- [x] ADR required: no.
 
 ---
 
@@ -173,7 +178,19 @@ admins; the backend is the real gate.
 
 | AC | Test | Status |
 |----|------|--------|
-| AC-01…AC-13 | to be filled during implementation | ⬜ |
+| AC-01 | `AdminEndpointsTests.Statistics_OnAllowlist_Returns200_CaseInsensitive` (3 cases) | ✅ |
+| AC-02 | `AdminEndpointsTests.Statistics_Anonymous_Returns401`, `…_SignedInButNotOnAllowlist_Returns403`, `…_SignedInWithoutEmailClaim_Returns403`, `…_EmptyAllowlist_Returns403EvenForTheOperator` (the startup warning is a log line, not asserted) | ✅ |
+| AC-03 | `AdminStatisticsScenarioTests.Statistics_SeededWorld_EveryFieldMatches` (users block); `GetUsageStatisticsUseCaseTests.Execute_Windows_StartAtMidnightUtcOfTheFirstCalendarDay`, `…_Users_PassesThroughCountsAndIssuers` | ✅ |
+| AC-04 | scenario test (storages block); `GetUsageStatisticsUseCaseTests.Execute_Storages_CountsSharedAndEmptyAndUsesLowerMedian` | ✅ |
+| AC-05 | scenario test (items block); `GetUsageStatisticsUseCaseTests.Execute_Items_BucketsByExpiryRulesAndGroupsByUnit` | ✅ |
+| AC-06 | scenario test (`generatedAt` present, no name / subject / address in the raw body); `…_EmptyDatabase_ReturnsZerosAndEmptyMaps` (EC-03) | ✅ |
+| AC-07 | `AdminStatisticsScenarioTests.Statistics_SeededWorld_EveryFieldMatches` — 3 users, 3 storages (1 shared, 1 empty), 6 items in every expiry state, 1 open link | ✅ |
+| AC-08 | `AdminEndpointsTests.Me_ReportsIsAdminOnlyForTheAllowlist` | ✅ |
+| AC-09 | `OpenApiContractTests` (`getUsageStatistics`), CI job *API contract gate* (additive) | ⏳ CI |
+| AC-10 | `session-menu.spec.ts` → "SPEC-008 statistics entry" (offered above *Sign out* for the operator, emits, absent for others) | ✅ |
+| AC-11 | `admin.guard.spec.ts` (redirect to `/storages`, session loaded first); `admin-statistics-page.spec.ts` → "shows the error state when the API refuses" | ✅ |
+| AC-12 | `admin-statistics-page.spec.ts` → one call, three groups, 15 tiles, providers/units lists, refresh re-queries | ✅ |
+| AC-13 | `i18n.spec.ts` (de/en/fr/it key parity); number formatting via `Intl.NumberFormat(language)` asserted as `1,234` in the page spec | ✅ |
 
 ---
 

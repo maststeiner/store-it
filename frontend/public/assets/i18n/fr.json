@@ -183,5 +183,44 @@
       "title": "Transmettre la propriété",
       "message": "{{name}} devient propriétaire de ce stock. Vous restez membre et ne pouvez plus le supprimer ni le partager."
     }
+  },
+  "admin": {
+    "menu": {
+      "statistics": "Statistiques"
+    },
+    "statistics": {
+      "title": "Statistiques d’utilisation",
+      "generatedAt": "État au {{time}}",
+      "refresh": "Actualiser",
+      "loading": "Chargement des statistiques…",
+      "groups": {
+        "users": "Utilisateurs",
+        "storages": "Stocks",
+        "items": "Articles"
+      },
+      "users": {
+        "total": "Total",
+        "newLast7Days": "Nouveaux (7 derniers jours)",
+        "newLast30Days": "Nouveaux (30 derniers jours)",
+        "withoutAnyStorage": "Sans aucun stock",
+        "byIssuer": "Par fournisseur de connexion"
+      },
+      "storages": {
+        "total": "Total",
+        "shared": "Partagés",
+        "empty": "Vides",
+        "itemsPerStorageMedian": "Articles par stock (médiane)",
+        "itemsPerStorageMax": "Articles par stock (maximum)",
+        "pendingInvitations": "Liens d’invitation ouverts"
+      },
+      "items": {
+        "total": "Total",
+        "withExpiryDate": "Avec date de péremption",
+        "withProductionDate": "Avec date de production",
+        "expired": "Périmés",
+        "expiringSoon": "Bientôt périmés",
+        "byUnit": "Par unité"
+      }
+    }
   }
 }

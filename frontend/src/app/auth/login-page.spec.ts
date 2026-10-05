@@ -159,7 +159,9 @@ describe('LoginPage', () => {
 
     const fixture = TestBed.createComponent(LoginPage);
     fixture.detectChanges();
-    ctrl.expectOne('/auth/me').flush({ displayName: 'Alice', email: 'alice@example.com' });
+    ctrl
+      .expectOne('/auth/me')
+      .flush({ displayName: 'Alice', email: 'alice@example.com', isAdmin: false });
     // whenStable() does not drain the promise chain behind loadMe(); a macrotask does.
     await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -169,7 +171,7 @@ describe('LoginPage', () => {
   it('does not re-check a session that is already known', async () => {
     ctrl = await setup();
     const auth = TestBed.inject(AuthService);
-    auth.user.set({ displayName: 'Bob', email: 'bob@example.com' });
+    auth.user.set({ displayName: 'Bob', email: 'bob@example.com', isAdmin: false });
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
 
     const fixture = TestBed.createComponent(LoginPage);

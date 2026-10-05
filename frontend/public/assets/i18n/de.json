@@ -183,5 +183,44 @@
       "title": "Eigentum übergeben",
       "message": "{{name}} wird Eigentümer dieses Lagerorts. Sie bleiben Mitglied und können ihn nicht mehr löschen oder teilen."
     }
+  },
+  "admin": {
+    "menu": {
+      "statistics": "Statistik"
+    },
+    "statistics": {
+      "title": "Nutzungsstatistik",
+      "generatedAt": "Stand {{time}}",
+      "refresh": "Aktualisieren",
+      "loading": "Statistik wird geladen …",
+      "groups": {
+        "users": "Benutzer",
+        "storages": "Lager",
+        "items": "Artikel"
+      },
+      "users": {
+        "total": "Gesamt",
+        "newLast7Days": "Neu in den letzten 7 Tagen",
+        "newLast30Days": "Neu in den letzten 30 Tagen",
+        "withoutAnyStorage": "Ohne Lager",
+        "byIssuer": "Nach Anmeldeanbieter"
+      },
+      "storages": {
+        "total": "Gesamt",
+        "shared": "Geteilt",
+        "empty": "Leer",
+        "itemsPerStorageMedian": "Artikel pro Lager (Median)",
+        "itemsPerStorageMax": "Artikel pro Lager (Maximum)",
+        "pendingInvitations": "Offene Einladungslinks"
+      },
+      "items": {
+        "total": "Gesamt",
+        "withExpiryDate": "Mit Ablaufdatum",
+        "withProductionDate": "Mit Produktionsdatum",
+        "expired": "Abgelaufen",
+        "expiringSoon": "Läuft bald ab",
+        "byUnit": "Nach Einheit"
+      }
+    }
   }
 }

@@ -17,7 +17,8 @@ import { TranslatePipe } from '../core/translate';
 
 /**
  * Header control for the signed-in session: an initials chip that opens a menu
- * carrying the full identity, the sign-out action and account deletion (SPEC-006).
+ * carrying the full identity, the sign-out action, account deletion (SPEC-006) and,
+ * for the operator, the usage statistics (SPEC-008).
  *
  * The identity deliberately lives behind a click rather than a hover tooltip —
  * tooltips do not exist on touch devices, rarely surface on keyboard focus and
@@ -52,6 +53,19 @@ import { TranslatePipe } from '../core/translate';
             <span class="session-email">{{ email }}</span>
           }
         </div>
+        @if (user().isAdmin) {
+          <button
+            #item
+            type="button"
+            role="menuitem"
+            tabindex="-1"
+            class="session-menu-item"
+            (click)="emitStatistics()"
+            (keydown)="onMenuKeydown($event)"
+          >
+            {{ 'admin.menu.statistics' | translate }}
+          </button>
+        }
         <button
           #item
           type="button"
@@ -83,6 +97,8 @@ export class SessionMenu {
   readonly signOut = output<void>();
   /** SPEC-006: the user wants to delete the account — the host confirms before acting. */
   readonly deleteAccount = output<void>();
+  /** SPEC-008 AC-10: the operator opens the usage statistics (rendered only for admins). */
+  readonly statistics = output<void>();
 
   protected readonly open = signal(false);
 
@@ -125,6 +141,11 @@ export class SessionMenu {
     // Arrow keys open the menu rather than scrolling the page behind it.
     event.preventDefault();
     this.open.set(true);
+  }
+
+  protected emitStatistics(): void {
+    this.open.set(false);
+    this.statistics.emit();
   }
 
   protected emitSignOut(): void {

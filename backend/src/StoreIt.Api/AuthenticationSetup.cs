@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using StoreIt.Application;
 using CookieRedirectContext = Microsoft.AspNetCore.Authentication.RedirectContext<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions>;
 
@@ -106,7 +107,14 @@ public static class AuthenticationSetup
         // /health, and the OpenAPI document — see Program.cs).
         services
             .AddAuthorizationBuilder()
-            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+            .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
+            // SPEC-008 D2: the operator policy — authenticated AND on the e-mail allowlist.
+            .AddPolicy(
+                AdminAccess.PolicyName,
+                policy => policy.RequireAuthenticatedUser().AddRequirements(new AdminRequirement())
+            );
+        services.Configure<AdminOptions>(configuration.GetSection(AdminOptions.SectionName));
+        services.AddSingleton<IAuthorizationHandler, AdminRequirementHandler>();
 
         return services;
     }

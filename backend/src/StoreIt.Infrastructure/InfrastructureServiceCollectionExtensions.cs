@@ -35,6 +35,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
         services.AddSingleton<IInvitationTokens, InvitationTokens>();
+        services.AddScoped<IUsageStatisticsQuery, UsageStatisticsQuery>(); // SPEC-008
         return services;
     }
 }

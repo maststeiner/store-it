@@ -4,5 +4,6 @@
 export interface UserProfileResponse {
   email: (string | null);
   id: (string | null);
+  isAdmin: boolean;
   name: (string | null);
 }
