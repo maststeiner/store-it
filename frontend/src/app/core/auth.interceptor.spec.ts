@@ -35,7 +35,7 @@ describe('authInterceptor', () => {
 
   it('redirects_and_clears_on_401', () => {
     // Start with a signed-in user.
-    auth.user.set({ displayName: 'Alice', email: 'alice@example.com' });
+    auth.user.set({ displayName: 'Alice', email: 'alice@example.com', isAdmin: false });
 
     http.get('/api/v1/storages').subscribe({ error: () => undefined });
     ctrl.expectOne('/api/v1/storages').flush(null, { status: 401, statusText: 'Unauthorized' });
@@ -45,13 +45,17 @@ describe('authInterceptor', () => {
   });
 
   it('ignores_401_from_auth_me', () => {
-    auth.user.set({ displayName: 'Alice', email: 'alice@example.com' });
+    auth.user.set({ displayName: 'Alice', email: 'alice@example.com', isAdmin: false });
 
     http.get('/auth/me').subscribe({ error: () => undefined });
     ctrl.expectOne('/auth/me').flush(null, { status: 401, statusText: 'Unauthorized' });
 
     // user signal must NOT be touched for /auth/me 401
-    expect(auth.user()).toEqual({ displayName: 'Alice', email: 'alice@example.com' });
+    expect(auth.user()).toEqual({
+      displayName: 'Alice',
+      email: 'alice@example.com',
+      isAdmin: false,
+    });
   });
 
   it('attaches_xsrf_header_on_post', () => {

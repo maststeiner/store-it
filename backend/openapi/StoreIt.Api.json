@@ -1678,6 +1678,51 @@
           }
         ]
       }
+    },
+    "/api/v1/admin/statistics": {
+      "get": {
+        "tags": [
+          "Admin"
+        ],
+        "operationId": "getUsageStatistics",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageStatisticsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieSession": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1761,6 +1806,18 @@
           },
           "alreadyMember": {
             "type": "boolean"
+          }
+        }
+      },
+      "InvitationStatisticsResponse": {
+        "required": [
+          "pending"
+        ],
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -1872,6 +1929,46 @@
           },
           "expiryStatus": {
             "$ref": "#/components/schemas/ExpiryStatus"
+          }
+        }
+      },
+      "ItemStatisticsResponse": {
+        "required": [
+          "total",
+          "withExpiryDate",
+          "withProductionDate",
+          "expired",
+          "expiringSoon",
+          "byUnit"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "withExpiryDate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "withProductionDate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expired": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expiringSoon": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byUnit": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         }
       },
@@ -1994,6 +2091,38 @@
           }
         }
       },
+      "StorageStatisticsResponse": {
+        "required": [
+          "total",
+          "shared",
+          "empty",
+          "itemsPerStorageMedian",
+          "itemsPerStorageMax"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "shared": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "empty": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsPerStorageMedian": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itemsPerStorageMax": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "TransferOwnershipRequest": {
         "required": [
           "userId"
@@ -2017,11 +2146,40 @@
         ],
         "type": "string"
       },
+      "UsageStatisticsResponse": {
+        "required": [
+          "generatedAt",
+          "users",
+          "storages",
+          "invitations",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "users": {
+            "$ref": "#/components/schemas/UserStatisticsResponse"
+          },
+          "storages": {
+            "$ref": "#/components/schemas/StorageStatisticsResponse"
+          },
+          "invitations": {
+            "$ref": "#/components/schemas/InvitationStatisticsResponse"
+          },
+          "items": {
+            "$ref": "#/components/schemas/ItemStatisticsResponse"
+          }
+        }
+      },
       "UserProfileResponse": {
         "required": [
           "id",
           "email",
-          "name"
+          "name",
+          "isAdmin"
         ],
         "type": "object",
         "properties": {
@@ -2042,6 +2200,44 @@
               "null",
               "string"
             ]
+          },
+          "isAdmin": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UserStatisticsResponse": {
+        "required": [
+          "total",
+          "newLast7Days",
+          "newLast30Days",
+          "byIssuer",
+          "withoutAnyStorage"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "newLast7Days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "newLast30Days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byIssuer": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "withoutAnyStorage": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       }
@@ -2070,6 +2266,9 @@
     },
     {
       "name": "Sharing"
+    },
+    {
+      "name": "Admin"
     }
   ]
 }

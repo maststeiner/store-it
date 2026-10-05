@@ -34,6 +34,9 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<TransferOwnershipUseCase>();
         services.AddScoped<GetAccountSummaryUseCase>();
 
+        // SPEC-008 operator statistics
+        services.AddScoped<GetUsageStatisticsUseCase>();
+
         return services;
     }
 }

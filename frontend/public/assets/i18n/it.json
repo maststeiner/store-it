@@ -183,5 +183,44 @@
       "title": "Trasferire la proprietà",
       "message": "{{name}} diventa proprietario di questo deposito. Tu resti membro e non potrai più eliminarlo o condividerlo."
     }
+  },
+  "admin": {
+    "menu": {
+      "statistics": "Statistiche"
+    },
+    "statistics": {
+      "title": "Statistiche d’uso",
+      "generatedAt": "Stato al {{time}}",
+      "refresh": "Aggiorna",
+      "loading": "Caricamento delle statistiche…",
+      "groups": {
+        "users": "Utenti",
+        "storages": "Dispense",
+        "items": "Articoli"
+      },
+      "users": {
+        "total": "Totale",
+        "newLast7Days": "Nuovi negli ultimi 7 giorni",
+        "newLast30Days": "Nuovi negli ultimi 30 giorni",
+        "withoutAnyStorage": "Senza dispensa",
+        "byIssuer": "Per provider di accesso"
+      },
+      "storages": {
+        "total": "Totale",
+        "shared": "Condivise",
+        "empty": "Vuote",
+        "itemsPerStorageMedian": "Articoli per dispensa (mediana)",
+        "itemsPerStorageMax": "Articoli per dispensa (massimo)",
+        "pendingInvitations": "Link di invito aperti"
+      },
+      "items": {
+        "total": "Totale",
+        "withExpiryDate": "Con data di scadenza",
+        "withProductionDate": "Con data di produzione",
+        "expired": "Scaduti",
+        "expiringSoon": "In scadenza",
+        "byUnit": "Per unità"
+      }
+    }
   }
 }

@@ -29,10 +29,16 @@ describe('AuthService', () => {
 
   it('loadMe_sets_user_on_200', async () => {
     const promise = service.loadMe();
-    ctrl.expectOne('/auth/me').flush({ displayName: 'Alice', email: 'alice@example.com' });
+    ctrl
+      .expectOne('/auth/me')
+      .flush({ displayName: 'Alice', email: 'alice@example.com', isAdmin: false });
     await promise;
 
-    expect(service.user()).toEqual({ displayName: 'Alice', email: 'alice@example.com' });
+    expect(service.user()).toEqual({
+      displayName: 'Alice',
+      email: 'alice@example.com',
+      isAdmin: false,
+    });
     expect(service.loadError()).toBe(false);
   });
 
@@ -59,9 +65,15 @@ describe('AuthService', () => {
   it('loadMe_500_does_not_clear_signed_in_user', async () => {
     // First: sign the user in via a successful loadMe.
     const firstLoad = service.loadMe();
-    ctrl.expectOne('/auth/me').flush({ displayName: 'Alice', email: 'alice@example.com' });
+    ctrl
+      .expectOne('/auth/me')
+      .flush({ displayName: 'Alice', email: 'alice@example.com', isAdmin: false });
     await firstLoad;
-    expect(service.user()).toEqual({ displayName: 'Alice', email: 'alice@example.com' });
+    expect(service.user()).toEqual({
+      displayName: 'Alice',
+      email: 'alice@example.com',
+      isAdmin: false,
+    });
 
     // Then: a 500 must leave the signed-in user unchanged.
     const secondLoad = service.loadMe();
@@ -70,14 +82,20 @@ describe('AuthService', () => {
       .flush('Internal Server Error', { status: 500, statusText: 'Internal Server Error' });
     await secondLoad;
 
-    expect(service.user()).toEqual({ displayName: 'Alice', email: 'alice@example.com' });
+    expect(service.user()).toEqual({
+      displayName: 'Alice',
+      email: 'alice@example.com',
+      isAdmin: false,
+    });
     expect(service.loadError()).toBe(true);
   });
 
   it('logout_Success_ClearsUserAndRedirectsToLogin', async () => {
     // Put the user in a signed-in state first.
     const loadPromise = service.loadMe();
-    ctrl.expectOne('/auth/me').flush({ displayName: 'Bob', email: 'bob@example.com' });
+    ctrl
+      .expectOne('/auth/me')
+      .flush({ displayName: 'Bob', email: 'bob@example.com', isAdmin: false });
     await loadPromise;
     expect(service.user()).not.toBeNull();
 
@@ -95,7 +113,9 @@ describe('AuthService', () => {
   it('logout_ServerError_KeepsSessionAndSurfacesError', async () => {
     // Put the user in a signed-in state first.
     const loadPromise = service.loadMe();
-    ctrl.expectOne('/auth/me').flush({ displayName: 'Bob', email: 'bob@example.com' });
+    ctrl
+      .expectOne('/auth/me')
+      .flush({ displayName: 'Bob', email: 'bob@example.com', isAdmin: false });
     await loadPromise;
     expect(service.user()).not.toBeNull();
 
@@ -119,7 +139,9 @@ describe('AuthService', () => {
   // SPEC-006 AC-10 / AC-11
   it('deleteAccount_Success_ClearsUserAndRedirectsToLoginWithNotice', async () => {
     const loadPromise = service.loadMe();
-    ctrl.expectOne('/auth/me').flush({ displayName: 'Bob', email: 'bob@example.com' });
+    ctrl
+      .expectOne('/auth/me')
+      .flush({ displayName: 'Bob', email: 'bob@example.com', isAdmin: false });
     await loadPromise;
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
@@ -136,7 +158,9 @@ describe('AuthService', () => {
 
   it('deleteAccount_ServerError_KeepsSessionAndSurfacesError', async () => {
     const loadPromise = service.loadMe();
-    ctrl.expectOne('/auth/me').flush({ displayName: 'Bob', email: 'bob@example.com' });
+    ctrl
+      .expectOne('/auth/me')
+      .flush({ displayName: 'Bob', email: 'bob@example.com', isAdmin: false });
     await loadPromise;
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Options;
 using StoreIt.Api;
 using StoreIt.Application;
 using StoreIt.Infrastructure;
@@ -56,6 +57,13 @@ builder.Services.AddOpenApi(
 
 var app = builder.Build();
 
+// SPEC-008 AC-02: an empty allowlist is a valid state (no operator view yet), but worth one
+// line in the log so a forgotten Admin__Emails is found before the first 403 is.
+if (app.Services.GetRequiredService<IOptions<AdminOptions>>().Value.GetEmails().Count == 0)
+{
+    AdminStartupLog.AdminEmailsNotSet(app.Logger);
+}
+
 app.UseExceptionHandler();
 
 // Authentication runs before authorization. Secure-by-default (SPEC-003): a
@@ -77,6 +85,7 @@ app.MapAuthEndpoints(); // the /auth group is already .AllowAnonymous()
 app.MapStorageEndpointsV1();
 app.MapAccountEndpointsV1(); // SPEC-006
 app.MapSharingEndpointsV1(); // SPEC-007
+app.MapAdminEndpointsV1(); // SPEC-008
 
 // ⚠️  DEVELOPMENT ONLY — never reachable in Staging or Production.
 // Provides a POST /auth/dev-login shortcut for Playwright E2E tests so they can

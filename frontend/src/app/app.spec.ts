@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
 import { App } from './app';
-import { AuthService } from './core/auth.service';
+import { AuthService, AuthUser } from './core/auth.service';
 import { TranslateService } from './core/translate';
 
 const BASE_TRANSLATIONS = {
@@ -72,9 +72,7 @@ describe('App — session menu', () => {
   const logout = vi.fn();
   const deleteAccount = vi.fn();
 
-  async function configure(
-    user: { displayName: string | null; email: string | null } | null | undefined,
-  ): Promise<void> {
+  async function configure(user: AuthUser | null | undefined): Promise<void> {
     logout.mockClear();
     deleteAccount.mockReset();
     deleteAccount.mockResolvedValue(undefined);
@@ -100,7 +98,7 @@ describe('App — session menu', () => {
   }
 
   it('Header_WhenSignedIn_ShowsTheSessionChip', async () => {
-    await configure({ displayName: 'Alice Example', email: 'alice@example.com' });
+    await configure({ displayName: 'Alice Example', email: 'alice@example.com', isAdmin: false });
 
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
@@ -131,7 +129,7 @@ describe('App — session menu', () => {
   });
 
   it('SignOut_WhenChosenFromTheMenu_LogsTheUserOut', async () => {
-    await configure({ displayName: 'Alice Example', email: 'alice@example.com' });
+    await configure({ displayName: 'Alice Example', email: 'alice@example.com', isAdmin: false });
 
     const fixture = TestBed.createComponent(App);
     const element = fixture.nativeElement as HTMLElement;
@@ -154,7 +152,7 @@ describe('App — session menu', () => {
       fixture: ReturnType<typeof TestBed.createComponent<App>>;
       element: HTMLElement;
     }> {
-      await configure({ displayName: 'Alice Example', email: 'alice@example.com' });
+      await configure({ displayName: 'Alice Example', email: 'alice@example.com', isAdmin: false });
       const fixture = TestBed.createComponent(App);
       const element = fixture.nativeElement as HTMLElement;
       document.body.appendChild(element);
@@ -223,7 +221,7 @@ describe('App — session menu', () => {
     });
 
     it('DeleteAccount_WhenTheAccountHasNoEmail_AsksForTheDisplayNameInstead', async () => {
-      await configure({ displayName: 'Alice Example', email: null });
+      await configure({ displayName: 'Alice Example', email: null, isAdmin: false });
       const fixture = TestBed.createComponent(App);
       const element = fixture.nativeElement as HTMLElement;
       document.body.appendChild(element);

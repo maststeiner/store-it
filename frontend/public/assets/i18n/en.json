@@ -183,5 +183,44 @@
       "title": "Hand over ownership",
       "message": "{{name}} becomes the owner of this storage. You stay a member and can no longer delete or share it."
     }
+  },
+  "admin": {
+    "menu": {
+      "statistics": "Statistics"
+    },
+    "statistics": {
+      "title": "Usage statistics",
+      "generatedAt": "Generated at {{time}}",
+      "refresh": "Refresh",
+      "loading": "Loading statistics…",
+      "groups": {
+        "users": "Users",
+        "storages": "Storages",
+        "items": "Items"
+      },
+      "users": {
+        "total": "Total",
+        "newLast7Days": "New in the last 7 days",
+        "newLast30Days": "New in the last 30 days",
+        "withoutAnyStorage": "Without any storage",
+        "byIssuer": "By sign-in provider"
+      },
+      "storages": {
+        "total": "Total",
+        "shared": "Shared",
+        "empty": "Empty",
+        "itemsPerStorageMedian": "Items per storage (median)",
+        "itemsPerStorageMax": "Items per storage (maximum)",
+        "pendingInvitations": "Open invitation links"
+      },
+      "items": {
+        "total": "Total",
+        "withExpiryDate": "With expiry date",
+        "withProductionDate": "With production date",
+        "expired": "Expired",
+        "expiringSoon": "Expiring soon",
+        "byUnit": "By unit"
+      }
+    }
   }
 }

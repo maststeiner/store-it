@@ -49,3 +49,5 @@ export type { PreviewInvitation$Params as PreviewInvitation$Params } from './fn/
 export { previewInvitation as previewInvitation } from './fn/sharing/preview-invitation';
 export type { AcceptInvitation$Params as AcceptInvitation$Params } from './fn/sharing/accept-invitation';
 export { acceptInvitation as acceptInvitation } from './fn/sharing/accept-invitation';
+export type { GetUsageStatistics$Params as GetUsageStatistics$Params } from './fn/admin/get-usage-statistics';
+export { getUsageStatistics as getUsageStatistics } from './fn/admin/get-usage-statistics';
