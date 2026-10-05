@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using StoreIt.Infrastructure;
@@ -55,7 +56,9 @@ public sealed class DevLoginFixture : WebApplicationFactory<Program>, IAsyncLife
             );
         }
 
-        // No ConfigureTestServices / No auth-scheme override — the real cookie pipeline must run.
+        // No auth-scheme override — the real cookie pipeline must run. The only test-service
+        // tweak is the EF model cache (see EfServiceProviderCaching.cs).
+        builder.ConfigureTestServices(services => services.DisableEfServiceProviderCaching());
     }
 
     public override async ValueTask DisposeAsync()

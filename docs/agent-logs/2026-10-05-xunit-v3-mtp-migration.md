@@ -55,6 +55,29 @@ Stryker still work, then PR.
   (and making the projects proper MTP executables) the debug run on `ExpiryRules.cs` killed 11/11
   testable mutants. Stryker 5's per-test coverage capture runs once per mutated assembly (four
   passes here); the cost shows up in the full nightly run, not on `--since` PRs.
+- **CI round 1 (MTP, concurrency 4): 68.41 % against 74.33 % on the VsTest nightly, same 682 mutants.**
+  The per-file diff of the two reports put the loss almost entirely into once-per-process code:
+  `StorageConfiguration` 0/38 killed (was 25/38), `UserConfiguration` 0/10 (7/10), `StoreItDbContext`
+  0/6 (4/6), `DomainExceptionHandler` 6/14 (13/14), `CsrfEndpointFilter` 4/9 (5/9).
+- **Not the upstream concurrency bug.** stryker-net#3832 (5.0.0 under-reports kills nondeterministically
+  at concurrency > 1) looked like a match; CI round 2 at `--concurrency 1` produced the identical
+  68.41 % with identical per-file numbers in 1 h 29 instead of 1 h 11. The loss is deterministic.
+- **Actual cause: EF Core's process-wide model cache meets a long-lived test process.** EF caches its
+  internal service provider (and the compiled model) keyed by service-affecting options only — the
+  connection string does not count — so every `WebApplicationFactory` host in one process shares the
+  first model built. The VsTest runner marks mutants that run in static/one-time context as "static"
+  and gives them fresh sessions; the MTP runner reports "0 static mutations" and keeps its test-server
+  processes warm (stryker-net#3742; fix PR #3695 open since July). A mutant in an
+  `IEntityTypeConfiguration` is therefore seen by at most the first host of the process.
+- **Fix on the test side only:** `EfServiceProviderCaching.DisableEfServiceProviderCaching()` wraps the
+  app's `DbContextOptions<StoreItDbContext>` registration with `EnableServiceProviderCaching(false)` in
+  all four fixtures. The model is rebuilt per host; the Api.Service suite goes from ~10 s to ~22 s.
+  Production code is untouched. The two static `readonly` dictionaries (`DomainExceptionHandler.ByType`,
+  `CsrfEndpointFilter.SafeMethods`) stay a known gap of up to 8 mutants until #3695 lands —
+  restructuring production code for a mutation tool's limitation is not on the table.
+- `coverage-analysis` `all` and `perTestInIsolation` were tried on the way: no gain, 2–5× the time.
+  Also learned: single-file `--mutate` runs are not a valid proxy for kill rates under MTP (fresh
+  processes make once-per-process mutants look alive); only full runs count.
 - **Sonar report path** changes to `TestResults/coverage.opencover.*.xml` (coverlet.MTP timestamps
   the file names and writes to `--results-directory`).
 
@@ -70,7 +93,7 @@ Stryker still work, then PR.
 - **Result:** locally green — build 0 warnings, `dotnet test` solution-wide 205/205, Domain 70/70 and
   Api.Service 126/126 with coverlet.MTP (Api.Service line coverage 97.99 % across all four modules),
   architecture tests 9/9 with `--filter`, CSharpier clean, Stryker MTP debug run 100 % on the probed
-  file. CI commands in `ci.yml` (job 1, Sonar backend, architecture gate) and `stryker-config.json`
+  file; CI rounds 1–2 (MTP) 68.41 % → round 3 with the EF cache fix pending at the time of writing. CI commands in `ci.yml` (job 1, Sonar backend, architecture gate) and `stryker-config.json`
   (`test-runner: mtp`) updated; docs (SETUP, metrics, tech-stack, test-guidelines) say coverlet.MTP.
 - **Deviations from spec:** none (no spec — tech-debt convention).
 - **Harness follow-up:** (1) the first full nightly Stryker run on `develop` after merge is the real

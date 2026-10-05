@@ -90,8 +90,8 @@ jobs:
       # Verifies the tests actually test something (kills mutants) — AI-generated
       # tests can look plausible while asserting nothing. Break threshold: 60%.
       #
-      # Concurrency used to be 4 (Stryker defaults to logical processors / 2, which left half of
-      # the 4-vCPU runner idle). With the MTP runner it is 1 for now — see the note at the steps.
+      # --concurrency 4: Stryker defaults to logical processors / 2, which is 2 test
+      # runners on a 4-vCPU GitHub runner — half the machine idle for 35 minutes.
       #
       # The `since` block in stryker-config.json carries `ignore-changes-in`, without
       # which "changed code only" was a lie: Stryker treats every changed file outside a
@@ -100,16 +100,15 @@ jobs:
       # backend/Dockerfile" and produced the same 628 mutants and the same 37 minutes as
       # the nightly full run. `since.enabled` stays false there so this job's full run
       # and local runs are unaffected; --since below turns it on for pull requests.
-      # --concurrency 1 with the MTP runner: Stryker 5.0.0 under-reports kills nondeterministically at
-      # concurrency > 1 (stryker-net#3832; the shared test-server process is reused across concurrently
-      # evaluated mutants, #3742). The first MTP run of this suite at concurrency 4 scored 68.41 % against
-      # 74.33 % for the same 682 mutants on the VsTest runner. Raise again once #3832 is fixed upstream.
+      # Concurrency 1 was tried for the MTP runner (stryker-net#3832 reports nondeterministic
+      # under-reporting at > 1): identical score, 18 minutes slower — the loss this suite saw was
+      # once-per-process state instead (EF model cache, see tests/.../EfServiceProviderCaching.cs).
       - name: Stryker mutation testing (full)
         if: steps.scope.outputs.mode == 'full'
-        run: dotnet stryker --concurrency 1
+        run: dotnet stryker --concurrency 4
       - name: Stryker mutation testing (changed code only)
         if: steps.scope.outputs.mode == 'incremental'
-        run: dotnet stryker --concurrency 1 --since:"origin/${GITHUB_BASE_REF}"
+        run: dotnet stryker --concurrency 4 --since:"origin/${GITHUB_BASE_REF}"
       - name: Mutation testing skipped
         if: steps.scope.outputs.mode == 'skip'
         run: echo "No backend/ changes to mutate (or a post-merge push — covered by the nightly backstop); skipping."
