@@ -2,18 +2,19 @@
     <!-- Inherit the backend-wide props (analyzers) — MSBuild only auto-imports the nearest file -->
     <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))" />
 
-    <!-- Coverage gate for all test projects (SPEC/DoD: threshold 70%, calibrate during pilot).
-       Architecture tests opt out (they verify structure, not behavior). -->
+    <!-- Test host: xunit.v3 runs on Microsoft.Testing.Platform; backend/global.json switches `dotnet test` to the
+       MTP runner (the .NET 10 SDK rejects the VSTest path for MTP apps, and global.json allows no comment).
+       Coverage gate (SPEC/DoD: 70% lines) is enforced by coverlet.MTP at run time: the filters live
+       in each behaviour test project's testconfig.json, the threshold is passed by the CI command
+       (coverlet-threshold 70, coverlet-threshold-type line, see ci.yml). Architecture tests have no coverlet
+       reference and therefore no gate (they verify structure, not behaviour). -->
     <PropertyGroup>
-        <CollectCoverage>true</CollectCoverage>
-        <Threshold>70</Threshold>
-        <ThresholdType>line</ThresholdType>
-        <!-- Source-generated framework code (e.g. OpenAPI XML-comment support) is
-             emitted into our assemblies under Microsoft/System namespaces — it is
-             not ours to cover -->
-        <Exclude>[*]Microsoft.*,[*]System.*</Exclude>
         <!-- CA1707: underscores are mandated by our test naming convention
              (Method_Scenario_ExpectedResult, see docs/guidelines/test-guidelines.md) -->
         <NoWarn>$(NoWarn);CA1707</NoWarn>
+        <!-- xUnit1051 (xunit.v3 analyzer): "pass TestContext.Current.CancellationToken" to every HttpClient/EF call.
+             Our integration tests call ~60 such APIs; cancellation responsiveness is irrelevant for them and the
+             token threading would bury the test intent. Deliberately off; revisit if test runs ever need cancelling. -->
+        <NoWarn>$(NoWarn);xUnit1051</NoWarn>
     </PropertyGroup>
 </Project>

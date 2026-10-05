@@ -34,7 +34,7 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         "postgres:18-alpine"
     ).Build();
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _postgres.StartAsync();
 
@@ -149,7 +149,7 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
         client.DefaultRequestHeaders.Add("X-XSRF-TOKEN", tokenValue);
     }
 
-    async Task IAsyncLifetime.DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();

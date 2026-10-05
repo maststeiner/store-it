@@ -1,5 +1,6 @@
 using System.Reflection;
 using NetArchTest.Rules;
+using TestResult = NetArchTest.Rules.TestResult; // xunit.v3 also defines Xunit.TestResult
 
 namespace StoreIt.Architecture.Tests;
 

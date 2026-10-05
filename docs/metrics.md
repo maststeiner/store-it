@@ -19,7 +19,7 @@
 
 | Metric | Source |
 |--------|--------|
-| Line coverage (gate: see `guidelines/test-guidelines.md`) | backend coverlet · frontend vitest (CI job 1 / 3) |
+| Line coverage (gate: see `guidelines/test-guidelines.md`) | backend coverlet.MTP · frontend vitest (CI job 1 / 3) |
 | **Mutation score** | Stryker.NET (CI job 1a) |
 | Duplication, code smells, new-code coverage | SonarCloud (backend + frontend projects) |
 | Vulnerabilities / secrets / license issues | Trivy + dependency-review (CI job 2) |
@@ -83,7 +83,7 @@ both are margins that have narrowed.
 Numbers above are a human-readable snapshot; the CI run and PR are the authoritative source. Record each further feature the same way (spec link, PR link, CI-run numbers) to build the trend vs. classically developed items.
 
 **How the figures are read from a run.** Backend line coverage is the total of the
-`StoreIt.Api.Service.Tests` coverlet report, which spans all four modules; the `StoreIt.Domain.Tests`
+`StoreIt.Api.Service.Tests` coverlet.MTP report, which spans all four modules; the `StoreIt.Domain.Tests`
 run prints a second, Domain-only total (97.9% for SPEC-001) that is easy to mistake for it. Frontend
 coverage is the `All files` line-percent column of the vitest coverage table. The mutation score is
 Stryker's `The final mutation score is …` line in job 1a. Architecture debt is 0 whenever job 4 is

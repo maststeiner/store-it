@@ -16,8 +16,8 @@
 
 - [x] **Language / runtime:** .NET (C#) backend · Angular (TypeScript) frontend → arc42 section 2.
 - [x] **Formatter / linter:** `dotnet format` (backend) · Prettier + ESLint (frontend).
-- [x] **Test framework + coverage:** xUnit + coverlet (backend) · Angular default (frontend).
-- [x] **Coverage threshold:** defined and calibrated in `docs/guidelines/test-guidelines.md` (Coverage + Decisions & Calibration), enforced in the gate configs (frontend `vitest-base.config.ts` · backend coverlet).
+- [x] **Test framework + coverage:** xUnit v3 on Microsoft.Testing.Platform + coverlet.MTP (backend, since #102) · Angular default (frontend).
+- [x] **Coverage threshold:** defined and calibrated in `docs/guidelines/test-guidelines.md` (Coverage + Decisions & Calibration), enforced in the gate configs (frontend `vitest-base.config.ts` · backend coverlet.MTP threshold flags in `ci.yml`, filters in `testconfig.json`).
 - [x] **Architecture conformance:** .NET architecture tests (`Category=ArchitectureTests`), rules from ADR-001.
 - [x] Stack commands added to the **Auto** permission tier in `.claude/settings.json`.
 
