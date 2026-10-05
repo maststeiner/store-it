@@ -4,7 +4,11 @@ import { AuthUser } from '../core/auth.service';
 import { TranslateService } from '../core/translate';
 import { SessionMenu } from './session-menu';
 
-const ALICE: AuthUser = { displayName: 'Alice Example', email: 'alice@example.com' };
+const ALICE: AuthUser = {
+  displayName: 'Alice Example',
+  email: 'alice@example.com',
+  isAdmin: false,
+};
 
 describe('SessionMenu', () => {
   beforeEach(async () => {
@@ -58,19 +62,27 @@ describe('SessionMenu', () => {
   });
 
   it('Initials_WhenOnlyEmailKnown_DerivesFromTheEmail', async () => {
-    const { el } = await render({ displayName: null, email: 'bob.builder@example.com' });
+    const { el } = await render({
+      displayName: null,
+      email: 'bob.builder@example.com',
+      isAdmin: false,
+    });
 
     expect(el.querySelector('.session-chip')?.textContent?.trim()).toBe('BB');
   });
 
   it('Initials_WhenNeitherNameNorEmailKnown_FallsBackToAPlaceholder', async () => {
-    const { el } = await render({ displayName: null, email: null });
+    const { el } = await render({ displayName: null, email: null, isAdmin: false });
 
     expect(el.querySelector('.session-chip')?.textContent?.trim()).toBe('?');
   });
 
   it('Menu_WhenNoEmailKnown_OmitsTheEmailLine', async () => {
-    const { fixture, el } = await render({ displayName: 'Alice Example', email: null });
+    const { fixture, el } = await render({
+      displayName: 'Alice Example',
+      email: null,
+      isAdmin: false,
+    });
     const menu = await openMenu(fixture, el);
 
     expect(menu.querySelector('.session-name')?.textContent).toContain('Alice Example');
@@ -247,5 +259,71 @@ describe('SessionMenu', () => {
 
     expect(signedOut).toBe(1);
     expect(el.querySelector('.session-menu')).toBeNull();
+  });
+});
+
+describe('SessionMenu — SPEC-008 statistics entry', () => {
+  const OPERATOR: AuthUser = {
+    displayName: 'Olga Operator',
+    email: 'operator@test.local',
+    isAdmin: true,
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SessionMenu] }).compileComponents();
+    TestBed.inject(TranslateService).setTranslation('en', {
+      auth: {
+        session: {
+          menu: 'Account menu — signed in as {{name}}',
+          logout: 'Sign out',
+          deleteAccount: 'Delete account',
+        },
+      },
+      admin: { menu: { statistics: 'Statistics' } },
+    });
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('app-session-menu').forEach((node) => node.remove());
+  });
+
+  async function openMenu(
+    user: AuthUser,
+  ): Promise<{ fixture: ComponentFixture<SessionMenu>; el: HTMLElement }> {
+    const fixture = TestBed.createComponent(SessionMenu);
+    fixture.componentRef.setInput('user', user);
+    const el = fixture.nativeElement as HTMLElement;
+    document.body.appendChild(el);
+    fixture.detectChanges();
+    (el.querySelector('#session-chip') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    return { fixture, el };
+  }
+
+  function itemLabels(el: HTMLElement): string[] {
+    return [...el.querySelectorAll('[role="menuitem"]')].map(
+      (item) => item.textContent?.trim() ?? '',
+    );
+  }
+
+  it('AC-10: offers Statistics above Sign out for the operator and emits on click', async () => {
+    const { fixture, el } = await openMenu(OPERATOR);
+    const emitted = vi.fn();
+    fixture.componentInstance.statistics.subscribe(emitted);
+
+    expect(itemLabels(el)).toEqual(['Statistics', 'Sign out', 'Delete account']);
+
+    (el.querySelector('[role="menuitem"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    expect(emitted).toHaveBeenCalledTimes(1);
+    expect(el.querySelector('#session-menu')).toBeNull();
+  });
+
+  it('AC-10: renders no Statistics item for a regular user', async () => {
+    const { el } = await openMenu({ ...OPERATOR, isAdmin: false });
+
+    expect(itemLabels(el)).toEqual(['Sign out', 'Delete account']);
   });
 });

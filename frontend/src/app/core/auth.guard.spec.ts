@@ -25,6 +25,7 @@ describe('authGuard', () => {
     const userSignal = signal<AuthUser | null | undefined>({
       displayName: 'Alice',
       email: 'alice@example.com',
+      isAdmin: false,
     });
     const loadMe = vi.fn().mockResolvedValue(undefined);
 
@@ -106,7 +107,7 @@ describe('authGuard', () => {
   it('undefined_then_loadMe_populates_user_allows', async () => {
     const userSignal = signal<AuthUser | null | undefined>(undefined);
     const loadMe = vi.fn().mockImplementation(() => {
-      userSignal.set({ displayName: 'Bob', email: 'bob@example.com' });
+      userSignal.set({ displayName: 'Bob', email: 'bob@example.com', isAdmin: false });
       return Promise.resolve();
     });
 

@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AccountService } from './api/services';
 import { AuthService } from './core/auth.service';
@@ -29,6 +29,7 @@ export class App implements OnInit {
   private readonly errors = inject(ErrorMessages);
   private readonly accountApi = inject(AccountService);
   private readonly translate = inject(TranslateService);
+  private readonly router = inject(Router);
 
   /** SPEC-006: the account-deletion confirmation is open. */
   protected readonly deleteAccountOpen = signal(false);
@@ -73,6 +74,11 @@ export class App implements OnInit {
   ngOnInit(): void {
     this.language.init();
     void this.auth.initCsrf();
+  }
+
+  /** SPEC-008 AC-10: menu entry → the operator page (the route guard re-checks). */
+  protected openStatistics(): void {
+    void this.router.navigate(['/admin']);
   }
 
   protected openDeleteAccount(): void {

@@ -68,6 +68,7 @@ services:
       Authentication__Microsoft__ClientId: ${Authentication__Microsoft__ClientId:-}
       Authentication__Microsoft__ClientSecret: ${Authentication__Microsoft__ClientSecret:-}
       Authentication__Microsoft__Authority: ${Authentication__Microsoft__Authority:-}
+      Admin__Emails: ${Admin__Emails:-}
     depends_on:
       postgres:
         condition: service_healthy

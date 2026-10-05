@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace StoreIt.Api;
 
@@ -125,7 +126,8 @@ public static class AuthEndpoints
     }
 
     private static Results<Ok<UserProfileResponse>, UnauthorizedHttpResult> HandleMe(
-        HttpContext http
+        HttpContext http,
+        IOptions<AdminOptions> adminOptions
     )
     {
         var user = http.User;
@@ -138,7 +140,9 @@ public static class AuthEndpoints
             new UserProfileResponse(
                 user.FindFirstValue(CurrentUser.LocalIdClaim),
                 user.FindFirstValue(ClaimTypes.Email) ?? user.FindFirstValue("email"),
-                user.FindFirstValue("name") ?? user.FindFirstValue(ClaimTypes.Name)
+                user.FindFirstValue("name") ?? user.FindFirstValue(ClaimTypes.Name),
+                // SPEC-008 AC-08: comfort flag for the client; the Admin policy is the gate.
+                AdminAccess.IsAdmin(user, adminOptions.Value)
             )
         );
     }
@@ -172,4 +176,4 @@ public static class AuthEndpoints
 }
 
 /// <summary>The authenticated session profile returned by <c>GET /auth/me</c>.</summary>
-public sealed record UserProfileResponse(string? Id, string? Email, string? Name);
+public sealed record UserProfileResponse(string? Id, string? Email, string? Name, bool IsAdmin);

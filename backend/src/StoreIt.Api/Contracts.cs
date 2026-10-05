@@ -117,3 +117,69 @@ public sealed record AccountSummaryResponse(
     public static AccountSummaryResponse From(AccountSummary summary) =>
         new(summary.OwnedStorages, summary.OwnedSharedStorages, summary.Memberships);
 }
+
+// --- SPEC-008 operator statistics: GET /api/v1/admin/statistics (aggregates only, AC-06) ---
+
+public sealed record UserStatisticsResponse(
+    int Total,
+    int NewLast7Days,
+    int NewLast30Days,
+    IReadOnlyDictionary<string, int> ByIssuer,
+    int WithoutAnyStorage
+);
+
+public sealed record StorageStatisticsResponse(
+    int Total,
+    int Shared,
+    int Empty,
+    int ItemsPerStorageMedian,
+    int ItemsPerStorageMax
+);
+
+public sealed record InvitationStatisticsResponse(int Pending);
+
+public sealed record ItemStatisticsResponse(
+    int Total,
+    int WithExpiryDate,
+    int WithProductionDate,
+    int Expired,
+    int ExpiringSoon,
+    IReadOnlyDictionary<string, int> ByUnit
+);
+
+public sealed record UsageStatisticsResponse(
+    DateTimeOffset GeneratedAt,
+    UserStatisticsResponse Users,
+    StorageStatisticsResponse Storages,
+    InvitationStatisticsResponse Invitations,
+    ItemStatisticsResponse Items
+)
+{
+    public static UsageStatisticsResponse From(UsageStatistics statistics) =>
+        new(
+            statistics.GeneratedAt,
+            new UserStatisticsResponse(
+                statistics.Users.Total,
+                statistics.Users.NewLast7Days,
+                statistics.Users.NewLast30Days,
+                statistics.Users.ByIssuer,
+                statistics.Users.WithoutAnyStorage
+            ),
+            new StorageStatisticsResponse(
+                statistics.Storages.Total,
+                statistics.Storages.Shared,
+                statistics.Storages.Empty,
+                statistics.Storages.ItemsPerStorageMedian,
+                statistics.Storages.ItemsPerStorageMax
+            ),
+            new InvitationStatisticsResponse(statistics.Invitations.Pending),
+            new ItemStatisticsResponse(
+                statistics.Items.Total,
+                statistics.Items.WithExpiryDate,
+                statistics.Items.WithProductionDate,
+                statistics.Items.Expired,
+                statistics.Items.ExpiringSoon,
+                statistics.Items.ByUnit
+            )
+        );
+}

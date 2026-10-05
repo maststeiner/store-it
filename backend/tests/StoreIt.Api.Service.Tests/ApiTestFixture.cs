@@ -47,6 +47,10 @@ public sealed class ApiTestFixture : WebApplicationFactory<Program>, IAsyncLifet
     {
         builder.UseSetting("ConnectionStrings:storeit", _postgres.GetConnectionString());
 
+        // SPEC-008 D1: the operator allowlist for the admin tests (two entries, mixed case, spaces —
+        // the normalisation is part of what the tests verify).
+        builder.UseSetting("Admin:Emails", "operator@test.local , Second.Operator@Test.local");
+
         // Dummy OIDC config so AddOpenIdConnect can bind at startup even though the
         // committed appsettings ships empty ClientId/secret. Tests never reach the IdP
         // (the "Test" scheme below authenticates), but the host must still boot.

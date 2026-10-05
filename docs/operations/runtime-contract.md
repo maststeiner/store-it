@@ -92,6 +92,7 @@ variables fall back to the defaults below.
 | `ASPNETCORE_ENVIRONMENT` | no | no | `Production` | **Must stay `Production`** in any reachable deployment. `Development` maps `POST /auth/dev-login`, which issues a session without credentials, and relaxes cookie/HTTPS rules. |
 | `ASPNETCORE_FORWARDEDHEADERS_ENABLED` | **yes, behind TLS termination** | no | unset (off) | `true` makes the API trust `X-Forwarded-For` / `X-Forwarded-Proto` so it builds `https://` URLs (OIDC `redirect_uri`) when TLS ends at a proxy. See §5 for the trust caveat. |
 | `ASPNETCORE_HTTP_PORTS` | no | no | `8080` (set in the image) | Listening port. Keep 8080 unless you also change `web`'s upstream. |
+| `Admin__Emails` | no | no | empty | SPEC-008: comma-separated e-mail addresses of the operator(s). A signed-in user whose e-mail claim matches (case-insensitive) sees `/admin` and may call `GET /api/v1/admin/statistics`; everyone else gets `403`. Empty → nobody is admin, one warning at startup. |
 | `Authentication__Google__ClientId` | no | no | empty | Sign-in with Google is registered only when **ClientId and Authority** are both non-empty; otherwise `/auth/login/google` answers `400 auth.provider.unconfigured` and the rest of the app works. |
 | `Authentication__Google__ClientSecret` | with ClientId | **yes** | empty | |
 | `Authentication__Google__Authority` | no | no | `https://accounts.google.com` | |

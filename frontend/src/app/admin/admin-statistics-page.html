@@ -1,0 +1,77 @@
+<section class="stats-page">
+  <div class="page-head">
+    <h1>{{ 'admin.statistics.title' | translate }}</h1>
+    @if (generatedAt(); as time) {
+      <span class="count-hint">{{ 'admin.statistics.generatedAt' | translate: { time } }}</span>
+    }
+    <button type="button" class="btn-ghost btn-small" (click)="load()" [disabled]="loading()">
+      {{ 'admin.statistics.refresh' | translate }}
+    </button>
+  </div>
+
+  @if (loadError(); as error) {
+    <p class="form-error" role="alert">{{ error }}</p>
+  }
+
+  @if (loading() && !statistics()) {
+    <p class="count-hint" role="status">{{ 'admin.statistics.loading' | translate }}</p>
+  }
+
+  @if (statistics()) {
+    <div class="stats-groups">
+      <section class="stats-group" aria-labelledby="stats-users">
+        <h2 id="stats-users">{{ 'admin.statistics.groups.users' | translate }}</h2>
+        <div class="stats-grid">
+          @for (tile of userTiles(); track tile.labelKey) {
+            <div class="stat-tile">
+              <span class="stat-value">{{ format(tile.value) }}</span>
+              <span class="stat-label">{{ tile.labelKey | translate }}</span>
+            </div>
+          }
+        </div>
+        @if (issuerRows().length > 0) {
+          <h3>{{ 'admin.statistics.users.byIssuer' | translate }}</h3>
+          <dl class="stat-list">
+            @for (row of issuerRows(); track row.label) {
+              <dt>{{ row.label }}</dt>
+              <dd>{{ format(row.value) }}</dd>
+            }
+          </dl>
+        }
+      </section>
+
+      <section class="stats-group" aria-labelledby="stats-storages">
+        <h2 id="stats-storages">{{ 'admin.statistics.groups.storages' | translate }}</h2>
+        <div class="stats-grid">
+          @for (tile of storageTiles(); track tile.labelKey) {
+            <div class="stat-tile">
+              <span class="stat-value">{{ format(tile.value) }}</span>
+              <span class="stat-label">{{ tile.labelKey | translate }}</span>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="stats-group" aria-labelledby="stats-items">
+        <h2 id="stats-items">{{ 'admin.statistics.groups.items' | translate }}</h2>
+        <div class="stats-grid">
+          @for (tile of itemTiles(); track tile.labelKey) {
+            <div class="stat-tile">
+              <span class="stat-value">{{ format(tile.value) }}</span>
+              <span class="stat-label">{{ tile.labelKey | translate }}</span>
+            </div>
+          }
+        </div>
+        @if (unitRows().length > 0) {
+          <h3>{{ 'admin.statistics.items.byUnit' | translate }}</h3>
+          <dl class="stat-list">
+            @for (row of unitRows(); track row.label) {
+              <dt>{{ row.label | translate }}</dt>
+              <dd>{{ format(row.value) }}</dd>
+            }
+          </dl>
+        }
+      </section>
+    </div>
+  }
+</section>

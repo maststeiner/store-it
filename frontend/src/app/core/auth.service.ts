@@ -8,6 +8,8 @@ import { AccountService } from '../api/services';
 export interface AuthUser {
   displayName: string | null;
   email: string | null;
+  /** SPEC-008 AC-08: the operator flag from /auth/me — comfort for the menu and the guard; the API decides. */
+  isAdmin: boolean;
 }
 
 /** Where a user ends up when no usable return target is known: the storage list. */
