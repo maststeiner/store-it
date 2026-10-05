@@ -21,7 +21,9 @@ namespace StoreIt.Api.Service.Tests;
 /// </remarks>
 internal static class EfServiceProviderCaching
 {
-    public static IServiceCollection DisableEfServiceProviderCaching(this IServiceCollection services)
+    public static IServiceCollection DisableEfServiceProviderCaching(
+        this IServiceCollection services
+    )
     {
         var descriptor = services.Single(d =>
             d.ServiceType == typeof(DbContextOptions<StoreItDbContext>)
@@ -32,8 +34,9 @@ internal static class EfServiceProviderCaching
                 typeof(DbContextOptions<StoreItDbContext>),
                 serviceProvider =>
                 {
-                    var original = (DbContextOptions<StoreItDbContext>)
-                        descriptor.ImplementationFactory!(serviceProvider);
+                    var original =
+                        (DbContextOptions<StoreItDbContext>)
+                            descriptor.ImplementationFactory!(serviceProvider);
                     return new DbContextOptionsBuilder<StoreItDbContext>(original)
                         .EnableServiceProviderCaching(false)
                         .Options;
