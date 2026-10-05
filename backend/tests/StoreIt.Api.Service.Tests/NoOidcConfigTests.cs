@@ -87,6 +87,8 @@ public sealed class NoOidcApiFixture : WebApplicationFactory<Program>, IAsyncLif
 
         builder.ConfigureTestServices(services =>
         {
+            services.DisableEfServiceProviderCaching(); // see EfServiceProviderCaching.cs
+
             // Replace the default scheme so test requests can authenticate via
             // X-Test-Subject without a live IdP — same pattern as ApiTestFixture.
             services
