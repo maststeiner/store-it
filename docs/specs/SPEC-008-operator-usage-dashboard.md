@@ -1,9 +1,9 @@
 # Spec: Operator usage dashboard (read-only, existing data)
 
-> **Status:** Review — draft for Marcel Steiner's G1 review (issue #203), not frozen
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-05 (issue #203)
 > **Sprint:** 2026-S41
 > **Author:** Claude Fable 5.1 (developer agent), from Marcel Steiner's request (issue #203, 2026-10-05)
-> **Last updated:** 2026-10-05
+> **Last updated:** 2026-10-05 (G1 freeze)
 
 ---
 
@@ -39,11 +39,11 @@ matched against the e-mail claim of the signed-in principal. The web client gets
 `/admin` with the numbers as plain stat tiles, reachable from the session menu only for
 admins; the backend is the real gate.
 
-### Decisions proposed (to confirm at G1)
+### Decisions taken (confirmed at G1, 2026-10-05)
 
 | # | Decision | Rationale |
 |---|----------|-----------|
-| D1 | Admin identity = configuration key `Admin:Emails` (env `Admin__Emails`, comma-separated), compared case-insensitively and trimmed with the `email` claim of the cookie principal. No e-mail claim → never admin. | Operationally the simplest: Marcel knows his sign-in address, nobody needs a user id from the database. The address is asserted by Microsoft/Google, not by the user. **Alternative (stricter):** `Admin:Principals` as `issuer|subject` pairs — exact identity, but the subject must first be read from the database. Marcel decides. |
+| D1 | Admin identity = configuration key `Admin:Emails` (env `Admin__Emails`, comma-separated), compared case-insensitively and trimmed with the `email` claim of the cookie principal. No e-mail claim → never admin. | Operationally the simplest: Marcel knows his sign-in address, nobody needs a user id from the database. The address is asserted by Microsoft/Google, not by the user. The stricter alternative (`issuer|subject` pairs) was considered and declined at G1 (Marcel Steiner, 2026-10-05: "E-Mail-Allowlist passt"); it stays the fallback if an operator account without an e-mail claim ever appears (EC-01). |
 | D2 | Authorization policy `Admin` (`RequireAssertion` over the allowlist), applied to a new endpoint group `/api/v1/admin` → `401` without session, `403` for non-admins. The allowlist is read once at startup through options binding; an empty list means "no admin exists" (the group answers `403` for everyone) and the startup check logs a warning, not an error. | Pure claim read keeps the per-request cost at zero and matches the BFF design. An empty allowlist must not break a deployment that simply has no operator view yet. |
 | D3 | Endpoint `GET /api/v1/admin/statistics`, operationId `getUsageStatistics`, `200` with `UsageStatisticsResponse` (one flat DTO of integers plus `generatedAt`). | One round trip, trivially cacheable later; the typed client is regenerated from the contract. |
 | D4 | Metrics (all computed on request, set-based in the database, no caching): see AC-03…AC-05. "Today" for expiry status comes from the app's `TimeProvider` (as the item endpoints do) and `ExpiryRules` decides *expired* / *expiring soon*; the client does not reimplement the rule (SPEC-001 constraint). | Reuses the one place the expiry rule lives; the numbers match what users see. |
@@ -181,6 +181,6 @@ admins; the backend is the real gate.
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-10-05 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
