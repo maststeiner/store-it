@@ -88,7 +88,7 @@ public sealed class ForwardedHeadersFixture : WebApplicationFactory<Program>, IA
         "postgres:18-alpine"
     ).Build();
 
-    public Task InitializeAsync() => _postgres.StartAsync();
+    public ValueTask InitializeAsync() => new(_postgres.StartAsync());
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
@@ -124,7 +124,7 @@ public sealed class ForwardedHeadersFixture : WebApplicationFactory<Program>, IA
         });
     }
 
-    async Task IAsyncLifetime.DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();

@@ -4,21 +4,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <!-- Structure tests, not behavior tests — excluded from the coverage gate (tests/Directory.Build.props) -->
-        <CollectCoverage>false</CollectCoverage>
+        <OutputType>Exe</OutputType>
+        <!-- xunit.v3 builds an executable that runs natively on Microsoft.Testing.Platform;
+             `dotnet test` is switched to MTP in global.json, Stryker uses its MTP runner. -->
+        <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+        <!-- Structure tests, not behavior tests — no coverlet.MTP reference, so no coverage is collected here -->
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" />
-        <PackageReference Include="coverlet.msbuild">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="NetArchTest.Rules" />
         <PackageReference Include="ReferencesRuler" />
-        <PackageReference Include="xunit" />
-        <PackageReference Include="xunit.runner.visualstudio" />
+        <PackageReference Include="xunit.v3" />
     </ItemGroup>
 
     <ItemGroup>

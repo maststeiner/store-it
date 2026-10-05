@@ -25,7 +25,7 @@ public sealed class DevLoginFixture : WebApplicationFactory<Program>, IAsyncLife
         "postgres:18-alpine"
     ).Build();
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _postgres.StartAsync();
 
@@ -58,7 +58,7 @@ public sealed class DevLoginFixture : WebApplicationFactory<Program>, IAsyncLife
         // No ConfigureTestServices / No auth-scheme override — the real cookie pipeline must run.
     }
 
-    async Task IAsyncLifetime.DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();

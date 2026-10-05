@@ -1,0 +1,11 @@
+{
+  "platformOptions": {
+    "Coverlet": {
+      "format": "opencover",
+      "exclude": "[*]Microsoft.*,[*]System.*,[*.Tests]*",
+      "excludeByAttribute": "ExcludeFromCodeCoverage,ExcludeFromCodeCoverageAttribute,GeneratedCodeAttribute,CompilerGeneratedAttribute",
+      "includeTestAssembly": false,
+      "excludeAssembliesWithoutSources": "MissingAll"
+    }
+  }
+}

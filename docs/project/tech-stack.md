@@ -31,7 +31,7 @@
 
 | Kind | Backend | Frontend |
 |------|---------|----------|
-| Unit / service / integration | xUnit + coverlet; Testcontainers (PostgreSQL; local house standard: Podman) | Angular default setup (vitest, `vitest-base.config.ts`) |
+| Unit / service / integration | xUnit v3 (Microsoft.Testing.Platform) + coverlet.MTP; Testcontainers (PostgreSQL; local house standard: Podman) | Angular default setup (vitest, `vitest-base.config.ts`) |
 | End-to-end | — | Playwright (`frontend/e2e/`), full stack |
 | Mutation testing | Stryker.NET (CI job `1a`) | Consciously dropped (see [test-guidelines](../guidelines/test-guidelines.md)) |
 
