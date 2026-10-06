@@ -12,7 +12,7 @@
   ],
   "timezone": "Europe/Zurich",
   "schedule": ["* 22-23,0-5 * * *"],
-  "baseBranches": ["develop"],
+  "baseBranchPatterns": ["develop"],
   "dependencyDashboard": true,
   "dependencyDashboardApproval": false,
   "prConcurrentLimit": 3,
