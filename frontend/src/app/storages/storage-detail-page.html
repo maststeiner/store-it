@@ -58,6 +58,19 @@
       >
         ＋
       </button>
+      <button
+        #searchButton
+        type="button"
+        class="icon-btn"
+        [class.active]="searchOpen()"
+        (click)="toggleSearch()"
+        [attr.aria-expanded]="searchOpen()"
+        aria-controls="item-search"
+        [title]="'items.search.toggle' | translate"
+        [attr.aria-label]="'items.search.toggle' | translate"
+      >
+        🔍
+      </button>
       @if (storage(); as s) {
         <button
           type="button"
@@ -170,7 +183,49 @@
     </form>
   }
 
-  @if (items()?.length === 0) {
+  @if (searchOpen()) {
+    <div class="search-bar">
+      <input
+        #searchField
+        id="item-search"
+        class="inline-input search-field"
+        type="search"
+        autocomplete="off"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event)"
+        (keydown.escape)="onSearchEscape($event)"
+        [placeholder]="'items.search.placeholder' | translate"
+        [attr.aria-label]="'items.search.label' | translate"
+      />
+      @if (query()) {
+        <button
+          type="button"
+          class="icon-btn"
+          (click)="clearSearch()"
+          [title]="'items.search.clear' | translate"
+          [attr.aria-label]="'items.search.clear' | translate"
+        >
+          ✕
+        </button>
+      }
+    </div>
+    @if (searching()) {
+      <p class="count-hint search-result" role="status">
+        @if (filteredItems().length === 0) {
+          {{ 'items.search.noMatches' | translate: { query: query().trim() } }}
+        } @else if (filteredItems().length === 1) {
+          {{ 'items.search.result.one' | translate: { total: items()?.length ?? 0 } }}
+        } @else {
+          {{
+            'items.search.result.other'
+              | translate: { shown: filteredItems().length, total: items()?.length ?? 0 }
+          }}
+        }
+      </p>
+    }
+  }
+
+  @if (items()?.length === 0 && !searching()) {
     <p class="empty-hint">{{ 'items.empty' | translate }}</p>
   }
 

@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-07 (issue #210)
 > **Sprint:** 2026-S41
 > **Author:** Claude Fable 5.1 (analyst/developer agent), from Marcel Steiner's request (issue #210, 2026-10-07)
-> **Last updated:** 2026-10-07
+> **Last updated:** 2026-10-07 (implementation on `feature/item-search`, verification table filled)
 
 ---
 
@@ -141,37 +141,39 @@ filter. Everything happens in the browser on the already loaded list.
 
 ## Technical Constraints (from Architect Agent)
 
-<!-- Proposal; confirmed/adjusted after G1 -->
+<!-- Proposed before G1, confirmed during implementation -->
 
-- [ ] Layering: web client only. `StorageDetailPage` gains `searchOpen` / `query` signals and a
-      `filteredItems` computed feeding the existing `groups` computed; the matching rule lives in a
-      small pure module `storages/item-search.ts` (`normalize`, `matchesQuery`) so AC-10 can test
-      it without the component. No backend, contract or client regeneration.
-- [ ] Tests: `item-search.spec.ts` (rule), `storage-detail-page.spec.ts` (new block: toggle/focus,
-      filter + groups, result line, no match, clear/Escape, add keeps the query), `i18n.spec.ts`.
-- [ ] Styles: `.search-bar` / `.search-field` in `styles.scss`, reusing `--line`, `--radius`,
-      `inline-input` tokens.
-- [ ] Dependencies: none new.
-- [ ] ADR required: no.
+- [x] Layering: web client only. `StorageDetailPage` gained `searchOpen` / `query` signals, a
+      `searching` computed (EC-01) and a `filteredItems` computed that feeds the existing `groups`
+      computed; the matching rule lives in the pure module `storages/item-search.ts`
+      (`normalizeForSearch`, `queryWords`, `matchesQuery`). No backend, contract or client change.
+- [x] Escape handling (D6): the field's `(keydown.escape)` handler calls `stopPropagation()`, so
+      the document-level Escape that closes the add form does not fire for the same key press.
+- [x] Tests: `item-search.spec.ts` (6 rule tests), `storage-detail-page.spec.ts` → block
+      "item search (SPEC-010)" (10 tests), two SPEC-007 header-button expectations extended by the
+      new button, `i18n.spec.ts` (key parity).
+- [x] Styles: `.search-bar`, `.search-field` (browser's own clear control suppressed — one clear
+      button, ours), `.search-result` in `styles.scss`; the field reuses `inline-input`.
+- [x] Dependencies: none new.
+- [x] ADR required: no.
 
 ---
 
 ## Verification
 
-<!-- Filled in by QA Agent -->
-
 | AC | Test | Status |
 |----|------|--------|
-| AC-01 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-02 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-03 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-04 | `item-search.spec.ts` | ⬜ |
-| AC-05 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-06 | `storage-detail-page.spec.ts` (no HTTP call on input) | ⬜ |
-| AC-07 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-08 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-09 | `i18n.spec.ts` | ⬜ |
-| AC-10 | `item-search.spec.ts` | ⬜ |
+| AC-01 | `storage-detail-page.spec.ts` → "AC-01: the header offers a Search button; activating it opens and focuses the field" | ✅ |
+| AC-02 | → "AC-02: the clear button removes the filter, closes the field and focuses the button", "AC-02 / D6: Escape in the field clears and closes without touching the add form" | ✅ |
+| AC-03 | → "AC-03: the button closes an empty field but only refocuses a field with a value" | ✅ |
+| AC-04 | `item-search.spec.ts` (case, accents, ß, AND, blank); page → "AC-04: accent- and case-insensitive, every word must match" | ✅ |
+| AC-05 | → "AC-04 / AC-05: filters by name while typing, groups shrink and empty groups vanish" (group counters `Expired · 1`, `Others · 1`) | ✅ |
+| AC-06 | → "AC-06: typing never calls the API" (`HttpTestingController.verify()` after typing) | ✅ |
+| AC-07 | → "AC-07: a result line counts shown vs. total; no match says so and hides the empty hint" (incl. EC-01 whitespace) | ✅ |
+| AC-08 | → "AC-08: adding an item keeps the query and re-applies it to the reloaded list" (D5: hidden non-matching add, total grows) | ✅ |
+| AC-09 | `i18n.spec.ts` (de/en/fr/it parity, placeholders); `items.search.result.one/other` | ✅ |
+| AC-10 | `item-search.spec.ts` — rule tested without the component | ✅ |
+| EC-04 | → "EC-04: an empty storage still offers the search; typing yields the no-match line" | ✅ |
 
 ---
 
