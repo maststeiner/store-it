@@ -18,6 +18,12 @@ export const routes: Routes = [
     loadComponent: () => import('./admin/admin-statistics-page').then((m) => m.AdminStatisticsPage),
     canActivate: [authGuard, adminGuard],
   },
+  {
+    // SPEC-009: version, license and third-party notices — lazy, behind the session (D5).
+    path: 'about',
+    loadComponent: () => import('./about/about-page').then((m) => m.AboutPage),
+    canActivate: [authGuard],
+  },
   { path: '', pathMatch: 'full', redirectTo: 'storages' },
   { path: '**', redirectTo: 'storages' },
 ];

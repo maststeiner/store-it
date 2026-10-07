@@ -21,6 +21,14 @@ const TRANSLATIONS = {
   items: {
     new: 'New item',
     empty: 'No items yet.',
+    search: {
+      toggle: 'Search items',
+      label: 'Search items by name',
+      placeholder: 'Search…',
+      clear: 'Clear search',
+      result: { one: '1 of {{total}} items', other: '{{shown}} of {{total}} items' },
+      noMatches: 'No items match “{{query}}”.',
+    },
     producedOn: 'prod. {{date}}',
     form: {
       name: 'Item',
@@ -350,7 +358,7 @@ describe('StorageDetailPage', () => {
       const labels = Array.from(element.querySelectorAll('.detail-head .icon-btn')).map((b) =>
         b.getAttribute('aria-label'),
       );
-      expect(labels).toEqual(['Rename', 'New item', 'Share', 'Delete']);
+      expect(labels).toEqual(['Rename', 'New item', 'Search items', 'Share', 'Delete']);
       expect(element.querySelector('.storage-owner')).toBeNull();
     });
 
@@ -364,7 +372,7 @@ describe('StorageDetailPage', () => {
       const labels = Array.from(element.querySelectorAll('.detail-head .icon-btn')).map((b) =>
         b.getAttribute('aria-label'),
       );
-      expect(labels).toEqual(['Rename', 'New item', 'Members', 'Leave']);
+      expect(labels).toEqual(['Rename', 'New item', 'Search items', 'Members', 'Leave']);
       expect(element.querySelector('.storage-owner')?.textContent).toContain(
         'Shared by Olga Owner',
       );
@@ -681,6 +689,259 @@ describe('StorageDetailPage', () => {
           .querySelector('.detail-head .icon-btn[aria-label="New item"]')
           ?.getAttribute('aria-expanded'),
       ).toBe('false');
+    });
+  });
+
+  // SPEC-010 — search field: filters the loaded list while typing, groups shrink, Escape clears.
+  describe('item search (SPEC-010)', () => {
+    const PANTRY = [
+      item({ id: 'a', name: 'Bio Vollmilch', expiryStatus: 'Expired' }),
+      item({ id: 'b', name: 'Käse', expiryStatus: 'ExpiringSoon' }),
+      item({ id: 'c', name: 'Crème fraîche', expiryStatus: 'Ok' }),
+      item({ id: 'd', name: 'Buttermilch', expiryStatus: 'Ok' }),
+    ];
+
+    async function renderPantry(): Promise<{
+      fixture: ComponentFixture<StorageDetailPage>;
+      element: HTMLElement;
+    }> {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      const element = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(element);
+      fixture.detectChanges();
+      flushInitialLoad(PANTRY);
+      await fixture.whenStable();
+      return { fixture, element };
+    }
+
+    const searchButton = (element: HTMLElement) =>
+      element.querySelector(
+        '.detail-head .icon-btn[aria-label="Search items"]',
+      ) as HTMLButtonElement;
+    const searchField = (element: HTMLElement) =>
+      element.querySelector('#item-search') as HTMLInputElement | null;
+
+    async function openSearch(fixture: ComponentFixture<StorageDetailPage>, element: HTMLElement) {
+      searchButton(element).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await new Promise((resolve) => setTimeout(resolve));
+    }
+
+    async function type(
+      fixture: ComponentFixture<StorageDetailPage>,
+      element: HTMLElement,
+      value: string,
+    ) {
+      const field = searchField(element)!;
+      field.value = value;
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      await fixture.whenStable();
+    }
+
+    const shownNames = (element: HTMLElement) =>
+      [...element.querySelectorAll('.item-row .item-name')].map((n) => n.textContent?.trim());
+    const groupHeads = (element: HTMLElement) =>
+      [...element.querySelectorAll('.group-head')].map((h) =>
+        h.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+
+    it('AC-01: the header offers a Search button; activating it opens and focuses the field', async () => {
+      const { fixture, element } = await renderPantry();
+      expect(searchField(element)).toBeNull();
+      expect(searchButton(element).getAttribute('aria-expanded')).toBe('false');
+
+      await openSearch(fixture, element);
+
+      const field = searchField(element)!;
+      expect(field.type).toBe('search');
+      expect(field.getAttribute('aria-label')).toBe('Search items by name');
+      expect(document.activeElement).toBe(field);
+      expect(searchButton(element).getAttribute('aria-expanded')).toBe('true');
+      element.remove();
+    });
+
+    it('AC-04 / AC-05: filters by name while typing, groups shrink and empty groups vanish', async () => {
+      const { fixture, element } = await renderPantry();
+      await openSearch(fixture, element);
+      expect(shownNames(element)).toEqual([
+        'Bio Vollmilch',
+        'Käse',
+        'Crème fraîche',
+        'Buttermilch',
+      ]);
+
+      await type(fixture, element, 'milch');
+
+      expect(shownNames(element)).toEqual(['Bio Vollmilch', 'Buttermilch']);
+      expect(groupHeads(element)).toEqual(['Expired · 1', 'Others · 1']);
+      element.remove();
+    });
+
+    it('AC-04: accent- and case-insensitive, every word must match', async () => {
+      const { fixture, element } = await renderPantry();
+      await openSearch(fixture, element);
+
+      await type(fixture, element, 'KASE');
+      expect(shownNames(element)).toEqual(['Käse']);
+
+      await type(fixture, element, 'creme fraiche');
+      expect(shownNames(element)).toEqual(['Crème fraîche']);
+
+      await type(fixture, element, 'bio butter');
+      expect(shownNames(element)).toEqual([]);
+      element.remove();
+    });
+
+    it('AC-06: typing never calls the API', async () => {
+      const { fixture, element } = await renderPantry();
+      await openSearch(fixture, element);
+
+      await type(fixture, element, 'milch');
+      await type(fixture, element, 'milch b');
+
+      http.verify(); // no outstanding request beyond the initial load
+      element.remove();
+    });
+
+    it('AC-07: a result line counts shown vs. total; no match says so and hides the empty hint', async () => {
+      const { fixture, element } = await renderPantry();
+      await openSearch(fixture, element);
+      expect(element.querySelector('.search-result')).toBeNull();
+
+      await type(fixture, element, 'milch');
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('2 of 4 items');
+      expect(element.querySelector('.search-result')?.getAttribute('role')).toBe('status');
+
+      await type(fixture, element, 'käse');
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('1 of 4 items');
+
+      await type(fixture, element, 'zzz');
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe(
+        'No items match “zzz”.',
+      );
+      expect(element.querySelector('.empty-hint')).toBeNull();
+      expect(element.querySelectorAll('.group')).toHaveLength(0);
+
+      // EC-01: whitespace is not a query.
+      await type(fixture, element, '   ');
+      expect(element.querySelector('.search-result')).toBeNull();
+      expect(shownNames(element)).toHaveLength(4);
+      element.remove();
+    });
+
+    it('AC-02: the clear button removes the filter, closes the field and focuses the button', async () => {
+      const { fixture, element } = await renderPantry();
+      await openSearch(fixture, element);
+      await type(fixture, element, 'milch');
+      expect(
+        element.querySelector('.search-bar .icon-btn[aria-label="Clear search"]'),
+      ).not.toBeNull();
+
+      (
+        element.querySelector(
+          '.search-bar .icon-btn[aria-label="Clear search"]',
+        ) as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(searchField(element)).toBeNull();
+      expect(shownNames(element)).toHaveLength(4);
+      expect(document.activeElement).toBe(searchButton(element));
+      element.remove();
+    });
+
+    it('AC-02 / D6: Escape in the field clears and closes without touching the add form', async () => {
+      const { fixture, element } = await renderPantry();
+      await openAddForm(fixture);
+      await openSearch(fixture, element);
+      await type(fixture, element, 'milch');
+
+      searchField(element)!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(searchField(element)).toBeNull();
+      expect(shownNames(element)).toHaveLength(4);
+      expect(element.querySelector('form.add-form')).not.toBeNull();
+      expect(document.activeElement).toBe(searchButton(element));
+      element.remove();
+    });
+
+    it('AC-03: the button closes an empty field but only refocuses a field with a value', async () => {
+      const { fixture, element } = await renderPantry();
+      await openSearch(fixture, element);
+
+      searchButton(element).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      expect(searchField(element)).toBeNull();
+
+      await openSearch(fixture, element);
+      await type(fixture, element, 'milch');
+      await openSearch(fixture, element);
+      expect(searchField(element)?.value).toBe('milch');
+      expect(shownNames(element)).toEqual(['Bio Vollmilch', 'Buttermilch']);
+      expect(document.activeElement).toBe(searchField(element));
+      element.remove();
+    });
+
+    it('AC-08: adding an item keeps the query and re-applies it to the reloaded list', async () => {
+      const { fixture, element } = await renderPantry();
+      await openSearch(fixture, element);
+      await type(fixture, element, 'milch');
+      await openAddForm(fixture);
+
+      const name = element.querySelector('#item-name') as HTMLInputElement;
+      name.value = 'Joghurt';
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+      const expiry = element.querySelector('#item-expiry') as HTMLInputElement;
+      expiry.value = '2026-12-01';
+      expiry.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      (element.querySelector('form.add-form') as HTMLFormElement).dispatchEvent(
+        new Event('submit'),
+      );
+      http
+        .expectOne('/api/v1/storages/s1/items')
+        .flush('e', { status: 201, statusText: 'Created' });
+      http
+        .expectOne('/api/v1/storages/s1/items')
+        .flush([...PANTRY, item({ id: 'e', name: 'Joghurt', expiryStatus: 'Ok' })]);
+      http
+        .expectOne('/api/v1/storages/s1')
+        .flush({ id: 's1', name: 'Freezer', itemCount: 5, expiredCount: 1, expiringSoonCount: 1 });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      // D5: the filter is the user's — the new, non-matching item is hidden, the total grows.
+      expect(searchField(element)?.value).toBe('milch');
+      expect(shownNames(element)).toEqual(['Bio Vollmilch', 'Buttermilch']);
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('2 of 5 items');
+      element.remove();
+    });
+
+    it('EC-04: an empty storage still offers the search; typing yields the no-match line', async () => {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      const element = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(element);
+      fixture.detectChanges();
+      flushInitialLoad([]);
+      await fixture.whenStable();
+      expect(element.querySelector('.empty-hint')).not.toBeNull();
+
+      await openSearch(fixture, element);
+      await type(fixture, element, 'x');
+
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe(
+        'No items match “x”.',
+      );
+      expect(element.querySelector('.empty-hint')).toBeNull();
+      element.remove();
     });
   });
 });

@@ -81,6 +81,11 @@ export class App implements OnInit {
     void this.router.navigate(['/admin']);
   }
 
+  /** SPEC-009 AC-01: menu entry → the About page. */
+  protected openAbout(): void {
+    void this.router.navigate(['/about']);
+  }
+
   protected openDeleteAccount(): void {
     this.deleteAccountError.set(null);
     this.ownedSharedStorages.set(0);

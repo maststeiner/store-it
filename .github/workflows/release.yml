@@ -90,6 +90,10 @@ jobs:
           context: backend
           target: runtime
           platforms: ${{ matrix.platform }}
+          # SPEC-009 D1: stamp the release tag + commit into the API (GET /api/v1/about).
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            REVISION=${{ github.sha }}
           labels: |
             ${{ steps.labels.outputs.common }}
             org.opencontainers.image.title=store-it-backend
@@ -107,6 +111,10 @@ jobs:
           context: backend
           target: migrate
           platforms: ${{ matrix.platform }}
+          # Same build args as the runtime image, so the shared `build` stage stays cache-identical.
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            REVISION=${{ github.sha }}
           labels: |
             ${{ steps.labels.outputs.common }}
             org.opencontainers.image.title=store-it-migrate
@@ -121,6 +129,10 @@ jobs:
         with:
           context: frontend
           platforms: ${{ matrix.platform }}
+          # SPEC-009 D1: stamp the release tag + commit into the web bundle (About page).
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            REVISION=${{ github.sha }}
           labels: |
             ${{ steps.labels.outputs.common }}
             org.opencontainers.image.title=store-it-web

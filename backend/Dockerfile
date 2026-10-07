@@ -21,8 +21,22 @@ COPY src/StoreIt.Infrastructure/StoreIt.Infrastructure.csproj src/StoreIt.Infras
 RUN dotnet restore src/StoreIt.Api/StoreIt.Api.csproj
 
 COPY src/ src/
-RUN dotnet publish src/StoreIt.Api/StoreIt.Api.csproj \
-    --configuration Release --no-restore --output /app
+# SPEC-009 D1: the release workflow passes the tag and commit; a build without them (CI job 1c,
+# a local `docker build`) is a development build and the API reports `dev`. The stamp lands in
+# the assembly's informational version ("<tag>+<sha>"), read by AboutInformation.
+# The two ARGs are unset before MSBuild runs: Docker exposes build args as environment
+# variables, and MSBuild treats every environment variable as a property — a `VERSION` of
+# "v0.3.0" would become `$(Version)` and fail every project with NETSDK1018 (not a NuGet version).
+ARG VERSION=dev
+ARG REVISION=
+RUN stamp="${VERSION}${REVISION:++$REVISION}" && unset VERSION REVISION \
+    && dotnet publish src/StoreIt.Api/StoreIt.Api.csproj \
+        --configuration Release --no-restore --output /app \
+        -p:InformationalVersion="${stamp}"
+# SPEC-009 D3: the shipped NuGet packages with their licenses, derived from the publish output's
+# dependency manifest and the restored package cache (no hand-maintained list). Fails the build
+# when a package declares no license. The API serves the file via GET /api/v1/about.
+RUN dotnet /app/StoreIt.Api.dll third-party-notices /app/StoreIt.Api.deps.json /app/third-party-notices.json
 
 # ── migrate ───────────────────────────────────────────────────────────────────
 # Runs `dotnet ef database update` and exits. Kept on the SDK image because that is
