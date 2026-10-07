@@ -1,6 +1,6 @@
 # Spec: About page — version, license and third-party notices
 
-> **Status:** Draft — waiting for Marcel Steiner's G1 review (issue #208)
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-07 (issue #208)
 > **Sprint:** 2026-S41
 > **Author:** Claude Fable 5.1 (analyst/developer agent), from Marcel Steiner's request (issue #208, 2026-10-07)
 > **Last updated:** 2026-10-07
@@ -58,7 +58,7 @@ for the web, the published dependency manifest for the API — so the page can n
 what is shipped. A tiny static list covers the platform components that are neither npm nor NuGet
 (.NET runtime, nginx, PostgreSQL).
 
-### Decisions proposed (to be confirmed or changed at G1)
+### Decisions taken (confirmed at G1, 2026-10-07)
 
 | # | Decision | Rationale / alternative |
 |---|----------|-------------------------|
@@ -250,6 +250,6 @@ what is shipped. A tiny static list covers the platform components that are neit
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-10-07 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
