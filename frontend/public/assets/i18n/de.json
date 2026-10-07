@@ -59,7 +59,18 @@
       "production": "Produktionsdatum",
       "dateHint": "Mindestens ein Datum angeben (Ablauf- oder Produktionsdatum)."
     },
-    "new": "Neuer Artikel"
+    "new": "Neuer Artikel",
+    "search": {
+      "toggle": "Artikel suchen",
+      "label": "Artikel nach Namen suchen",
+      "placeholder": "Suchen …",
+      "clear": "Suche löschen",
+      "result": {
+        "one": "1 von {{total}} Artikeln",
+        "other": "{{shown}} von {{total}} Artikeln"
+      },
+      "noMatches": "Keine Artikel passen zu „{{query}}“."
+    }
   },
   "groups": {
     "expired": "Abgelaufen",
