@@ -113,6 +113,29 @@ public sealed class ThirdPartyNoticesCommandTests : IDisposable
         Assert.Contains("no license", exception.Message, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("LICENSE.txt")] // declared but not shipped
+    [InlineData("../../escape.txt")] // resolves outside the package directory
+    public void Generate_DeclaredLicenseFileMissingOrOutsideThePackage_Fails(string licenseFile)
+    {
+        WriteNuspec("Npgsql", "10.0.3", "<license type=\"expression\">PostgreSQL</license>");
+        WriteNuspec("Acme.Legacy", "1.0.0", "<licenseUrl>https://example.org/l</licenseUrl>");
+        WriteNuspec(
+            "Acme.FileLicensed",
+            "2.0.0",
+            $"<license type=\"file\">{licenseFile}</license>"
+        );
+        // The escape target exists, so only the boundary check can reject it.
+        File.WriteAllText(Path.Combine(_packages, "escape.txt"), "not this package's license");
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            ThirdPartyNoticesCommand.Generate(Manifest, _packages)
+        );
+
+        Assert.Contains("Acme.FileLicensed 2.0.0", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("license file", exception.Message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void Generate_PackageMissingFromTheCache_Fails()
     {

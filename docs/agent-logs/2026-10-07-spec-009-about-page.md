@@ -83,11 +83,24 @@ published, and every third-party framework and library it ships with, each with 
 The rendered page (layout, `<details>`, the mismatch notice) needs a human look — part of the
 G3 test, like the About page on prod showing the real tag after the next release (AC-06).
 
+## Review (G2, automated part)
+
+CodeRabbit reviewed the PR (profile ASSERTIVE) with **one actionable finding**, Minor:
+`ThirdPartyNoticesCommand.ReadLicense` returned `("See license text", null)` when a package
+declared `<license type="file">` but the file was absent — an entry without license information,
+contradicting the generator's own fail-on-missing rule; and `Path.Combine` with a rooted value
+would have ignored the package directory. **Fixed**: the declared file must exist and resolve
+inside the package directory, otherwise the run fails like the no-license case. Two new theory
+cases in `ThirdPartyNoticesCommandTests` cover the missing file and a `../` escape whose target
+exists. Qodo Merge was installed by Marcel during the review and triggered with `/review`; no
+response within the first ten minutes (installation still to be verified on the GitHub side).
+
 ## Human Interventions
 
 | # | Intervention | Reason |
 |---|--------------|--------|
 | 1 | Froze the spec with all six proposed decisions unchanged ("ja, passt so") | G1 |
+| 2 | Asked for the automated review to be enabled (Qodo, not CodeRabbit) | G2 — the repository's CodeRabbit auto-review is star-gated |
 
 ## Outcome
 
