@@ -1,6 +1,6 @@
 # Spec: Search field on the storage page — filter the item list while typing
 
-> **Status:** Draft — waiting for Marcel Steiner's G1 review (issue #210)
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-07 (issue #210)
 > **Sprint:** 2026-S41
 > **Author:** Claude Fable 5.1 (analyst/developer agent), from Marcel Steiner's request (issue #210, 2026-10-07)
 > **Last updated:** 2026-10-07
@@ -40,7 +40,7 @@ groups show only items whose **name** contains every typed word (case- and accen
 a status line says how many of the storage's items are shown; a clear button or Escape resets the
 filter. Everything happens in the browser on the already loaded list.
 
-### Decisions proposed (to be confirmed or changed at G1)
+### Decisions taken (confirmed at G1, 2026-10-07)
 
 | # | Decision | Rationale / alternative |
 |---|----------|-------------------------|
@@ -179,6 +179,6 @@ filter. Everything happens in the browser on the already loaded list.
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-10-07 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
