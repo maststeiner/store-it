@@ -59,7 +59,18 @@
       "production": "Production date",
       "dateHint": "Provide at least one date (expiry or production)."
     },
-    "new": "New item"
+    "new": "New item",
+    "search": {
+      "toggle": "Search items",
+      "label": "Search items by name",
+      "placeholder": "Search…",
+      "clear": "Clear search",
+      "result": {
+        "one": "1 of {{total}} items",
+        "other": "{{shown}} of {{total}} items"
+      },
+      "noMatches": "No items match “{{query}}”."
+    }
   },
   "groups": {
     "expired": "Expired",

@@ -476,6 +476,25 @@ h1 {
   color: var(--text-soft);
 }
 
+/* SPEC-010 — search field above the item groups */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.search-field {
+  flex: 1;
+}
+.search-field::-webkit-search-cancel-button {
+  /* one clear control, ours — the browser's would be a second, differently styled one */
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-result {
+  margin: 0 0 22px;
+}
+
 /* ── Item groups ────────────────────────────── */
 .group {
   margin-bottom: 36px;

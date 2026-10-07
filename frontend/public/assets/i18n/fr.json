@@ -59,7 +59,18 @@
       "production": "Date de production",
       "dateHint": "Indiquer au moins une date (expiration ou production)."
     },
-    "new": "Nouvel article"
+    "new": "Nouvel article",
+    "search": {
+      "toggle": "Rechercher des articles",
+      "label": "Rechercher des articles par nom",
+      "placeholder": "Rechercher…",
+      "clear": "Effacer la recherche",
+      "result": {
+        "one": "1 article sur {{total}}",
+        "other": "{{shown}} articles sur {{total}}"
+      },
+      "noMatches": "Aucun article ne correspond à « {{query}} »."
+    }
   },
   "groups": {
     "expired": "Expiré",
