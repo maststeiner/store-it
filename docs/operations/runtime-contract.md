@@ -28,6 +28,14 @@ tag** — they come from the same build and agree on the set of migrations; mixi
 unsupported. Every image carries the OCI labels `org.opencontainers.image.{source,revision,
 version,title}`.
 
+**The images also know their own version (SPEC-009).** The release workflow stamps the tag and
+commit into both application images (`VERSION` / `REVISION` build args); the web client shows
+them on its About page and reads the API's version from `GET /api/v1/about` (behind the
+session). Both sides report `dev` when built without the args. **The About page flags a `web` and
+`backend` that run different versions** — the same-tag rule above, made visible without a shell.
+The same page lists the third-party packages each image ships, generated at build time from the
+bundle and the publish output; nothing in a deployment has to be configured for it.
+
 ---
 
 ## 2. Services and start ordering
@@ -68,7 +76,7 @@ preserving the browser's `Host` header (needed for OIDC redirect URIs):
 
 | Path | Goes to | Notes |
 |---|---|---|
-| `/api/**` | backend | REST API, cookie session + `X-XSRF-TOKEN` double submit |
+| `/api/**` | backend | REST API, cookie session + `X-XSRF-TOKEN` double submit (incl. `GET /api/v1/about`, SPEC-009) |
 | `/auth/**` | backend | login, callback, logout, csrf, me |
 | `/health` | backend | API health; anonymous |
 | everything else | static files, fallback `index.html` | SPA routes |

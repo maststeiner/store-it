@@ -12,7 +12,16 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build -- --configuration production
+# SPEC-009 D1: the release workflow passes the tag and commit; a build without them (CI job 1c,
+# a local `docker build`) is a development build and reports `dev`. The defines become the
+# STOREIT_VERSION / STOREIT_REVISION constants read by src/app/core/build-info.ts.
+ARG VERSION=dev
+ARG REVISION=
+# SPEC-009 D3: `postbuild` turns Angular's license extraction (3rdpartylicenses.txt) into
+# browser/assets/third-party-notices.json; the test guards against shipping without it.
+RUN npm run build -- --configuration production \
+        --define "STOREIT_VERSION='${VERSION}'" --define "STOREIT_REVISION='${REVISION}'" \
+    && test -f dist/frontend/browser/assets/third-party-notices.json
 
 FROM docker.io/library/nginx:1.31-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf

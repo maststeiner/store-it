@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-07 (issue #208)
 > **Sprint:** 2026-S41
 > **Author:** Claude Fable 5.1 (analyst/developer agent), from Marcel Steiner's request (issue #208, 2026-10-07)
-> **Last updated:** 2026-10-07
+> **Last updated:** 2026-10-07 (implementation on `feature/about-page`, verification table filled)
 
 ---
 
@@ -188,61 +188,69 @@ what is shipped. A tiny static list covers the platform components that are neit
 
 ## Technical Constraints (from Architect Agent)
 
-<!-- Proposal; confirmed/adjusted after G1 -->
+<!-- Proposed before G1, confirmed during implementation; deviations from the proposal are marked ⚠ -->
 
-- [ ] Layering: `AboutEndpoints.cs` in `StoreIt.Api` reads version data from the entry
-      assembly (`AssemblyInformationalVersionAttribute`) and the notices JSON from the content
-      root through an `IAboutInformation` service registered in Api; no Application or Domain
-      change, no persistence, no EF (ADR-001; architecture tests stay green).
-- [ ] Version stamping: backend `dotnet publish -p:Version=<tag without v> -p:InformationalVersion=<tag>+<sha>`
-      with `IncludeSourceRevisionInInformationalVersion=false` (otherwise the SDK appends a
-      second `+sha`); web `ng build --define STOREIT_VERSION='"<tag>"' --define STOREIT_REVISION='"<sha>"'`
-      with `dev` / `null` defaults in `angular.json`; `release.yml` passes both build args to
-      the backend and web `docker/build-push-action` steps; CI job 1c builds without args.
-- [ ] Generators: `frontend/scripts/third-party-notices.mjs` (Node, no dependency; parses the
-      `Package:` / `License:` blocks of `3rdpartylicenses.txt`, reads
-      `node_modules/<name>/package.json` for `version` and `homepage`/`repository`), wired as
-      `npm run build` → `ng build && node scripts/third-party-notices.mjs`;
-      `backend/scripts/ThirdPartyNotices.cs` (.NET 10 file-based app, `dotnet run
-      scripts/ThirdPartyNotices.cs -- <deps.json> <nuget cache> <out>`), run in the Dockerfile
-      after `dotnet publish`. Both fail with a non-zero exit on missing license information.
-- [ ] Contract: `backend/openapi/StoreIt.Api.json` regenerated (`getAbout`, tag `About`,
-      `AboutResponse`, `ThirdPartyComponentResponse`), web client regenerated
-      (`src/app/api/fn/about`, `AboutService`), both committed.
-- [ ] Tests: backend — `AboutEndpointsTests` (401/200, version parsing from informational
-      version incl. `dev` fallback, notices file present / absent / malformed), a unit test for
-      the notices generator against fixture `deps.json` + `.nuspec` files (incl. EC-03/04 and
-      the fail-on-missing rule), `OpenApiContractTests`; web — `session-menu.spec.ts` (SPEC-009
-      block), `about-page.spec.ts` (versions, mismatch notice, three groups, hint when the file
-      is missing, API error keeps the page), a unit test for the Node generator against a fixture
-      `3rdpartylicenses.txt`, `i18n.spec.ts`.
-- [ ] Docs: `docs/operations/runtime-contract.md` (§1: images carry the version in the app, not
-      only in labels; `GET /api/v1/about` behind the session), `README`/`SETUP.md` note that
-      the notices are generated, not committed.
-- [ ] Dependencies: none new.
-- [ ] ADR required: no (uses ADR-007's version concept; no structural decision).
+- [x] Layering: `AboutEndpoints.cs`, `AboutInformation.cs` (`BuildVersion`, `ThirdPartyComponent`,
+      `IAboutInformation`, `AboutInformation`, `ThirdPartyNotices`) and `ThirdPartyNoticesCommand.cs`
+      live in `StoreIt.Api`; the version comes from the API assembly's
+      `AssemblyInformationalVersionAttribute`, the notices from `third-party-notices.json` next to
+      the binaries, both read once (singleton). No Application, Domain or Infrastructure change, no
+      persistence (ADR-001; architecture tests green).
+- [x] Version stamping: backend `dotnet publish -p:InformationalVersion="<tag>+<sha>"` with
+      `IncludeSourceRevisionInInformationalVersion=false` in the csproj (otherwise the SDK appends a
+      second `+sha`). ⚠ The Dockerfile unsets the `VERSION` / `REVISION` build args before MSBuild
+      runs: Docker exposes them as environment variables, MSBuild reads every environment variable
+      as a property, and `$(Version)="v0.3.0"` fails every project with `NETSDK1018`. Web `ng build --define "STOREIT_VERSION='<tag>'" --define "STOREIT_REVISION='<sha>'"`,
+      read through the `BUILD_INFO` token (`core/build-info.ts`, `typeof` guard → `dev` when
+      undefined). `release.yml` passes `VERSION` / `REVISION` build args to the backend, migrate
+      (same build stage, cache-identical) and web image steps; CI job 1c builds without args.
+      ⚠ No `angular.json` defaults needed: an undefined global is the development build.
+- [x] Generators: **web** `frontend/scripts/third-party-notices.mjs` (Node, no dependency), wired as
+      npm `postbuild` (runs after every `npm run build`; skips quietly when the extraction is absent,
+      i.e. a development configuration); the Dockerfile asserts the output file exists.
+      **API** ⚠ not a separate file-based script but a command mode of the API itself —
+      `dotnet StoreIt.Api.dll third-party-notices <deps.json> <out> [<packages dir>]`
+      (`ThirdPartyNoticesCommand`, intercepted in `Program.cs` before the host is built): one binary,
+      unit-testable from the existing test project, no second project to restore in the Dockerfile.
+      Both fail with a non-zero exit when a package carries no license information.
+- [x] Contract: `backend/openapi/StoreIt.Api.json` regenerated (`getAbout`, tag `About`,
+      `AboutResponse`, `ThirdPartyComponentResponse` — the latter carries an optional `text` for
+      packages that ship their own license file, ⚠ addition to the AC-09 field list), web client
+      regenerated (`src/app/api/fn/about`, `AboutService`), both committed.
+- [x] Tests: backend — `AboutEndpointsTests` (401 / dev-build 200 / stamped stub 200, `BuildVersion.Parse`
+      theory incl. the SDK default, notices file present / absent / malformed),
+      `ThirdPartyNoticesCommandTests` (synthetic manifest + nuspec cache: expression / file / legacy
+      URL, sort order, project libraries skipped, fail on missing license and on a missing package,
+      CLI exit codes), `OpenApiContractTests`; web — `session-menu.spec.ts` (About entry, order,
+      emit), `app.spec.ts` (navigation to `/about`), `about-page.spec.ts` (versions, dev build,
+      mismatch notice, MIT text + link, three groups incl. platform, `<details>`, API failure, missing
+      notices), `build-info.spec.ts`, `third-party-notices.script.spec.ts` (parser, enrichment,
+      `main` incl. skip), `i18n.spec.ts`.
+- [x] Docs: `docs/operations/runtime-contract.md` (§1 version stamp + mismatch hint, §3 the endpoint),
+      `docs/SETUP.md` §3 (attribution lists are generated, not committed). `frontend/nginx.conf`:
+      the `no-cache` rule now covers every runtime-loaded `assets/**/*.json`, not only i18n.
+- [x] Dependencies: none new.
+- [x] ADR required: no.
 
 ---
 
 ## Verification
 
-<!-- Filled in by QA Agent -->
-
 | AC | Test | Status |
 |----|------|--------|
-| AC-01 | `session-menu.spec.ts` → SPEC-009 block | ⬜ |
-| AC-02 | existing `auth.guard.spec.ts` (route-agnostic) + `about-page.spec.ts` route config | ⬜ |
-| AC-03 | `about-page.spec.ts` (define value rendered; `dev` default) | ⬜ |
-| AC-04 | `AboutEndpointsTests` | ⬜ |
-| AC-05 | `about-page.spec.ts` (notice shown / hidden) | ⬜ |
-| AC-06 | unit tests of the stamping path (version parsing, define default) · **human G3 check on the next release** | ⬜ |
-| AC-07 | `about-page.spec.ts` (MIT text, copyright line, link) | ⬜ |
-| AC-08 | generator unit test (fixture `3rdpartylicenses.txt`, fail-on-missing) · CI job 1c builds the web image | ⬜ |
-| AC-09 | generator unit test (fixture `deps.json` + `.nuspec`) · `AboutEndpointsTests` (components passthrough) | ⬜ |
-| AC-10 | `about-page.spec.ts` (three groups, entry fields, `<details>`) | ⬜ |
-| AC-11 | `about-page.spec.ts` (API error → page still rendered; 404 notices → hint) | ⬜ |
-| AC-12 | `OpenApiContractTests` (`getAbout`), CI job *API contract gate* (additive) | ⬜ |
-| AC-13 | `i18n.spec.ts` (de/en/fr/it key parity) | ⬜ |
+| AC-01 | `session-menu.spec.ts` → "Menu_WhenOpened_ListsAboutThenSignOutThenDeleteAccountAsDestructive", "About_WhenChosen_EmitsAndClosesTheMenu", SPEC-008 block (order with *Statistics*); `app.spec.ts` → "About_WhenChosenFromTheMenu_NavigatesToTheAboutPage" | ✅ |
+| AC-02 | route `/about` carries `authGuard` (`app.routes.ts`); guard behaviour covered by the existing `auth.guard.spec.ts` | ✅ |
+| AC-03 | `about-page.spec.ts` → "AC-03 / AC-04 …" (release build) and "AC-03 / EC-01 …" (`dev`, no revision, no release link); `build-info.spec.ts` (undefined defines → `dev`) | ✅ |
+| AC-04 | `AboutEndpointsTests.About_Anonymous_Returns401`, `…_SignedIn_ReportsDevBuildWithRuntimeAndNoComponents`, `…_StampedBuild_ReportsVersionRevisionAndComponents` | ✅ |
+| AC-05 | `about-page.spec.ts` → "AC-05: flags web and API running different versions"; no notice in the equal and dev cases | ✅ |
+| AC-06 | `AboutEndpointsTests.BuildVersion_Parse_RecognisesOnlyTheStamp` (8 cases); `build-info.spec.ts`; **local image builds with `--build-arg VERSION=v9.9.9 REVISION=…`**: web chunk contains the stamp and `assets/third-party-notices.json` (18.8 kB, 7 packages); backend image: see agent log · **human G3 check on the next release** (About page on prod shows the tag) | ✅ local · ⏳ release |
+| AC-07 | `about-page.spec.ts` → "AC-07: shows the MIT license with the copyright line and a link to the repository" | ✅ |
+| AC-08 | `third-party-notices.script.spec.ts` (parser incl. fail-on-missing, enrichment, `main` writes / skips); production build run locally: 7 components written | ✅ |
+| AC-09 | `ThirdPartyNoticesCommandTests` (6 tests); `AboutEndpointsTests.About_StampedBuild_…` (pass-through); backend image build runs the command against the real package cache | ✅ |
+| AC-10 | `about-page.spec.ts` → "AC-10: lists the components in three groups …" (names per group, version / license / copyright / link, collapsed `<details>`, .NET version from `runtime`, nginx without version) | ✅ |
+| AC-11 | `about-page.spec.ts` → "AC-11: keeps the page when the API refuses …" and "AC-11 / EC-01: a missing web notices file shows the hint …" | ✅ |
+| AC-12 | `OpenApiContractTests` (`getAbout`); CI job *API contract gate* (additive) | ✅ · ⏳ CI |
+| AC-13 | `i18n.spec.ts` (de/en/fr/it key parity, no empty values) | ✅ |
 
 ---
 

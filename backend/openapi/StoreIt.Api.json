@@ -1723,10 +1723,74 @@
           }
         ]
       }
+    },
+    "/api/v1/about": {
+      "get": {
+        "tags": [
+          "About"
+        ],
+        "operationId": "getAbout",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieSession": [ ]
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "AboutResponse": {
+        "required": [
+          "version",
+          "revision",
+          "runtime",
+          "components"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "revision": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "runtime": {
+            "type": "string"
+          },
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ThirdPartyComponentResponse"
+            }
+          }
+        }
+      },
       "AcceptedInvitationResponse": {
         "required": [
           "storageId"
@@ -2123,6 +2187,46 @@
           }
         }
       },
+      "ThirdPartyComponentResponse": {
+        "required": [
+          "name",
+          "version",
+          "license",
+          "copyright",
+          "url",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "license": {
+            "type": "string"
+          },
+          "copyright": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "url": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "TransferOwnershipRequest": {
         "required": [
           "userId"
@@ -2269,6 +2373,9 @@
     },
     {
       "name": "Admin"
+    },
+    {
+      "name": "About"
     }
   ]
 }

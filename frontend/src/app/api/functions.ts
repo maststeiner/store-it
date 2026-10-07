@@ -51,3 +51,5 @@ export type { AcceptInvitation$Params as AcceptInvitation$Params } from './fn/sh
 export { acceptInvitation as acceptInvitation } from './fn/sharing/accept-invitation';
 export type { GetUsageStatistics$Params as GetUsageStatistics$Params } from './fn/admin/get-usage-statistics';
 export { getUsageStatistics as getUsageStatistics } from './fn/admin/get-usage-statistics';
+export type { GetAbout$Params as GetAbout$Params } from './fn/about/get-about';
+export { getAbout as getAbout } from './fn/about/get-about';
