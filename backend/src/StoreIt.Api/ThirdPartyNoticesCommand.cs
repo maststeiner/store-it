@@ -152,9 +152,24 @@ internal static class ThirdPartyNoticesCommand
         {
             if (licenseElement.Attribute("type")?.Value == "file")
             {
-                var licenseFile = Path.Combine(packageDir, licenseValue.Replace('\\', '/'));
-                var fileText = File.Exists(licenseFile) ? File.ReadAllText(licenseFile) : null;
-                return ("See license text", fileText);
+                // The declared file must exist inside the package directory: a missing file is
+                // missing license information (fail, like the no-license case), and a path that
+                // escapes the package would read something that is not this package's license.
+                var root = Path.GetFullPath(packageDir) + Path.DirectorySeparatorChar;
+                var licenseFile = Path.GetFullPath(
+                    Path.Combine(packageDir, licenseValue.Replace('\\', '/'))
+                );
+                if (
+                    !licenseFile.StartsWith(root, StringComparison.Ordinal)
+                    || !File.Exists(licenseFile)
+                )
+                {
+                    throw new InvalidOperationException(
+                        $"{id} {version}: declared license file '{licenseValue}' not found in the package"
+                    );
+                }
+
+                return ("See license text", File.ReadAllText(licenseFile));
             }
 
             return (licenseValue, null);
