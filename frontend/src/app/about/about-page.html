@@ -1,0 +1,106 @@
+<section class="about-page">
+  <div class="page-head">
+    <h1>{{ 'about.title' | translate }}</h1>
+  </div>
+
+  <!-- AC-03 / AC-04 / AC-05 — versions -->
+  <section class="about-section" aria-labelledby="about-version">
+    <h2 id="about-version">{{ 'about.version.title' | translate }}</h2>
+    <dl class="about-facts">
+      <dt>{{ 'about.version.web' | translate }}</dt>
+      <dd data-testid="web-version">
+        <span class="mono">{{ web.version }}</span>
+        @if (webRevision(); as revision) {
+          <span class="mono about-revision">{{ revision }}</span>
+        }
+      </dd>
+
+      <dt>{{ 'about.version.api' | translate }}</dt>
+      <dd data-testid="api-version">
+        @if (api(); as api) {
+          <span class="mono">{{ api.version }}</span>
+          @if (apiRevision(); as revision) {
+            <span class="mono about-revision">{{ revision }}</span>
+          }
+        } @else if (apiError()) {
+          <span class="count-hint">—</span>
+        } @else {
+          <span class="count-hint" role="status">{{ 'about.version.loading' | translate }}</span>
+        }
+      </dd>
+
+      @if (api()?.runtime; as runtime) {
+        <dt>{{ 'about.version.runtime' | translate }}</dt>
+        <dd>{{ runtime }}</dd>
+      }
+    </dl>
+
+    @if (versionMismatch()) {
+      <p class="about-notice" role="status">{{ 'about.versionMismatch' | translate }}</p>
+    }
+    @if (apiError(); as error) {
+      <p class="form-error" role="alert">{{ error }}</p>
+    }
+    @if (releaseUrl(); as url) {
+      <a class="about-link" [href]="url" target="_blank" rel="noopener">
+        {{ 'about.version.release' | translate }}
+      </a>
+    }
+  </section>
+
+  <!-- AC-07 — the application's license -->
+  <section class="about-section" aria-labelledby="about-license">
+    <h2 id="about-license">{{ 'about.license.title' | translate }}</h2>
+    <p>{{ 'about.license.text' | translate }}</p>
+    <pre class="about-license-text">{{ mitLicense }}</pre>
+    <a class="about-link" [href]="licenseUrl" target="_blank" rel="noopener">
+      {{ 'about.license.link' | translate }}
+    </a>
+  </section>
+
+  <!-- AC-10 / AC-11 — third-party notices in three groups -->
+  <section class="about-section" aria-labelledby="about-third-party">
+    <h2 id="about-third-party">{{ 'about.thirdParty.title' | translate }}</h2>
+    <p>{{ 'about.thirdParty.intro' | translate }}</p>
+
+    @for (group of groups(); track group.key) {
+      <h3 [attr.data-group]="group.key">{{ group.labelKey | translate }}</h3>
+      @if (group.entries === null) {
+        <p class="count-hint">{{ 'about.notAvailableInDev' | translate }}</p>
+      } @else {
+        <ul class="about-components" [attr.data-group]="group.key">
+          @for (entry of group.entries; track entry.name) {
+            <li class="about-component">
+              <div class="about-component-head">
+                <span class="about-component-name">{{ entry.name }}</span>
+                @if (entry.version; as version) {
+                  <span class="mono about-component-version">{{ version }}</span>
+                }
+                <span class="about-component-license">{{ entry.license }}</span>
+              </div>
+              @if (entry.copyright; as copyright) {
+                <p class="about-component-meta">{{ copyright }}</p>
+              }
+              @if (entry.url; as url) {
+                <a
+                  class="about-component-meta about-link"
+                  [href]="url"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  {{ url }}
+                </a>
+              }
+              @if (entry.text; as text) {
+                <details class="about-component-text">
+                  <summary>{{ 'about.thirdParty.licenseText' | translate }}</summary>
+                  <pre>{{ text }}</pre>
+                </details>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+  </section>
+</section>

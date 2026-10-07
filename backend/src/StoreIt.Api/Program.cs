@@ -4,6 +4,13 @@ using StoreIt.Api;
 using StoreIt.Application;
 using StoreIt.Infrastructure;
 
+// SPEC-009 D3: `dotnet StoreIt.Api.dll third-party-notices …` runs at publish time and
+// writes the shipped NuGet packages with their licenses; it never starts the web host.
+if (ThirdPartyNoticesCommand.TryHandle(args, out var noticesExitCode))
+{
+    return noticesExitCode;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 12-factor: config strictly from the environment — no committed fallback.
@@ -30,6 +37,9 @@ builder.Services.AddInfrastructure();
 builder.Services.AddStoreItAuthentication(builder.Configuration, builder.Environment);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
+// SPEC-009: version + third-party notices, read once at startup.
+builder.Services.AddSingleton<IAboutInformation, AboutInformation>();
 
 // SPEC-003 (Task 8a): double-submit CSRF protection for cookie-authenticated mutations.
 // The SPA reads the JS-readable XSRF-TOKEN cookie (set by GET /auth/csrf) and echoes it
@@ -86,6 +96,7 @@ app.MapStorageEndpointsV1();
 app.MapAccountEndpointsV1(); // SPEC-006
 app.MapSharingEndpointsV1(); // SPEC-007
 app.MapAdminEndpointsV1(); // SPEC-008
+app.MapAboutEndpointsV1(); // SPEC-009
 
 // ⚠️  DEVELOPMENT ONLY — never reachable in Staging or Production.
 // Provides a POST /auth/dev-login shortcut for Playwright E2E tests so they can

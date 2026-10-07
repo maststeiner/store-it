@@ -183,3 +183,46 @@ public sealed record UsageStatisticsResponse(
             )
         );
 }
+
+// SPEC-009 about
+
+/// <summary>One shipped third-party package of the API (SPEC-009 AC-09).</summary>
+public sealed record ThirdPartyComponentResponse(
+    string Name,
+    string Version,
+    string License,
+    string? Copyright,
+    string? Url,
+    string? Text
+)
+{
+    public static ThirdPartyComponentResponse From(ThirdPartyComponent component) =>
+        new(
+            component.Name,
+            component.Version,
+            component.License,
+            component.Copyright,
+            component.Url,
+            component.Text
+        );
+}
+
+/// <summary>
+/// SPEC-009 AC-04: the running API's release version (<c>v0.3.0</c> or <c>dev</c>), commit,
+/// .NET runtime and third-party packages.
+/// </summary>
+public sealed record AboutResponse(
+    string Version,
+    string? Revision,
+    string Runtime,
+    IReadOnlyList<ThirdPartyComponentResponse> Components
+)
+{
+    public static AboutResponse From(IAboutInformation about) =>
+        new(
+            about.Version.Version,
+            about.Version.Revision,
+            about.Runtime,
+            about.Components.Select(ThirdPartyComponentResponse.From).ToList()
+        );
+}

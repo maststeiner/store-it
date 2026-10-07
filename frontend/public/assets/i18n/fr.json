@@ -233,5 +233,32 @@
         "byUnit": "Par unité"
       }
     }
+  },
+  "about": {
+    "menu": "À propos",
+    "title": "À propos de store-it",
+    "version": {
+      "title": "Version",
+      "web": "Client web",
+      "api": "API",
+      "runtime": "Environnement d’exécution",
+      "release": "Notes de version sur GitHub",
+      "loading": "Chargement…"
+    },
+    "versionMismatch": "Le client web et l’API n’ont pas la même version. Déployez les deux à partir de la même release.",
+    "license": {
+      "title": "Licence",
+      "text": "store-it est un logiciel open source publié sous licence MIT.",
+      "link": "Licence dans le dépôt"
+    },
+    "thirdParty": {
+      "title": "Logiciels tiers",
+      "intro": "store-it repose sur les composants open source suivants. Les noms, identifiants de licence et textes de licence sont affichés tels que publiés par leurs auteurs.",
+      "web": "Client web",
+      "api": "API",
+      "platform": "Plateforme",
+      "licenseText": "Afficher le texte de la licence"
+    },
+    "notAvailableInDev": "Non disponible dans les builds de développement."
   }
 }
