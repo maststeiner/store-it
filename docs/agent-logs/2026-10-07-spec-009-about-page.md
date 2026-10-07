@@ -92,15 +92,16 @@ contradicting the generator's own fail-on-missing rule; and `Path.Combine` with 
 would have ignored the package directory. **Fixed**: the declared file must exist and resolve
 inside the package directory, otherwise the run fails like the no-license case. Two new theory
 cases in `ThirdPartyNoticesCommandTests` cover the missing file and a `../` escape whose target
-exists. Qodo Merge was installed by Marcel during the review and triggered with `/review`; no
-response within the first ten minutes (installation still to be verified on the GitHub side).
+exists. Marcel also tried to add Qodo as the automated reviewer; dropped the same day: Qodo's
+open-source program requires 200+ GitHub stars and the workspace's trial had ended, so neither the
+paid nor the open-source app reviewed anything. CodeRabbit stays the automated review.
 
 ## Human Interventions
 
 | # | Intervention | Reason |
 |---|--------------|--------|
 | 1 | Froze the spec with all six proposed decisions unchanged ("ja, passt so") | G1 |
-| 2 | Asked for the automated review to be enabled (Qodo, not CodeRabbit) | G2 — the repository's CodeRabbit auto-review is star-gated |
+| 2 | Asked for Qodo as the automated reviewer, then dropped it (200+ stars required, trial ended) | G2 — CodeRabbit remains, triggered per PR |
 
 ## Outcome
 
