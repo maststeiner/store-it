@@ -111,7 +111,7 @@ public sealed record ItemRequest(
     Unit Unit,
     DateOnly? ExpiryDate,
     DateOnly? ProductionDate,
-    IReadOnlyList<string>? Tags = null
+    IReadOnlyList<string?>? Tags = null
 );
 
 /// <summary>SPEC-007 AC-18: body of <c>PUT /api/v1/storages/{storageId}/owner</c>.</summary>

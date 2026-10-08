@@ -143,7 +143,8 @@
       },
       "tags": {
         "tooMany": "An item may carry at most 10 tags.",
-        "tooLong": "A tag may have at most 30 characters."
+        "tooLong": "A tag may have at most 30 characters.",
+        "conflict": "The tags changed in the meantime. Please save again."
       }
     },
     "request": {

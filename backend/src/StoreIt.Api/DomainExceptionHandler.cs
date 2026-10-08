@@ -29,6 +29,8 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
             StatusCodes.Status409Conflict,
             "storage.ownerCannotLeave"
         ),
+        // SPEC-011: concurrent tag changes by two members — the client retries the save.
+        [typeof(TagConflictException)] = (StatusCodes.Status409Conflict, "item.tags.conflict"),
         // SPEC-006 AC-05: the session belongs to an account deleted from another device —
         // end it here instead of answering 500 on the FK violation (sign-out below).
         [typeof(OwnerNoLongerExistsException)] = (

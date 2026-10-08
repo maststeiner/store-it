@@ -73,6 +73,16 @@ long rows, the suggestion dropdown over the form, and the feel of the comma/Ente
 the human G3 test. **Migration**: the release that carries this PR runs `migrate` before
 `backend` as always; nothing else to configure.
 
+## Review (G2, automated part)
+
+CodeRabbit (profile ASSERTIVE) posted three findings on `a96273e`, all Minor, all taken:
+
+| Finding | Fix |
+|---|---|
+| `"tags": [null]` reaches `Tag.Clean` and throws `NullReferenceException` → 500 instead of 400 | `Clean(string?)` treats `null` as blank (EC-08); domain + HTTP test |
+| Two members racing on the same storage's tags hit the unique index or the `item_tags` FK → 500 | `TagConflictException` (Application), mapped from `23505 IX_tags_storage_id_NormalizedName` / `23503 FK_item_tags_tags_tag_id` in the repository, `409 item.tags.conflict` in the handler, message in four locales; handler mapping unit-tested (the race itself is not reproducible in a black-box test) |
+| The frozen spec text (single-tag filter, required `tags`, blur commit) now conflicts with A1/A2 without a note | amendment A3: optional `tags`, the concurrency answer, and an explicit "A1–A3 supersede" note for G2/G3 |
+
 ## Human Interventions
 
 | # | Intervention | Reason |

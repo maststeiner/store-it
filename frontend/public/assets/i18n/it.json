@@ -143,7 +143,8 @@
       },
       "tags": {
         "tooMany": "Un articolo può avere al massimo 10 tag.",
-        "tooLong": "Un tag può avere al massimo 30 caratteri."
+        "tooLong": "Un tag può avere al massimo 30 caratteri.",
+        "conflict": "I tag sono cambiati nel frattempo. Salva di nuovo."
       }
     },
     "request": {

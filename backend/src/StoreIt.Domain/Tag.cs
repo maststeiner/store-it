@@ -36,8 +36,14 @@ public class Tag
     /// The display form of a typed tag: trimmed, inner whitespace collapsed to one space,
     /// Unicode NFC. Empty for blank input (EC-08). Validates the length (AC-03).
     /// </summary>
-    public static string Clean(string raw)
+    public static string Clean(string? raw)
     {
+        // A null element (`"tags": [null]` from JSON) is blank input, not a server error.
+        if (raw is null)
+        {
+            return string.Empty;
+        }
+
         var cleaned = InnerWhitespace.Replace(raw.Trim(), " ").Normalize(NormalizationForm.FormC);
         if (cleaned.Length > MaxLength)
         {

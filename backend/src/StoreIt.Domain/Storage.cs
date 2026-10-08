@@ -132,7 +132,7 @@ public class Storage
         Unit unit,
         DateOnly? expiryDate,
         DateOnly? productionDate,
-        IEnumerable<string>? tags = null
+        IEnumerable<string?>? tags = null
     )
     {
         var item = new Item(name, amount, unit, expiryDate, productionDate);
@@ -152,7 +152,7 @@ public class Storage
         Unit unit,
         DateOnly? expiryDate,
         DateOnly? productionDate,
-        IEnumerable<string>? tags = null
+        IEnumerable<string?>? tags = null
     )
     {
         var item = GetItem(itemId);
@@ -191,7 +191,7 @@ public class Storage
     /// existing tags of the storage reused by normalized name, new ones created with the typed
     /// spelling; more than <see cref="Tag.MaxPerItem"/> distinct tags is a validation error.
     /// </summary>
-    private List<Tag> ResolveTags(IEnumerable<string>? rawTags)
+    private List<Tag> ResolveTags(IEnumerable<string?>? rawTags)
     {
         var resolved = new List<Tag>();
         foreach (var raw in rawTags ?? [])
