@@ -39,8 +39,10 @@ rename, chip-click filter, no colours, cascade semantics).
     `Kase` therefore sorts before `Käse` (noted in a domain test).
   - **`ItemRequest.Tags` is optional on the wire** (`null` = none, EC-07) so the pre-existing
     test helpers and any older request keep working; the response always carries the array.
-  - **The tag field commits on blur** (text left in it becomes a tag), on Enter and on `,`;
-    Enter never submits the surrounding form. Escape closes the suggestion list only when it is
+  - **The tag field has its own *Add* button** (spec amendment A1, Marcel during G2): the
+    first version committed text left in the field on blur, which made the item's *Add* button
+    look as if it also added the tag. Now only the button, Enter or `,` add; blur only closes
+    the suggestions; Enter never submits the surrounding form. Escape closes the suggestion list only when it is
     open, otherwise it bubbles to the page (the add form's Escape, SPEC-010 D6).
   - **The result line is shared**: SPEC-010's "n of m items" now reacts to either filter
     (`filterActive`), and the no-match text names the tag when no text query is set.
@@ -73,10 +75,11 @@ the human G3 test. **Migration**: the release that carries this PR runs `migrate
 | 1 | "Bitte keine Annahmen treffen, sondern nachfragen" — eight questions answered before the draft | G1 input |
 | 2 | Asked whether an item can carry several tags (yes, up to ten; only the filter is single-tag) | clarification before G1 |
 | 3 | Froze the spec with D1–D13 unchanged ("passt so") | G1 |
+| 4 | Asked for a dedicated *Add tag* button after the tag field — sharing the item's *Add* was confusing | G2 → amendment A1 |
 
 ## Outcome
 
 - **Result:** PR open, awaiting G2/G3
-- **Deviations from spec:** none in scope or acceptance criteria; two implementation details
-  beyond the proposal are marked ⚠ in the spec's Technical Constraints (blur commit, no new E2E)
+- **Deviations from spec:** none in scope or acceptance criteria; amendment A1 (explicit add
+  button) recorded; one implementation detail beyond the proposal is marked ⚠ (no new E2E)
 - **Harness follow-up:** none

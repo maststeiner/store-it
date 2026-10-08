@@ -12,6 +12,7 @@ describe('TagInput', () => {
         tags: {
           label: 'Tags',
           placeholder: 'Add a tag…',
+          add: 'Add tag',
           remove: 'Remove tag {{name}}',
           limit: 'At most 10 tags per item.',
         },
@@ -147,14 +148,31 @@ describe('TagInput', () => {
     expect(seen).toEqual(['document']);
   });
 
-  it('keeps typed text as a tag when focus leaves the field', () => {
+  it('A1: the Add button next to the field adds the typed text; it is disabled while the field is empty', () => {
+    const { fixture, el, input } = render();
+    const button = el.querySelector('.tag-add') as HTMLButtonElement;
+    expect(button.textContent?.trim()).toBe('Add tag');
+    expect(button.disabled).toBe(true);
+
+    typeText(fixture, input, 'Vorrat');
+    expect(button.disabled).toBe(false);
+    button.click();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.tags()).toEqual(['Vorrat']);
+    expect(input.value).toBe('');
+    expect(button.disabled).toBe(true);
+  });
+
+  it('A1: leaving the field commits nothing — the text stays until it is added explicitly', () => {
     const { fixture, input } = render();
 
     typeText(fixture, input, 'Vorrat');
     input.dispatchEvent(new Event('blur'));
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.tags()).toEqual(['Vorrat']);
+    expect(fixture.componentInstance.tags()).toEqual([]);
+    expect(input.value).toBe('Vorrat');
   });
 
   it('Backspace in an empty field removes the last chip', () => {

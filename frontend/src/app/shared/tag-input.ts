@@ -7,7 +7,7 @@ export const MAX_TAGS_PER_ITEM = 10;
 
 /**
  * SPEC-011 D13 / AC-08…AC-10: the tag control of the item forms. Chips with ✕ above a
- * combobox; typing lists the storage's existing tags that are not on the item yet; Enter or
+ * combobox; typing lists the storage's existing tags that are not on the item yet; the *Add* button, Enter or
  * `,` adds the typed text (a new or an existing tag), selecting a suggestion adds it. Identity
  * of a tag is case-insensitive (the API decides the spelling, D4/D8); the control only avoids
  * obvious duplicates while typing.
@@ -54,6 +54,15 @@ export const MAX_TAGS_PER_ITEM = 10;
         (blur)="onBlur()"
         (keydown)="onKeydown($event)"
       />
+      <button
+        type="button"
+        class="btn-ghost btn-small tag-add"
+        [disabled]="full() || draft().trim() === ''"
+        (mousedown)="$event.preventDefault()"
+        (click)="addDraft()"
+      >
+        {{ 'items.tags.add' | translate }}
+      </button>
       @if (listOpen() && suggestionsToShow().length > 0) {
         <ul class="tag-suggestions" role="listbox" [id]="inputId() + '-list'">
           @for (suggestion of suggestionsToShow(); track suggestion; let i = $index) {
@@ -171,10 +180,16 @@ export class TagInput {
     this.field().nativeElement.focus();
   }
 
-  protected onBlur(): void {
-    // Text left in the field is meant as a tag — do not lose it on Save.
+  /** D13 (amendment A1): the explicit add — same as Enter, visible as a button. */
+  protected addDraft(): void {
     this.add(this.draft());
     this.clearDraft();
+    this.field().nativeElement.focus();
+  }
+
+  protected onBlur(): void {
+    // Leaving the field only closes the list; text stays in the field until it is added
+    // explicitly (button, Enter or comma) — nothing is committed behind the user's back.
     this.listOpen.set(false);
   }
 
