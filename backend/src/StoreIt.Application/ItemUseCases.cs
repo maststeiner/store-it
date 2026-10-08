@@ -80,7 +80,7 @@ public sealed record AddItemInput(
     Unit Unit,
     DateOnly? ExpiryDate,
     DateOnly? ProductionDate,
-    IReadOnlyList<string>? Tags = null
+    IReadOnlyList<string?>? Tags = null
 );
 
 /// <summary>AC-05/AC-06: add an item to a storage.</summary>
@@ -111,7 +111,7 @@ public sealed record UpdateItemInput(
     Unit Unit,
     DateOnly? ExpiryDate,
     DateOnly? ProductionDate,
-    IReadOnlyList<string>? Tags = null
+    IReadOnlyList<string?>? Tags = null
 );
 
 /// <summary>

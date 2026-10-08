@@ -96,6 +96,29 @@ public class ItemTagsTests(ApiTestFixture factory) : IClassFixture<ApiTestFixtur
     }
 
     [Fact]
+    public async Task AddItem_WithNullTagElement_IgnoresIt()
+    {
+        // EC-08 over the wire: System.Text.Json does not enforce non-null elements.
+        var storage = await _owner.CreateStorageAsync("Pantry");
+
+        var response = await _owner.PostAsJsonAsync(
+            $"/api/v1/storages/{storage.Id}/items",
+            new
+            {
+                name = "Beans",
+                amount = 1,
+                unit = "Piece",
+                expiryDate = Expiry,
+                productionDate = (DateOnly?)null,
+                tags = new string?[] { null, "Dosen" },
+            }
+        );
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(["Dosen"], await TagsOf(_owner, storage.Id, "Beans"));
+    }
+
+    [Fact]
     public async Task AddItem_WithTooManyTags_Returns400AndKeepsTheStorageUnchanged()
     {
         // AC-03

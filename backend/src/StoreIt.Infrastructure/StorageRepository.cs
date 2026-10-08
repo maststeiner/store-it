@@ -63,6 +63,20 @@ public sealed class StorageRepository(StoreItDbContext dbContext) : IStorageRepo
             when (ex.InnerException
                     is Npgsql.PostgresException
                     {
+                        SqlState: "23505" or "23503",
+                        ConstraintName: TagUniqueIndex or ItemTagTagForeignKey
+                    }
+            )
+        {
+            // SPEC-011: two members raced on the same storage's tags — same new tag twice
+            // (unique index) or assign vs. prune (FK). A retry resolves it; never a 500.
+            DetachAdded<Tag>();
+            throw new TagConflictException();
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException
+                    is Npgsql.PostgresException
+                    {
                         SqlState: "23505",
                         ConstraintName: MemberPrimaryKey
                     }
@@ -97,4 +111,10 @@ public sealed class StorageRepository(StoreItDbContext dbContext) : IStorageRepo
 
     /// <summary>Constraint name EF Core generated for <c>storages.OwnerId → users.Id</c>.</summary>
     private const string OwnerForeignKey = "FK_storages_users_OwnerId";
+
+    /// <summary>SPEC-011: unique index on <c>tags (storage_id, NormalizedName)</c>.</summary>
+    private const string TagUniqueIndex = "IX_tags_storage_id_NormalizedName";
+
+    /// <summary>SPEC-011: <c>item_tags.tag_id → tags.Id</c> — violated when the tag was pruned meanwhile.</summary>
+    private const string ItemTagTagForeignKey = "FK_item_tags_tags_tag_id";
 }
