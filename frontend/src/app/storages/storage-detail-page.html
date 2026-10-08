@@ -201,7 +201,7 @@
         [placeholder]="'items.search.placeholder' | translate"
         [attr.aria-label]="'items.search.label' | translate"
       />
-      @if (query()) {
+      @if (filterActive()) {
         <button
           type="button"
           class="icon-btn"
@@ -213,30 +213,32 @@
         </button>
       }
     </div>
-  }
-
-  @if (activeTag(); as tag) {
-    <div class="tag-filter">
-      <span class="tag-chip tag-chip-active">
-        <span>{{ tag }}</span>
-        <span class="tag-chip-count">· {{ activeTagCount() }}</span>
-        <button
-          type="button"
-          class="tag-chip-remove"
-          (click)="clearTagFilter()"
-          [attr.aria-label]="'items.tags.clearFilter' | translate"
-          [title]="'items.tags.clearFilter' | translate"
-        >
-          ✕
-        </button>
-      </span>
-    </div>
+    @if (tags().length > 0) {
+      <!-- SPEC-011 A2: every tag of the storage, selectable (any number, OR) -->
+      <div class="tag-list" role="group" [attr.aria-label]="'items.tags.filterLabel' | translate">
+        @for (tag of tags(); track tag.name) {
+          <button
+            type="button"
+            class="tag-chip"
+            [class.tag-chip-active]="isSelectedTag(tag.name)"
+            [attr.aria-pressed]="isSelectedTag(tag.name)"
+            (click)="toggleTag(tag.name)"
+          >
+            <span>{{ tag.name }}</span>
+            <span class="tag-chip-count">· {{ tag.itemCount }}</span>
+          </button>
+        }
+      </div>
+    }
   }
 
   @if (filterActive()) {
     <output class="count-hint search-result status-block">
       @if (filteredItems().length === 0) {
-        {{ 'items.search.noMatches' | translate: { query: query().trim() || activeTag() } }}
+        {{
+          'items.search.noMatches'
+            | translate: { query: query().trim() || selectedTags().join(', ') }
+        }}
       } @else if (filteredItems().length === 1) {
         {{ 'items.search.result.one' | translate: { total: items()?.length ?? 0 } }}
       } @else {
@@ -342,9 +344,9 @@
                     <button
                       type="button"
                       class="tag-chip"
-                      [class.tag-chip-active]="isActiveTag(tag)"
-                      [attr.aria-pressed]="isActiveTag(tag)"
-                      (click)="toggleTag(tag)"
+                      [class.tag-chip-active]="isSelectedTag(tag)"
+                      [attr.aria-pressed]="isSelectedTag(tag)"
+                      (click)="toggleTagFromRow(tag)"
                       [title]="'items.tags.filterBy' | translate: { name: tag }"
                     >
                       {{ tag }}

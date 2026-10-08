@@ -58,6 +58,7 @@ the whole spec is a separate step (gate table).
 | # | Date | Change |
 |---|------|--------|
 | A1 | 2026-10-08 | **D13 — explicit *Add* button for tags.** The tag field gets its own *Add tag* button right after it (`items.tags.add`), disabled while the field is empty; the button, Enter or `,` add the typed text. Text left in the field is **not** committed when the field loses focus — the first implementation did that, which made the item's *Add* button look as if it also added the tag. Requested by Marcel Steiner during G2: "Einen eigenen Button um Tags hinzuzufügen, gleich hinter dem Textfeld für Tags. Dasselbe wie für das Hinzufügen der Items ist verwirrend." Scope and acceptance criteria unchanged (AC-09 names Enter and `,`; the button is an additional way). |
+| A2 | 2026-10-08 | **D12 and AC-13/AC-14 — the tag filter is a visible, multi-select list.** Clicking a row chip as the only way to filter was not intuitive (Marcel Steiner during G2). Now: when the 🔍 panel is open, **every tag of the storage is listed under the search field as a chip with its item count**; chips select and deselect (`aria-pressed`), **any number** may be selected, and an item matches when it carries **at least one** selected tag (**OR**, Marcel's choice); the text search still combines with AND (AC-15). A chip on an item row opens the panel and selects that tag (D6 kept). The separate active-filter line is gone; ✕ / Escape clear the text and the selection; closing the panel with the 🔍 button is only possible when nothing is active (AC-03 extended). EC-04: a selected tag that vanishes drops out of the selection, the rest stays. |
 
 ---
 
@@ -226,11 +227,11 @@ the whole spec is a separate step (gate table).
 | AC-10 | `tag-input.spec.ts` → "AC-10: at ten tags the input is disabled …"; page → "AC-10: the API refusal for tags is shown in the form" | ✅ |
 | AC-11 | page → add form sends `tags: ['Dosen', 'neu']`, inline edit sends the changed set | ✅ |
 | AC-12 | page → "AC-12: shows the tags of an item as chips …" | ✅ |
-| AC-13 | page → "AC-13: clicking a chip filters the list …" (groups shrink, active chip with count, `aria-pressed`) | ✅ |
-| AC-14 | page → "AC-14: the ✕ clears the filter, the same chip toggles it off, another chip replaces it" | ✅ |
+| AC-13 | page → "A2: the search panel lists every tag …", "AC-13 (A2): selecting a tag in the list filters the items; the row chips mirror the selection", "D6 (A2): a chip on an item row opens the search panel and selects that tag" | ✅ |
+| AC-14 | page → "AC-14 (A2): several tags combine with OR; deselecting and ✕ restore the full list" | ✅ |
 | AC-15 | page → "AC-15: tag filter and text search combine with AND and share the result line" | ✅ |
 | AC-16 | `i18n.spec.ts` (de/en/fr/it parity) | ✅ |
-| EC-04 | page → "EC-04: the active filter is cleared when its tag no longer exists after a reload" | ✅ |
+| EC-04 | page → "EC-04: a selected tag that no longer exists after a reload drops out of the selection" | ✅ |
 
 ---
 

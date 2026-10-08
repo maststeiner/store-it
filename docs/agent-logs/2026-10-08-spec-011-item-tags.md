@@ -44,7 +44,11 @@ rename, chip-click filter, no colours, cascade semantics).
     look as if it also added the tag. Now only the button, Enter or `,` add; blur only closes
     the suggestions; Enter never submits the surrounding form. Escape closes the suggestion list only when it is
     open, otherwise it bubbles to the page (the add form's Escape, SPEC-010 D6).
-  - **The result line is shared**: SPEC-010's "n of m items" now reacts to either filter
+  - **The tag filter became a list (amendment A2)**: the first version filtered only through a
+  click on a row chip and showed the active tag in a separate line — invisible until found. Now
+  the 🔍 panel lists every tag with its count; selection is multi (OR), the text search stays
+  AND, row chips open the panel and select. `selectedTags` replaced `activeTag`.
+- **The result line is shared**: SPEC-010's "n of m items" now reacts to either filter
     (`filterActive`), and the no-match text names the tag when no text query is set.
 - **Access rule reused**: `GET …/tags` sits under the storages group, so the EF access filter and
   the route-id guard give 404 / 400 exactly like the item routes — one new mapping, no new policy.
@@ -77,10 +81,11 @@ the human G3 test. **Migration**: the release that carries this PR runs `migrate
 | 2 | Asked whether an item can carry several tags (yes, up to ten; only the filter is single-tag) | clarification before G1 |
 | 3 | Froze the spec with D1–D13 unchanged ("passt so") | G1 |
 | 4 | Asked for a dedicated *Add tag* button after the tag field — sharing the item's *Add* was confusing | G2 → amendment A1 |
+| 5 | Asked for a visible tag list under the search field, selectable/deselectable, instead of the hidden chip-click filter; chose multi-select with OR when asked | G2 → amendment A2 |
 
 ## Outcome
 
 - **Result:** PR open, awaiting G2/G3
-- **Deviations from spec:** none in scope or acceptance criteria; amendment A1 (explicit add
-  button) recorded
+- **Deviations from spec:** none in scope; amendments A1 (explicit add button) and A2 (visible
+  multi-select tag list, OR) recorded
 - **Harness follow-up:** none

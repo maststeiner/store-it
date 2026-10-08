@@ -78,7 +78,7 @@
       "remove": "Retirer le tag {{name}}",
       "limit": "Au maximum 10 tags par article.",
       "filterBy": "Afficher uniquement les articles avec le tag {{name}}",
-      "clearFilter": "Effacer le filtre par tag"
+      "filterLabel": "Filtrer par tag"
     }
   },
   "groups": {
