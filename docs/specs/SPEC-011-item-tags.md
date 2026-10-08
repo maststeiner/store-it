@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-08 (issue #220)
 > **Sprint:** 2026-S41
 > **Author:** Claude Fable 5.1 (analyst/developer agent), from Marcel Steiner's request and answers (issue #220, 2026-10-08)
-> **Last updated:** 2026-10-08
+> **Last updated:** 2026-10-08 (implementation on `feature/item-tags`, verification table filled)
 
 ---
 
@@ -164,58 +164,64 @@ the whole spec is a separate step (gate table).
 
 ## Technical Constraints (from Architect Agent)
 
-<!-- Proposal; confirmed/adjusted after G1 -->
+<!-- Proposed before G1, confirmed during implementation; deviations from the proposal marked ⚠ -->
 
-- [ ] Domain: `Tag` (Id, Name, NormalizedName) as a child of the `Storage` aggregate; `Item`
-      gets `IReadOnlyCollection<Tag> Tags`; `Storage.AddItem / UpdateItem` take
-      `IEnumerable<string> tags` and resolve them against the storage's tags (D8, AC-02),
-      creating missing ones; `Storage.PruneUnusedTags()` after add/update/remove (AC-04).
-      Validation (`item.tags.tooMany`, `item.tags.tooLong`) in the domain like the other item rules.
-- [ ] Persistence: tables `tags` (unique index `(StorageId, NormalizedName)`, `Name` max 30) and
-      `item_tags` (ItemId, TagId; cascade both ways); **one EF migration `ItemTags`**; the
-      repository includes `Items.Tags` and `Tags` when loading a storage for item operations.
-- [ ] Application: `AddItemInput` / `UpdateItemInput` gain `Tags`; `ItemWithStatus` gains
-      `Tags`; new `GetStorageTagsUseCase` → `IReadOnlyList<TagWithCount>`.
-- [ ] Api: `ItemRequest.Tags` (`IReadOnlyList<string>`, `[]` default), `ItemResponse.Tags`,
+- [x] Domain: `Tag` (Id, Name, NormalizedName; `Clean` = trim + collapse whitespace + NFC with
+      the 30-character check, `Normalize` = lower-case) as a child of the `Storage` aggregate;
+      `Item.Tags` with an internal `SetTags`; `Storage.AddItem / UpdateItem` take
+      `IEnumerable<string>? tags` (optional, so existing callers compile) and resolve them
+      through `ResolveTags` (blank dropped, duplicates collapsed, existing reused by normalized
+      name, new created with the typed spelling, `item.tags.tooMany` above 10 distinct);
+      `PruneUnusedTags` after update, amount-0 removal and remove (AC-04);
+      `GetTagsWithCounts` (AC-05).
+- [x] Persistence: tables `tags` (FK `storage_id` cascade, unique index
+      `(storage_id, NormalizedName)`, both names max 30) and `item_tags` (`item_id`, `tag_id`,
+      cascade both ways) — EF many-to-many via `UsingEntity("item_tags")`; migration
+      `20261008113709_ItemTags`; repository includes `Items.Tags` and `Tags` (split query).
+- [x] Application: `AddItemInput.Tags` / `UpdateItemInput.Tags` (optional), `ItemWithStatus.Tags`
+      (canonical, sorted ordinal-ignore-case), `TagWithCount`, `GetStorageTagsUseCase`.
+- [x] Api: `ItemRequest.Tags` (`IReadOnlyList<string>?`, absent = none, EC-07), `ItemResponse.Tags`,
       `TagResponse(Name, ItemCount)`, `GET /api/v1/storages/{storageId}/tags` (`getTags`, tag
-      `Items`, 404 for non-members like the item routes); contract + typed client regenerated.
-- [ ] Web: `TagInput` component (`shared/tag-input.ts`), chips in the storage detail row,
-      `activeTag` signal combined with SPEC-010's `filteredItems`; `ItemsService.getTags` loaded
-      with the items and after every save.
-- [ ] Tests: domain (`StorageTests`: canonical spelling, limits, prune), service tests
-      (`ItemTagsTests`: AC-01…AC-06 incl. member access and cascade), `OpenApiContractTests`
-      (`getTags`), web (`tag-input.spec.ts`, `storage-detail-page.spec.ts` block "tags
-      (SPEC-011)", `i18n.spec.ts`), E2E happy path (add item with a new and an existing tag,
-      filter by chip) if the existing E2E suite covers items.
-- [ ] Docs: `docs/operations/runtime-contract.md` — the release carries a migration (note in
-      the release PR, `migrate` before `backend` as always); no new variables.
-- [ ] Dependencies: none new.
-- [ ] ADR required: no (child entities of an existing aggregate, ADR-001/ADR-003 unchanged).
+      `Items`, 400/404 like the item routes); contract and typed client regenerated and committed.
+- [x] Web: `TagInput` (`shared/tag-input.ts`, `model<string[]>` + `suggestions` input; combobox with
+      listbox, Enter / `,` / blur commit, arrow keys, Escape closes the list only, Backspace removes
+      the last chip, locked at 10); the storage page holds `tags`, `activeTag`, `filterActive` and
+      combines the tag filter with SPEC-010's `filteredItems`; `getTags` is loaded with the items
+      and after every add / save / delete (EC-04 clears a vanished active tag).
+      ⚠ Text left in the tag field is committed on blur, so a tag typed just before *Save* is not lost.
+- [x] Tests: `StorageTagsTests` (13, domain), `ItemTagsTests` (11, service incl. member access,
+      cascade, 400s), `OpenApiContractTests` (`getTags`); web `tag-input.spec.ts` (10),
+      `storage-detail-page.spec.ts` → block "tags (SPEC-011)" (8), `i18n.spec.ts`. ⚠ No new E2E:
+      the existing Playwright item flow is unaffected (the tag field is optional) and the chip
+      interaction is covered by the component specs.
+- [x] Docs: release PR must say "migration included" (`migrate` before `backend`, runtime contract
+      §2 rule 1); no new variables, so `runtime-contract.md` is unchanged.
+- [x] Dependencies: none new.
+- [x] ADR required: no.
 
 ---
 
 ## Verification
 
-<!-- Filled in by QA Agent -->
-
 | AC | Test | Status |
 |----|------|--------|
-| AC-01 | `ItemTagsTests` | ⬜ |
-| AC-02 | `StorageTests` / `ItemTagsTests` | ⬜ |
-| AC-03 | `StorageTests` / `ItemTagsTests` | ⬜ |
-| AC-04 | `StorageTests` / `ItemTagsTests` (cascade) | ⬜ |
-| AC-05 | `ItemTagsTests` | ⬜ |
-| AC-06 | `ItemTagsTests` | ⬜ |
-| AC-07 | `OpenApiContractTests`, CI contract gate | ⬜ |
-| AC-08 | `tag-input.spec.ts`, `storage-detail-page.spec.ts` | ⬜ |
-| AC-09 | `tag-input.spec.ts` | ⬜ |
-| AC-10 | `tag-input.spec.ts`, `storage-detail-page.spec.ts` | ⬜ |
-| AC-11 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-12 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-13 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-14 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-15 | `storage-detail-page.spec.ts` | ⬜ |
-| AC-16 | `i18n.spec.ts` | ⬜ |
+| AC-01 | `ItemTagsTests.AddItem_WithTags_ReturnsThemCanonicalAndSorted`; `StorageTagsTests.AddItem_WithTags_CreatesTheTagsOnTheStorage` | ✅ |
+| AC-02 | `ItemTagsTests.AddItem_WithExistingTagInOtherCase_ReusesTheFirstSpelling`; `StorageTagsTests.AddItem_WithExistingTagInOtherCase_ReusesTheFirstSpelling`, `…_NormalisesWhitespaceAndKeepsAccents` (EC-02) | ✅ |
+| AC-03 | `ItemTagsTests.AddItem_WithTooManyTags_Returns400AndKeepsTheStorageUnchanged`, `…UpdateItem_WithTooLongTag_Returns400AndKeepsTheItem`; `StorageTagsTests.AddItem_WithMoreThanTenDistinctTags_Throws`, `…_WithATagLongerThanThirtyCharacters_Throws`, `…_WithExactlyThirtyCharactersAfterTrimming_Passes`, `…_IgnoresBlankTagsAndCollapsesDuplicates` (EC-06/EC-08) | ✅ |
+| AC-04 | `ItemTagsTests.UpdateAndDelete_PruneTagsNoItemCarries`, `…DeleteStorage_TakesItsTagsWithIt` (EC-05); `StorageTagsTests.UpdateItem_ReplacesTheTagsAndPrunesTheUnused`, `…_ToAmountZero_RemovesTheItemAndItsOrphanedTags`, `RemoveItem_PrunesTagsNoOtherItemCarries` | ✅ |
+| AC-05 | `ItemTagsTests.GetTags_ListsNameAndItemCountSorted`, `…GetTags_UnknownOrForeignStorage_Returns404`, `…GetTags_MalformedStorageId_Returns400`, `…Member_SeesAndReusesTheStorageTags` (EC-10); `StorageTagsTests.GetTagsWithCounts_…` | ✅ |
+| AC-06 | `ItemTagsTests.AddItem_WithoutTagsField_HasNoTags` (EC-07) | ✅ |
+| AC-07 | `OpenApiContractTests` (`getTags`); CI job *API contract gate* (additive) | ✅ · ⏳ CI |
+| AC-08 | `tag-input.spec.ts` → "AC-08: shows the item tags as chips …"; page → "AC-08 / AC-11: the add form carries a tag input …", "… the inline edit starts with the item tags …" | ✅ |
+| AC-09 | `tag-input.spec.ts` → "Enter adds the typed text …", "a comma separates tags …" (EC-09), "lists existing tags that match …", "a suggestion is picked …", "D4: typing an existing tag in another case …" | ✅ |
+| AC-10 | `tag-input.spec.ts` → "AC-10: at ten tags the input is disabled …"; page → "AC-10: the API refusal for tags is shown in the form" | ✅ |
+| AC-11 | page → add form sends `tags: ['Dosen', 'neu']`, inline edit sends the changed set | ✅ |
+| AC-12 | page → "AC-12: shows the tags of an item as chips …" | ✅ |
+| AC-13 | page → "AC-13: clicking a chip filters the list …" (groups shrink, active chip with count, `aria-pressed`) | ✅ |
+| AC-14 | page → "AC-14: the ✕ clears the filter, the same chip toggles it off, another chip replaces it" | ✅ |
+| AC-15 | page → "AC-15: tag filter and text search combine with AND and share the result line" | ✅ |
+| AC-16 | `i18n.spec.ts` (de/en/fr/it parity) | ✅ |
+| EC-04 | page → "EC-04: the active filter is cleared when its tag no longer exists after a reload" | ✅ |
 
 ---
 

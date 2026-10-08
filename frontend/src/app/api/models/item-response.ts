@@ -10,5 +10,6 @@ export interface ItemResponse {
   id: string;
   name: string;
   productionDate: (string | null);
+  tags: Array<string>;
   unit: Unit;
 }

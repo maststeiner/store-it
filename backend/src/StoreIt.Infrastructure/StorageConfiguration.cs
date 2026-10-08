@@ -56,6 +56,34 @@ public sealed class StorageConfiguration : IEntityTypeConfiguration<Storage>
             .Navigation(s => s.Members)
             .HasField("_members")
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        // SPEC-011 D1/D2: tags are aggregate children too — they belong to one storage, live
+        // and die with it (cascade), and are reachable only through it.
+        builder
+            .HasMany(s => s.Tags)
+            .WithOne()
+            .HasForeignKey("storage_id")
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .Navigation(s => s.Tags)
+            .HasField("_tags")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+    }
+}
+
+/// <summary>SPEC-011: one row per tag and storage; the normalized name is the uniqueness key (D4/D8).</summary>
+public sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
+{
+    public void Configure(EntityTypeBuilder<Tag> builder)
+    {
+        builder.ToTable("tags");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Id).ValueGeneratedNever();
+        builder.Property(t => t.Name).IsRequired().HasMaxLength(Tag.MaxLength);
+        builder.Property(t => t.NormalizedName).IsRequired().HasMaxLength(Tag.MaxLength);
+        builder.HasIndex("storage_id", nameof(Tag.NormalizedName)).IsUnique();
     }
 }
 
@@ -120,5 +148,31 @@ public sealed class ItemConfiguration : IEntityTypeConfiguration<Item>
 
         builder.Property(i => i.ExpiryDate);
         builder.Property(i => i.ProductionDate);
+
+        // SPEC-011 AC-01/AC-04: item ↔ tag through a join table; both ends cascade so a deleted
+        // item or a pruned tag takes its join rows with it.
+        builder
+            .HasMany(i => i.Tags)
+            .WithMany()
+            .UsingEntity(
+                "item_tags",
+                left =>
+                    left.HasOne(typeof(Tag))
+                        .WithMany()
+                        .HasForeignKey("tag_id")
+                        .OnDelete(DeleteBehavior.Cascade),
+                right =>
+                    right
+                        .HasOne(typeof(Item))
+                        .WithMany()
+                        .HasForeignKey("item_id")
+                        .OnDelete(DeleteBehavior.Cascade),
+                join => join.HasKey("item_id", "tag_id")
+            );
+
+        builder
+            .Navigation(i => i.Tags)
+            .HasField("_tags")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

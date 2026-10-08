@@ -70,6 +70,14 @@
         "other": "{{shown}} articoli su {{total}}"
       },
       "noMatches": "Nessun articolo corrisponde a “{{query}}”."
+    },
+    "tags": {
+      "label": "Tag",
+      "placeholder": "Aggiungi un tag…",
+      "remove": "Rimuovi il tag {{name}}",
+      "limit": "Al massimo 10 tag per articolo.",
+      "filterBy": "Mostra solo gli articoli con il tag {{name}}",
+      "clearFilter": "Rimuovi il filtro per tag"
     }
   },
   "groups": {
@@ -131,6 +139,10 @@
       },
       "dates": {
         "missing": "Indicare almeno una data (scadenza o produzione)."
+      },
+      "tags": {
+        "tooMany": "Un articolo può avere al massimo 10 tag.",
+        "tooLong": "Un tag può avere al massimo 30 caratteri."
       }
     },
     "request": {

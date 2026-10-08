@@ -21,6 +21,14 @@ const TRANSLATIONS = {
   items: {
     new: 'New item',
     empty: 'No items yet.',
+    tags: {
+      label: 'Tags',
+      placeholder: 'Add a tag…',
+      remove: 'Remove tag {{name}}',
+      limit: 'At most 10 tags per item.',
+      filterBy: 'Show only items tagged {{name}}',
+      clearFilter: 'Clear tag filter',
+    },
     search: {
       toggle: 'Search items',
       label: 'Search items by name',
@@ -47,7 +55,13 @@ const TRANSLATIONS = {
     deleteConfirm: 'Delete "{{name}}"?',
     namePlaceholder: 'Name',
   },
-  errors: { generic: 'Something went wrong.', item: { dates: { missing: 'One date required.' } } },
+  errors: {
+    generic: 'Something went wrong.',
+    item: {
+      dates: { missing: 'One date required.' },
+      tags: { tooMany: 'At most 10 tags.', tooLong: 'Tag too long.' },
+    },
+  },
   sharing: {
     share: 'Share',
     leave: 'Leave',
@@ -80,6 +94,7 @@ function item(partial: Partial<ItemResponse>): ItemResponse {
     id: 'i1',
     name: 'Item',
     amount: 1,
+    tags: [],
     unit: 'Piece',
     expiryDate: null,
     productionDate: null,
@@ -132,6 +147,20 @@ describe('StorageDetailPage', () => {
       ...sharing,
     });
     http.expectOne('/api/v1/storages/s1/items').flush(items);
+    http.expectOne('/api/v1/storages/s1/tags').flush(tagsOf(items));
+  }
+
+  /** SPEC-011 D10: what GET …/tags answers for a given item list (name + item count, sorted). */
+  function tagsOf(items: ItemResponse[]): { name: string; itemCount: number }[] {
+    const counts = new Map<string, number>();
+    for (const i of items) {
+      for (const tag of i.tags) {
+        counts.set(tag, (counts.get(tag) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()]
+      .map(([name, itemCount]) => ({ name, itemCount }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
   }
 
   it('renders the three status groups from the API-computed expiryStatus', async () => {
@@ -942,6 +971,233 @@ describe('StorageDetailPage', () => {
         'No items match “x”.',
       );
       expect(element.querySelector('.empty-hint')).toBeNull();
+      element.remove();
+    });
+  });
+
+  // SPEC-011 — tags: chips on rows, click-to-filter, combined with the text search, the form.
+  describe('tags (SPEC-011)', () => {
+    const TAGGED = [
+      item({ id: 'a', name: 'Bio Vollmilch', expiryStatus: 'Expired', tags: ['Bio'] }),
+      item({ id: 'b', name: 'Bohnen', expiryStatus: 'ExpiringSoon', tags: ['Dosen', 'homemade'] }),
+      item({ id: 'c', name: 'Mais', expiryStatus: 'Ok', tags: ['Dosen'] }),
+      item({ id: 'd', name: 'Butter', expiryStatus: 'Ok' }),
+    ];
+
+    async function renderTagged(items = TAGGED) {
+      const fixture = TestBed.createComponent(StorageDetailPage);
+      const element = fixture.nativeElement as HTMLElement;
+      document.body.appendChild(element);
+      fixture.detectChanges();
+      flushInitialLoad(items);
+      await fixture.whenStable();
+      fixture.detectChanges();
+      return { fixture, element };
+    }
+
+    const rowChips = (element: HTMLElement, name: string) => {
+      const row = [...element.querySelectorAll('.item-row')].find((r) =>
+        r.querySelector('.item-name')?.textContent?.includes(name),
+      ) as HTMLElement;
+      return [...row.querySelectorAll('.item-tags .tag-chip')].map((c) => c.textContent?.trim());
+    };
+    const shown = (element: HTMLElement) =>
+      [...element.querySelectorAll('.item-row .item-name')].map((n) => n.textContent?.trim());
+    const clickChip = async (
+      fixture: ComponentFixture<StorageDetailPage>,
+      element: HTMLElement,
+      name: string,
+    ) => {
+      const chip = [...element.querySelectorAll('.item-tags .tag-chip')].find(
+        (c) => c.textContent?.trim() === name,
+      ) as HTMLButtonElement;
+      chip.click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    it('AC-12: shows the tags of an item as chips after its name, none for an untagged item', async () => {
+      const { element } = await renderTagged();
+
+      expect(rowChips(element, 'Bohnen')).toEqual(['Dosen', 'homemade']);
+      expect(rowChips(element, 'Butter')).toEqual([]);
+      element.remove();
+    });
+
+    it('AC-13: clicking a chip filters the list to that tag and shows the active-filter chip with its count', async () => {
+      const { fixture, element } = await renderTagged();
+
+      await clickChip(fixture, element, 'Dosen');
+
+      expect(shown(element)).toEqual(['Bohnen', 'Mais']);
+      const filter = element.querySelector('.tag-filter') as HTMLElement;
+      expect(filter.querySelector('.tag-chip-active > span')?.textContent?.trim()).toBe('Dosen');
+      expect(filter.querySelector('.tag-chip-count')?.textContent?.trim()).toBe('· 2');
+      expect(filter.querySelector('.tag-chip-remove')).not.toBeNull();
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('2 of 4 items');
+      const active = [...element.querySelectorAll('.item-tags .tag-chip')].filter(
+        (c) => c.getAttribute('aria-pressed') === 'true',
+      );
+      expect(active.map((c) => c.textContent?.trim())).toEqual(['Dosen', 'Dosen']);
+      element.remove();
+    });
+
+    it('AC-14: the ✕ clears the filter, the same chip toggles it off, another chip replaces it', async () => {
+      const { fixture, element } = await renderTagged();
+
+      await clickChip(fixture, element, 'Dosen');
+      await clickChip(fixture, element, 'homemade');
+      expect(shown(element)).toEqual(['Bohnen']);
+
+      await clickChip(fixture, element, 'homemade');
+      expect(shown(element)).toHaveLength(4);
+      expect(element.querySelector('.tag-filter')).toBeNull();
+
+      await clickChip(fixture, element, 'Bio');
+      (element.querySelector('.tag-filter .tag-chip-remove') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(shown(element)).toHaveLength(4);
+      expect(element.querySelector('.search-result')).toBeNull();
+      element.remove();
+    });
+
+    it('AC-15: tag filter and text search combine with AND and share the result line', async () => {
+      const { fixture, element } = await renderTagged();
+      await clickChip(fixture, element, 'Dosen');
+      (
+        element.querySelector(
+          '.detail-head .icon-btn[aria-label="Search items"]',
+        ) as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await new Promise((resolve) => setTimeout(resolve));
+
+      const field = element.querySelector('#item-search') as HTMLInputElement;
+      field.value = 'mais';
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+
+      expect(shown(element)).toEqual(['Mais']);
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('1 of 4 items');
+
+      field.value = 'butter';
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      expect(shown(element)).toEqual([]);
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe(
+        'No items match “butter”.',
+      );
+      element.remove();
+    });
+
+    it('AC-08 / AC-11: the add form carries a tag input and sends the chips with the item', async () => {
+      const { fixture, element } = await renderTagged([]);
+      await openAddForm(fixture);
+
+      const tagField = element.querySelector('#item-tags') as HTMLInputElement;
+      expect(tagField).not.toBeNull();
+      tagField.value = 'Dosen, neu';
+      tagField.dispatchEvent(new Event('input', { bubbles: true }));
+      // Leaving the field commits the text still in it (like clicking Save does in a browser).
+      tagField.dispatchEvent(new Event('blur'));
+      fixture.detectChanges();
+      const name = element.querySelector('#item-name') as HTMLInputElement;
+      name.value = 'Erbsen';
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+      const expiry = element.querySelector('#item-expiry') as HTMLInputElement;
+      expiry.value = '2026-12-01';
+      expiry.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      (element.querySelector('form.add-form') as HTMLFormElement).dispatchEvent(
+        new Event('submit'),
+      );
+
+      const post = http.expectOne('/api/v1/storages/s1/items');
+      expect(post.request.body).toMatchObject({ name: 'Erbsen', tags: ['Dosen', 'neu'] });
+      post.flush('e', { status: 201, statusText: 'Created' });
+      // The reload fetches items, storage and tags (D10).
+      http
+        .expectOne('/api/v1/storages/s1/items')
+        .flush([item({ id: 'e', name: 'Erbsen', tags: ['Dosen', 'neu'] })]);
+      http.expectOne('/api/v1/storages/s1').flush({ id: 's1', name: 'Freezer', itemCount: 1 });
+      http.expectOne('/api/v1/storages/s1/tags').flush([
+        { name: 'Dosen', itemCount: 1 },
+        { name: 'neu', itemCount: 1 },
+      ]);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(rowChips(element, 'Erbsen')).toEqual(['Dosen', 'neu']);
+      element.remove();
+    });
+
+    it('AC-08 / AC-11: the inline edit starts with the item tags and sends the changed set', async () => {
+      const { fixture, element } = await renderTagged();
+      const bohnen = [...element.querySelectorAll('.item-row')].find((r) =>
+        r.querySelector('.item-name')?.textContent?.includes('Bohnen'),
+      ) as HTMLElement;
+      (bohnen.querySelector('.icon-btn[aria-label="Edit"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const chips = [...element.querySelectorAll('.tag-chip-editable > span')].map((c) =>
+        c.textContent?.trim(),
+      );
+      expect(chips).toEqual(['Dosen', 'homemade']);
+      (element.querySelector('[aria-label="Remove tag homemade"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      (element.querySelector('form.item-edit') as HTMLFormElement).dispatchEvent(
+        new Event('submit'),
+      );
+
+      const put = http.expectOne('/api/v1/storages/s1/items/b');
+      expect(put.request.body).toMatchObject({ name: 'Bohnen', tags: ['Dosen'] });
+      put.flush(null, { status: 204, statusText: 'No Content' });
+      element.remove();
+    });
+
+    it('AC-10: the API refusal for tags is shown in the form', async () => {
+      const { fixture, element } = await renderTagged([]);
+      await openAddForm(fixture);
+      const name = element.querySelector('#item-name') as HTMLInputElement;
+      name.value = 'X';
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+      fixture.detectChanges();
+      (element.querySelector('form.add-form') as HTMLFormElement).dispatchEvent(
+        new Event('submit'),
+      );
+
+      http
+        .expectOne('/api/v1/storages/s1/items')
+        .flush({ errorCode: 'item.tags.tooLong' }, { status: 400, statusText: 'Bad Request' });
+      fixture.detectChanges();
+
+      expect(element.querySelector('form.add-form [role="alert"]')?.textContent?.trim()).toBe(
+        'Tag too long.',
+      );
+      element.remove();
+    });
+
+    it('EC-04: the active filter is cleared when its tag no longer exists after a reload', async () => {
+      const { fixture, element } = await renderTagged();
+      await clickChip(fixture, element, 'Bio');
+      expect(shown(element)).toEqual(['Bio Vollmilch']);
+
+      // Delete the only item with "Bio"; the reload no longer lists the tag.
+      const row = element.querySelector('.item-row') as HTMLElement;
+      (row.querySelector('.icon-btn[aria-label="Delete"]') as HTMLButtonElement).click();
+      http
+        .expectOne('/api/v1/storages/s1/items/a')
+        .flush(null, { status: 204, statusText: 'No Content' });
+      http.expectOne('/api/v1/storages/s1/items').flush(TAGGED.filter((i) => i.id !== 'a'));
+      http.expectOne('/api/v1/storages/s1').flush({ id: 's1', name: 'Freezer', itemCount: 3 });
+      http.expectOne('/api/v1/storages/s1/tags').flush(tagsOf(TAGGED.filter((i) => i.id !== 'a')));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element.querySelector('.tag-filter')).toBeNull();
+      expect(shown(element)).toHaveLength(3);
       element.remove();
     });
   });
