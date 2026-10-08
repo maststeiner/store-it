@@ -72,6 +72,17 @@ public class StorageTagsTests
     }
 
     [Fact]
+    public void AddItem_WithNullTagElement_TreatsItAsBlank()
+    {
+        // A JSON client can send "tags": [null]; that is blank input (EC-08), not a crash.
+        var storage = Pantry();
+
+        var item = storage.AddItem("Beans", 1m, Unit.Piece, AnyDate, null, [null, "Dosen", null]);
+
+        Assert.Equal(["Dosen"], Names(item.Tags));
+    }
+
+    [Fact]
     public void AddItem_WithMoreThanTenDistinctTags_Throws()
     {
         // AC-03

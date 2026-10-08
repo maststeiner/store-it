@@ -143,7 +143,8 @@
       },
       "tags": {
         "tooMany": "Ein Artikel kann höchstens 10 Tags haben.",
-        "tooLong": "Ein Tag darf höchstens 30 Zeichen lang sein."
+        "tooLong": "Ein Tag darf höchstens 30 Zeichen lang sein.",
+        "conflict": "Die Tags haben sich zwischenzeitlich geändert. Bitte noch einmal speichern."
       }
     },
     "request": {
