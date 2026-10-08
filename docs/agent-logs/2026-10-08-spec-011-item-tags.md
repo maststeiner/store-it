@@ -58,6 +58,7 @@ rename, chip-click filter, no colours, cascade semantics).
 | `dotnet ef migrations add ItemTags` | `tags` + `item_tags`, unique index, cascades — reviewed |
 | `ng test` | 221 passed / 23 files (18 new) |
 | `ng lint` · `prettier --check .` · production build | clean |
+| E2E (CI job 1b) | first run red: the new *Add tag* button also matched the item flow's `/add/i` locator (strict-mode violation) — locator made exact, and the flow now adds a tag and filters by its chip |
 | OpenAPI contract | additive: `tags` on `ItemRequest`/`ItemResponse`, `TagResponse`, `getTags`; client regenerated |
 
 Two domain-test expectations were wrong on the first run, not the code: the ordinal sort order
@@ -81,5 +82,5 @@ the human G3 test. **Migration**: the release that carries this PR runs `migrate
 
 - **Result:** PR open, awaiting G2/G3
 - **Deviations from spec:** none in scope or acceptance criteria; amendment A1 (explicit add
-  button) recorded; one implementation detail beyond the proposal is marked ⚠ (no new E2E)
+  button) recorded
 - **Harness follow-up:** none
