@@ -74,6 +74,7 @@
     "tags": {
       "label": "Tag",
       "placeholder": "Aggiungi un tag…",
+      "add": "Aggiungi tag",
       "remove": "Rimuovi il tag {{name}}",
       "limit": "Al massimo 10 tag per articolo.",
       "filterBy": "Mostra solo gli articoli con il tag {{name}}",
