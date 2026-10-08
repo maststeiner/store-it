@@ -7,6 +7,7 @@ public class Storage
 {
     private readonly List<Item> _items = [];
     private readonly List<StorageMember> _members = [];
+    private readonly List<Tag> _tags = [];
 
     public Guid Id { get; private set; }
     public string Name { get; private set; } = null!;
@@ -18,6 +19,9 @@ public class Storage
 
     /// <summary>SPEC-007: users besides the owner who work on this storage (ADR-008).</summary>
     public IReadOnlyCollection<StorageMember> Members => _members.AsReadOnly();
+
+    /// <summary>SPEC-011 D1/D2: the tags in use on this storage's items — never more, never fewer.</summary>
+    public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
 
     private Storage() { } // EF Core
 
@@ -118,16 +122,21 @@ public class Storage
         return true;
     }
 
-    /// <summary>AC-05/AC-06: add an item (validation inside <see cref="Item"/>).</summary>
+    /// <summary>
+    /// AC-05/AC-06: add an item (validation inside <see cref="Item"/>); SPEC-011 AC-01/AC-02:
+    /// with its tags, resolved against the storage's existing ones.
+    /// </summary>
     public Item AddItem(
         string name,
         decimal amount,
         Unit unit,
         DateOnly? expiryDate,
-        DateOnly? productionDate
+        DateOnly? productionDate,
+        IEnumerable<string>? tags = null
     )
     {
         var item = new Item(name, amount, unit, expiryDate, productionDate);
+        item.SetTags(ResolveTags(tags));
         _items.Add(item);
         return item;
     }
@@ -142,7 +151,8 @@ public class Storage
         decimal amount,
         Unit unit,
         DateOnly? expiryDate,
-        DateOnly? productionDate
+        DateOnly? productionDate,
+        IEnumerable<string>? tags = null
     )
     {
         var item = GetItem(itemId);
@@ -152,15 +162,76 @@ public class Storage
         if (amount == 0)
         {
             _items.Remove(item);
+            PruneUnusedTags();
             return false;
         }
 
         item.Update(name, amount, unit, expiryDate, productionDate);
+        item.SetTags(ResolveTags(tags));
+        PruneUnusedTags();
         return true;
     }
 
-    /// <summary>AC-09: delete an item regardless of amount.</summary>
-    public void RemoveItem(Guid itemId) => _items.Remove(GetItem(itemId));
+    /// <summary>AC-09: delete an item regardless of amount (SPEC-011 AC-04: its tags may go with it).</summary>
+    public void RemoveItem(Guid itemId)
+    {
+        _items.Remove(GetItem(itemId));
+        PruneUnusedTags();
+    }
+
+    /// <summary>SPEC-011 AC-05: every tag with the number of items carrying it, sorted by name.</summary>
+    public IReadOnlyList<(Tag Tag, int ItemCount)> GetTagsWithCounts() =>
+        _tags
+            .Select(tag => (tag, _items.Count(item => item.Tags.Contains(tag))))
+            .OrderBy(entry => entry.Item1.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    /// <summary>
+    /// SPEC-011 AC-02/AC-03 (D8): the tags for one item — blanks dropped, duplicates collapsed,
+    /// existing tags of the storage reused by normalized name, new ones created with the typed
+    /// spelling; more than <see cref="Tag.MaxPerItem"/> distinct tags is a validation error.
+    /// </summary>
+    private List<Tag> ResolveTags(IEnumerable<string>? rawTags)
+    {
+        var resolved = new List<Tag>();
+        foreach (var raw in rawTags ?? [])
+        {
+            var cleaned = Tag.Clean(raw);
+            if (cleaned.Length == 0)
+            {
+                continue;
+            }
+
+            var normalized = Tag.Normalize(cleaned);
+            if (resolved.Any(tag => tag.NormalizedName == normalized))
+            {
+                continue;
+            }
+
+            var existing = _tags.FirstOrDefault(tag => tag.NormalizedName == normalized);
+            if (existing is null)
+            {
+                existing = new Tag(cleaned);
+                _tags.Add(existing);
+            }
+
+            resolved.Add(existing);
+        }
+
+        if (resolved.Count > Tag.MaxPerItem)
+        {
+            throw new DomainValidationException(
+                "item.tags.tooMany",
+                $"An item may carry at most {Tag.MaxPerItem} tags."
+            );
+        }
+
+        return resolved;
+    }
+
+    /// <summary>SPEC-011 AC-04 (D2/D11): a tag no item carries is gone.</summary>
+    private void PruneUnusedTags() =>
+        _tags.RemoveAll(tag => !_items.Any(item => item.Tags.Contains(tag)));
 
     /// <summary>
     /// AC-10: items sorted by expiry date ascending; items without expiry date last

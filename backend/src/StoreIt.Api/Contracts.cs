@@ -79,7 +79,8 @@ public sealed record ItemResponse(
     Unit Unit,
     DateOnly? ExpiryDate,
     DateOnly? ProductionDate,
-    ExpiryStatus ExpiryStatus
+    ExpiryStatus ExpiryStatus,
+    IReadOnlyList<string> Tags
 )
 {
     public static ItemResponse From(ItemWithStatus itemWithStatus) =>
@@ -90,18 +91,27 @@ public sealed record ItemResponse(
             itemWithStatus.Unit,
             itemWithStatus.ExpiryDate,
             itemWithStatus.ProductionDate,
-            itemWithStatus.Status
+            itemWithStatus.Status,
+            itemWithStatus.Tags
         );
+}
+
+/// <summary>SPEC-011 AC-05: a storage tag for suggestions and the active filter.</summary>
+public sealed record TagResponse(string Name, int ItemCount)
+{
+    public static TagResponse From(TagWithCount tag) => new(tag.Name, tag.ItemCount);
 }
 
 public sealed record StorageRequest(string Name);
 
+/// <summary>SPEC-011 D9/EC-07: <c>Tags</c> travels with the item; absent means none.</summary>
 public sealed record ItemRequest(
     string Name,
     decimal Amount,
     Unit Unit,
     DateOnly? ExpiryDate,
-    DateOnly? ProductionDate
+    DateOnly? ProductionDate,
+    IReadOnlyList<string>? Tags = null
 );
 
 /// <summary>SPEC-007 AC-18: body of <c>PUT /api/v1/storages/{storageId}/owner</c>.</summary>

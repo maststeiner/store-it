@@ -70,6 +70,14 @@
         "other": "{{shown}} of {{total}} items"
       },
       "noMatches": "No items match “{{query}}”."
+    },
+    "tags": {
+      "label": "Tags",
+      "placeholder": "Add a tag…",
+      "remove": "Remove tag {{name}}",
+      "limit": "At most 10 tags per item.",
+      "filterBy": "Show only items tagged {{name}}",
+      "clearFilter": "Clear tag filter"
     }
   },
   "groups": {
@@ -131,6 +139,10 @@
       },
       "dates": {
         "missing": "Please provide at least one date (expiry or production)."
+      },
+      "tags": {
+        "tooMany": "An item may carry at most 10 tags.",
+        "tooLong": "A tag may have at most 30 characters."
       }
     },
     "request": {

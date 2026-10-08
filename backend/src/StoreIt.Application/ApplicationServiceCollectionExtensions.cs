@@ -17,6 +17,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<AddItemUseCase>();
         services.AddScoped<UpdateItemUseCase>();
         services.AddScoped<DeleteItemUseCase>();
+        services.AddScoped<GetStorageTagsUseCase>(); // SPEC-011
 
         services.AddScoped<ProvisionUserUseCase>();
         services.AddScoped<DeleteAccountUseCase>();

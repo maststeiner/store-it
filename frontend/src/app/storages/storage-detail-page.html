@@ -170,6 +170,10 @@
           [(ngModel)]="form.productionDate"
         />
       </div>
+      <div class="field field-tags">
+        <label for="item-tags">{{ 'items.tags.label' | translate }}</label>
+        <app-tag-input [(tags)]="form.tags" [suggestions]="tagNames()" inputId="item-tags" />
+      </div>
       <div class="form-actions">
         <button type="submit" class="btn-primary">{{ 'actions.add' | translate }}</button>
         <button type="button" class="btn-ghost" (click)="cancelAdd()">
@@ -209,23 +213,42 @@
         </button>
       }
     </div>
-    @if (searching()) {
-      <output class="count-hint search-result status-block">
-        @if (filteredItems().length === 0) {
-          {{ 'items.search.noMatches' | translate: { query: query().trim() } }}
-        } @else if (filteredItems().length === 1) {
-          {{ 'items.search.result.one' | translate: { total: items()?.length ?? 0 } }}
-        } @else {
-          {{
-            'items.search.result.other'
-              | translate: { shown: filteredItems().length, total: items()?.length ?? 0 }
-          }}
-        }
-      </output>
-    }
   }
 
-  @if (items()?.length === 0 && !searching()) {
+  @if (activeTag(); as tag) {
+    <div class="tag-filter">
+      <span class="tag-chip tag-chip-active">
+        <span>{{ tag }}</span>
+        <span class="tag-chip-count">· {{ activeTagCount() }}</span>
+        <button
+          type="button"
+          class="tag-chip-remove"
+          (click)="clearTagFilter()"
+          [attr.aria-label]="'items.tags.clearFilter' | translate"
+          [title]="'items.tags.clearFilter' | translate"
+        >
+          ✕
+        </button>
+      </span>
+    </div>
+  }
+
+  @if (filterActive()) {
+    <output class="count-hint search-result status-block">
+      @if (filteredItems().length === 0) {
+        {{ 'items.search.noMatches' | translate: { query: query().trim() || activeTag() } }}
+      } @else if (filteredItems().length === 1) {
+        {{ 'items.search.result.one' | translate: { total: items()?.length ?? 0 } }}
+      } @else {
+        {{
+          'items.search.result.other'
+            | translate: { shown: filteredItems().length, total: items()?.length ?? 0 }
+        }}
+      }
+    </output>
+  }
+
+  @if (items()?.length === 0 && !filterActive()) {
     <p class="empty-hint">{{ 'items.empty' | translate }}</p>
   }
 
@@ -280,6 +303,13 @@
                 [(ngModel)]="editModel.productionDate"
                 [attr.aria-label]="'items.form.production' | translate"
               />
+              <div class="item-edit-tags">
+                <app-tag-input
+                  [(tags)]="editModel.tags"
+                  [suggestions]="tagNames()"
+                  [inputId]="'item-tags-' + item.id"
+                />
+              </div>
               <span class="item-actions">
                 <button
                   type="submit"
@@ -306,6 +336,22 @@
           } @else {
             <div class="item-row">
               <span class="item-name">{{ item.name }}</span>
+              @if (item.tags.length > 0) {
+                <span class="item-tags">
+                  @for (tag of item.tags; track tag) {
+                    <button
+                      type="button"
+                      class="tag-chip"
+                      [class.tag-chip-active]="isActiveTag(tag)"
+                      [attr.aria-pressed]="isActiveTag(tag)"
+                      (click)="toggleTag(tag)"
+                      [title]="'items.tags.filterBy' | translate: { name: tag }"
+                    >
+                      {{ tag }}
+                    </button>
+                  }
+                </span>
+              }
               <span class="item-qty mono">
                 {{ item.amount }} {{ 'units.' + item.unit | translate }}
               </span>

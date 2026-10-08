@@ -9,8 +9,10 @@ public sealed class StorageRepository(StoreItDbContext dbContext) : IStorageRepo
     public Task<Storage?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
         dbContext
             .Storages.Include(s => s.Items)
+                .ThenInclude(i => i.Tags)
+            .Include(s => s.Tags)
             .Include(s => s.Members)
-            // Two collection includes → one query would multiply rows (Sonar S8733).
+            // Several collection includes → one query would multiply rows (Sonar S8733).
             .AsSplitQuery()
             .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
 
@@ -28,8 +30,10 @@ public sealed class StorageRepository(StoreItDbContext dbContext) : IStorageRepo
     public async Task<IReadOnlyList<Storage>> GetAllAsync(CancellationToken cancellationToken) =>
         await dbContext
             .Storages.Include(s => s.Items)
+                .ThenInclude(i => i.Tags)
+            .Include(s => s.Tags)
             .Include(s => s.Members)
-            // Two collection includes → one query would multiply rows (Sonar S8733).
+            // Several collection includes → one query would multiply rows (Sonar S8733).
             .AsSplitQuery()
             .OrderBy(s => s.Name)
             .ToListAsync(cancellationToken);

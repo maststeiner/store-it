@@ -64,6 +64,7 @@ public sealed class OpenApiContractTests(ApiTestFixture factory) : IClassFixture
         Assert.Equal("getAccount", OperationId(paths, "/api/v1/account", "get"));
         Assert.Equal("getUsageStatistics", OperationId(paths, "/api/v1/admin/statistics", "get")); // SPEC-008 AC-09
         Assert.Equal("getAbout", OperationId(paths, "/api/v1/about", "get")); // SPEC-009 AC-12
+        Assert.Equal("getTags", OperationId(paths, "/api/v1/storages/{storageId}/tags", "get")); // SPEC-011 AC-07
         Assert.Equal("getItems", OperationId(paths, "/api/v1/storages/{storageId}/items", "get"));
         Assert.Equal("addItem", OperationId(paths, "/api/v1/storages/{storageId}/items", "post"));
         Assert.Equal(

@@ -52,7 +52,36 @@ public static class StorageEndpoints
         MapUpdateItem(items);
         MapDeleteItem(items);
 
+        // SPEC-011 AC-05: the storage's tags (suggestions, active filter) — same access rule
+        // as the items, so it carries the Items tag in the contract.
+        MapGetTags(storages.MapGroup("/{storageId}/tags").WithTags("Items"));
+
         return app;
+    }
+
+    private static void MapGetTags(RouteGroupBuilder tags)
+    {
+        tags.MapGet(
+                "/",
+                async Task<Results<Ok<IEnumerable<TagResponse>>, ProblemHttpResult>> (
+                    string storageId,
+                    GetStorageTagsUseCase useCase,
+                    CancellationToken ct
+                ) =>
+                {
+                    if (!TryParseRouteId(storageId, nameof(storageId), out var id, out var problem))
+                    {
+                        return problem;
+                    }
+
+                    return TypedResults.Ok(
+                        (await useCase.ExecuteAsync(id, ct)).Select(TagResponse.From)
+                    );
+                }
+            )
+            .WithName("getTags")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static void MapGetStorages(RouteGroupBuilder storages)
@@ -218,7 +247,8 @@ public static class StorageEndpoints
                             request.Amount,
                             request.Unit,
                             request.ExpiryDate,
-                            request.ProductionDate
+                            request.ProductionDate,
+                            request.Tags
                         ),
                         ct
                     );
@@ -265,7 +295,8 @@ public static class StorageEndpoints
                             request.Amount,
                             request.Unit,
                             request.ExpiryDate,
-                            request.ProductionDate
+                            request.ProductionDate,
+                            request.Tags
                         ),
                         ct
                     );

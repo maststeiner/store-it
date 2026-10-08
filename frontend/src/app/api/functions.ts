@@ -27,6 +27,8 @@ export type { UpdateItem$Params as UpdateItem$Params } from './fn/items/update-i
 export { updateItem as updateItem } from './fn/items/update-item';
 export type { DeleteItem$Params as DeleteItem$Params } from './fn/items/delete-item';
 export { deleteItem as deleteItem } from './fn/items/delete-item';
+export type { GetTags$Params as GetTags$Params } from './fn/items/get-tags';
+export { getTags as getTags } from './fn/items/get-tags';
 export type { GetAccount$Params as GetAccount$Params } from './fn/account/get-account';
 export { getAccount as getAccount } from './fn/account/get-account';
 export type { DeleteAccount$Params as DeleteAccount$Params } from './fn/account/delete-account';
