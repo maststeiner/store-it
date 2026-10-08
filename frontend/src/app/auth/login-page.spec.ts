@@ -76,7 +76,7 @@ describe('LoginPage', () => {
     await fixture.whenStable();
 
     const notice = (fixture.nativeElement as HTMLElement).querySelector('.login-notice');
-    expect(notice?.getAttribute('role')).toBe('status');
+    expect(notice?.tagName).toBe('OUTPUT'); // implicit status role
     expect(notice?.textContent).toContain('Your account and all your data have been deleted.');
   });
 

@@ -232,8 +232,12 @@ describe('StorageListPage', () => {
       (fixture.nativeElement as HTMLElement).querySelectorAll('.storage-card .card-open'),
     );
     const badge = (card: Element) => card.querySelector('.shared-badge');
+    // The emoji is decorative (aria-hidden); the accessible name is the visually hidden text.
+    const badgeText = (card: Element) =>
+      badge(card)?.querySelector('.sr-only')?.textContent?.trim();
     expect(badge(cards[0])).toBeNull();
-    expect(badge(cards[1])?.getAttribute('aria-label')).toBe('Shared storage');
-    expect(badge(cards[2])?.getAttribute('aria-label')).toBe('Shared storage');
+    expect(badgeText(cards[1])).toBe('Shared storage');
+    expect(badgeText(cards[2])).toBe('Shared storage');
+    expect(badge(cards[1])?.querySelector('[aria-hidden="true"]')?.textContent?.trim()).toBe('👥');
   });
 });

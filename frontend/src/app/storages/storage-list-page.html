@@ -69,13 +69,10 @@
               <div class="storage-name">
                 {{ storage.name }}
                 @if (!storage.isOwner || storage.memberCount > 0) {
-                  <span
-                    class="shared-badge"
-                    role="img"
-                    [attr.aria-label]="'sharing.sharedBadge' | translate"
-                    [title]="'sharing.sharedBadge' | translate"
-                    >👥</span
-                  >
+                  <span class="shared-badge" [title]="'sharing.sharedBadge' | translate">
+                    <span aria-hidden="true">👥</span>
+                    <span class="sr-only">{{ 'sharing.sharedBadge' | translate }}</span>
+                  </span>
                 }
               </div>
               <div class="storage-meta">

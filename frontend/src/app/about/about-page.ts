@@ -179,8 +179,11 @@ function shortRevision(revision: string | null): string | null {
   return revision ? revision.slice(0, SHORT_REVISION_LENGTH) : null;
 }
 
-/** ".NET 10.0.2" → "10.0.2"; anything unexpected is shown as given. */
+/**
+ * ".NET 10.0.2" → "10.0.2": `RuntimeInformation.FrameworkDescription` is "<product> <version>",
+ * so the version is the last token; a single-token description is shown as given.
+ */
 function runtimeVersionOf(runtime: string): string {
-  const match = /(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)/.exec(runtime);
-  return match ? match[1] : runtime;
+  const tokens = runtime.trim().split(/\s+/);
+  return tokens.length > 1 ? (tokens.at(-1) ?? runtime) : runtime;
 }

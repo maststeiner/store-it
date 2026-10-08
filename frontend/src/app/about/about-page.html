@@ -25,7 +25,7 @@
         } @else if (apiError()) {
           <span class="count-hint">—</span>
         } @else {
-          <span class="count-hint" role="status">{{ 'about.version.loading' | translate }}</span>
+          <output class="count-hint">{{ 'about.version.loading' | translate }}</output>
         }
       </dd>
 
@@ -36,7 +36,7 @@
     </dl>
 
     @if (versionMismatch()) {
-      <p class="about-notice" role="status">{{ 'about.versionMismatch' | translate }}</p>
+      <output class="about-notice status-block">{{ 'about.versionMismatch' | translate }}</output>
     }
     @if (apiError(); as error) {
       <p class="form-error" role="alert">{{ error }}</p>

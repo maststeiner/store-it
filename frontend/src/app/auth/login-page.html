@@ -3,7 +3,7 @@
     <h1>{{ 'auth.login.title' | translate }}</h1>
     <p class="login-subtitle">{{ 'auth.login.subtitle' | translate }}</p>
     @if (accountDeleted) {
-      <p class="login-notice" role="status">{{ 'auth.deleteAccount.done' | translate }}</p>
+      <output class="login-notice status-block">{{ 'auth.deleteAccount.done' | translate }}</output>
     }
     <div class="login-actions">
       <button class="btn-provider" type="button" (click)="signIn('microsoft')">
