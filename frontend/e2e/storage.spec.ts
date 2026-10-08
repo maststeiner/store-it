@@ -44,10 +44,20 @@ test('add an item and see it grouped by expiry status', async ({ page }) => {
   await page.locator('#item-name').fill('Yogurt');
   await page.locator('#item-amount').fill('2');
   await page.locator('#item-expiry').fill(yesterday);
-  await page.getByRole('button', { name: /add/i }).click();
+  // SPEC-011: a tag, added with the tag field's own button (amendment A1)
+  await page.locator('#item-tags').fill('Dairy');
+  await page.getByRole('button', { name: /add tag/i }).click();
+  // The item's own Add — exact, so the tag button above does not match
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
 
-  // Assert: item appears in the "expired" group
+  // Assert: item appears in the "expired" group, with its tag chip
   await expect(page.locator('.group.expired')).toContainText('Yogurt');
+  await expect(page.locator('.group.expired .tag-chip')).toHaveText('Dairy');
+
+  // SPEC-011 AC-13: the chip filters the storage by that tag
+  await page.locator('.group.expired .tag-chip').click();
+  await expect(page.locator('.tag-filter')).toContainText('Dairy');
+  await expect(page.locator('.item-row')).toHaveCount(1);
 });
 
 test('reject an item without any date (server validation surfaces in the UI)', async ({ page }) => {
@@ -63,7 +73,7 @@ test('reject an item without any date (server validation surfaces in the UI)', a
   await page.getByRole('button', { name: /new item/i }).click();
   await page.locator('#item-name').fill('Flour');
   await page.locator('#item-amount').fill('1');
-  await page.getByRole('button', { name: /add/i }).click();
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
 
   await expect(page.locator('.add-form .form-error')).toBeVisible();
 });
