@@ -1,6 +1,6 @@
 # Spec: Tags on items — assign, suggest, filter by tag
 
-> **Status:** Draft — waiting for Marcel Steiner's G1 review (issue #220)
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-08 (issue #220)
 > **Sprint:** 2026-S41
 > **Author:** Claude Fable 5.1 (analyst/developer agent), from Marcel Steiner's request and answers (issue #220, 2026-10-08)
 > **Last updated:** 2026-10-08
@@ -40,7 +40,7 @@ the whole spec is a separate step (gate table).
 | D6 | **Filter by clicking a tag chip** on an item, within the storage, combinable with the text search (AND). The text search does **not** match tags. | 6b |
 | D7 | **Plain text chips, no colours.** | 7 |
 
-### Decisions proposed by the draft (to be confirmed at G1)
+### Decisions taken by the draft (confirmed at G1, 2026-10-08)
 
 | # | Decision | Rationale / alternative |
 |---|----------|-------------------------|
@@ -223,6 +223,6 @@ the whole spec is a separate step (gate table).
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-10-08 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
