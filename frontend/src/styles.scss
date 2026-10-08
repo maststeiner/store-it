@@ -503,6 +503,96 @@ h1 {
   margin: 0 0 22px;
 }
 
+/* SPEC-011 — tags: chips on rows, the active filter, the input in the forms */
+.item-tags,
+.tag-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.tag-chips {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel-tint);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+button.tag-chip:hover,
+.tag-chip-active {
+  border-color: var(--accent);
+  background: rgba(62, 156, 147, 0.22);
+}
+.tag-chip-editable,
+.tag-chip-active {
+  cursor: default;
+}
+.tag-chip-count {
+  color: var(--text-soft);
+}
+.tag-chip-remove {
+  border: 0;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0 0 0 2px;
+  line-height: 1;
+}
+.tag-chip-remove:hover {
+  color: var(--text);
+}
+.tag-filter {
+  margin-bottom: 10px;
+}
+.tag-input {
+  position: relative;
+}
+.tag-suggestions {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(22, 52, 58, 0.14);
+}
+.tag-suggestions li {
+  padding: 6px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.tag-suggestions li:hover,
+.tag-suggestions li.active {
+  background: var(--panel-tint);
+}
+.field-tags {
+  grid-column: 1 / -1;
+}
+.item-edit-tags {
+  flex-basis: 100%;
+}
+
 /* ── Item groups ────────────────────────────── */
 .group {
   margin-bottom: 36px;

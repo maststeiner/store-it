@@ -7,5 +7,6 @@ export interface ItemRequest {
   expiryDate: (string | null);
   name: string;
   productionDate: (string | null);
+  tags?: (Array<string> | null);
   unit: Unit;
 }

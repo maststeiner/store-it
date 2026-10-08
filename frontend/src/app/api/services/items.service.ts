@@ -16,7 +16,10 @@ import { deleteItem } from '../fn/items/delete-item';
 import { DeleteItem$Params } from '../fn/items/delete-item';
 import { getItems } from '../fn/items/get-items';
 import { GetItems$Params } from '../fn/items/get-items';
+import { getTags } from '../fn/items/get-tags';
+import { GetTags$Params } from '../fn/items/get-tags';
 import { ItemResponse } from '../models/item-response';
+import { TagResponse } from '../models/tag-response';
 import { updateItem } from '../fn/items/update-item';
 import { UpdateItem$Params } from '../fn/items/update-item';
 
@@ -131,6 +134,33 @@ export class ItemsService extends BaseService {
     const resp = this.deleteItem$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<void>): void => r.body)
+    );
+  }
+
+  /** Path part for operation `getTags()` */
+  static readonly GetTagsPath = '/api/v1/storages/{storageId}/tags';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `getTags()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getTags$Response(params: GetTags$Params, context?: HttpContext): Observable<StrictHttpResponse<Array<TagResponse>>> {
+    const obs = getTags(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `getTags$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getTags(params: GetTags$Params, context?: HttpContext): Observable<Array<TagResponse>> {
+    const resp = this.getTags$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<Array<TagResponse>>): Array<TagResponse> => r.body)
     );
   }
 

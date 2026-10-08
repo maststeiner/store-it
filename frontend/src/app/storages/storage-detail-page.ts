@@ -12,13 +12,14 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
-import { ItemRequest, ItemResponse, StorageResponse, Unit } from '../api/models';
+import { ItemRequest, ItemResponse, StorageResponse, TagResponse, Unit } from '../api/models';
 import { UNIT } from '../api/models/unit-array';
 import { ItemsService, SharingService, StoragesService } from '../api/services';
 import { ErrorMessages } from '../core/error-messages';
 import { LanguageService } from '../core/language.service';
 import { TranslatePipe } from '../core/translate';
 import { ConfirmDialog } from '../shared/confirm-dialog';
+import { TagInput } from '../shared/tag-input';
 import { matchesQuery, queryWords } from './item-search';
 import { SharingPanel } from './sharing-panel';
 import { StorageDeleteDialog } from './storage-delete-dialog';
@@ -29,10 +30,12 @@ interface ItemFormModel {
   unit: Unit;
   expiryDate: string;
   productionDate: string;
+  /** SPEC-011 D9: the tags travel with the item. */
+  tags: string[];
 }
 
 function emptyForm(): ItemFormModel {
-  return { name: '', amount: null, unit: 'Piece', expiryDate: '', productionDate: '' };
+  return { name: '', amount: null, unit: 'Piece', expiryDate: '', productionDate: '', tags: [] };
 }
 
 @Component({
@@ -45,6 +48,7 @@ function emptyForm(): ItemFormModel {
     ConfirmDialog,
     SharingPanel,
     StorageDeleteDialog,
+    TagInput,
   ],
   templateUrl: './storage-detail-page.html',
 })
@@ -76,11 +80,34 @@ export class StorageDetailPage implements OnInit {
   /** True while the query carries at least one word (EC-01: whitespace is not a query). */
   protected readonly searching = computed(() => queryWords(this.query()).length > 0);
 
-  /** SPEC-010 AC-04/AC-05: the filter runs before grouping, on the loaded list only (AC-06). */
+  /** SPEC-011 D10: the storage's tags (canonical spelling + item count) for suggestions and the filter. */
+  protected readonly tags = signal<TagResponse[]>([]);
+  protected readonly tagNames = computed(() => this.tags().map((tag) => tag.name));
+  /** SPEC-011 D12: the one active tag filter, or null. */
+  protected readonly activeTag = signal<string | null>(null);
+  protected readonly activeTagCount = computed(() => {
+    const active = this.activeTag();
+    return active === null
+      ? 0
+      : (this.tags().find((tag) => sameTag(tag.name, active))?.itemCount ?? 0);
+  });
+
+  /** Either filter active → result line (SPEC-010 AC-07, SPEC-011 AC-15). */
+  protected readonly filterActive = computed(() => this.searching() || this.activeTag() !== null);
+
+  /**
+   * SPEC-010 AC-04/AC-05 and SPEC-011 AC-13/AC-15: the filters run before grouping, on the
+   * loaded list only (AC-06) — text query AND active tag.
+   */
   protected readonly filteredItems = computed(() => {
     const items = this.items() ?? [];
     const query = this.query();
-    return this.searching() ? items.filter((item) => matchesQuery(item.name, query)) : items;
+    const active = this.activeTag();
+    return items.filter(
+      (item) =>
+        (!this.searching() || matchesQuery(item.name, query)) &&
+        (active === null || item.tags.some((tag) => sameTag(tag, active))),
+    );
   });
 
   /** Pure presentation: grouping relies solely on the API-computed expiryStatus. */
@@ -128,6 +155,22 @@ export class StorageDetailPage implements OnInit {
   ngOnInit(): void {
     this.loadStorage();
     this.loadItems();
+    this.loadTags();
+  }
+
+  /** SPEC-011 AC-13/AC-14: a row chip toggles the tag filter; another chip replaces it. */
+  protected toggleTag(tag: string): void {
+    const active = this.activeTag();
+    this.activeTag.set(active !== null && sameTag(active, tag) ? null : tag);
+  }
+
+  protected clearTagFilter(): void {
+    this.activeTag.set(null);
+  }
+
+  protected isActiveTag(tag: string): boolean {
+    const active = this.activeTag();
+    return active !== null && sameTag(active, tag);
   }
 
   protected openAdd(): void {
@@ -189,6 +232,7 @@ export class StorageDetailPage implements OnInit {
           this.cancelAdd();
           this.loadItems();
           this.loadStorage();
+          this.loadTags();
         },
         // AC-04: a validation error keeps the form open with the message.
         error: (error: unknown) => this.formError.set(this.errors.messageFor(error)),
@@ -204,6 +248,7 @@ export class StorageDetailPage implements OnInit {
       unit: item.unit,
       expiryDate: item.expiryDate?.slice(0, 10) ?? '',
       productionDate: item.productionDate?.slice(0, 10) ?? '',
+      tags: [...item.tags],
     };
   }
 
@@ -225,6 +270,7 @@ export class StorageDetailPage implements OnInit {
           this.editItemId.set(null);
           this.loadItems();
           this.loadStorage();
+          this.loadTags();
         },
         error: (error: unknown) => this.editError.set(this.errors.messageFor(error)),
       });
@@ -237,6 +283,7 @@ export class StorageDetailPage implements OnInit {
         next: () => {
           this.loadItems();
           this.loadStorage();
+          this.loadTags();
         },
         error: (error: unknown) => this.loadError.set(this.errors.messageFor(error)),
       });
@@ -336,6 +383,20 @@ export class StorageDetailPage implements OnInit {
     });
   }
 
+  /** SPEC-011 D10; EC-04: a filter on a tag that no longer exists is cleared. */
+  private loadTags(): void {
+    this.itemsApi.getTags({ storageId: this.storageId }).subscribe({
+      next: (tags) => {
+        this.tags.set(tags);
+        const active = this.activeTag();
+        if (active !== null && !tags.some((tag) => sameTag(tag.name, active))) {
+          this.activeTag.set(null);
+        }
+      },
+      error: () => this.tags.set([]),
+    });
+  }
+
   private loadItems(): void {
     this.itemsApi.getItems({ storageId: this.storageId }).subscribe({
       next: (items) => {
@@ -353,6 +414,12 @@ export class StorageDetailPage implements OnInit {
       unit: model.unit,
       expiryDate: model.expiryDate || null,
       productionDate: model.productionDate || null,
+      tags: model.tags,
     };
   }
+}
+
+/** Tag identity is case-insensitive (SPEC-011 D4); the API owns the spelling. */
+function sameTag(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase();
 }

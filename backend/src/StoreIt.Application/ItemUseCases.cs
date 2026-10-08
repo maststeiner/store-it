@@ -11,7 +11,8 @@ public sealed record ItemWithStatus(
     Unit Unit,
     DateOnly? ExpiryDate,
     DateOnly? ProductionDate,
-    ExpiryStatus Status
+    ExpiryStatus Status,
+    IReadOnlyList<string> Tags
 )
 {
     public static ItemWithStatus From(Item item, DateOnly today) =>
@@ -22,8 +23,31 @@ public sealed record ItemWithStatus(
             item.Unit,
             item.ExpiryDate,
             item.ProductionDate,
-            item.GetExpiryStatus(today)
+            item.GetExpiryStatus(today),
+            // SPEC-011 AC-01: canonical spelling, sorted case-insensitively.
+            item.Tags.Select(tag => tag.Name)
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                .ToList()
         );
+}
+
+/// <summary>SPEC-011 AC-05: a storage tag with the number of items carrying it.</summary>
+public sealed record TagWithCount(string Name, int ItemCount);
+
+/// <summary>SPEC-011 AC-05 (D10): the storage's tags for suggestions and the active filter.</summary>
+public sealed class GetStorageTagsUseCase(IStorageRepository repository)
+{
+    public async Task<IReadOnlyList<TagWithCount>> ExecuteAsync(
+        Guid storageId,
+        CancellationToken cancellationToken
+    )
+    {
+        var storage = await repository.GetRequiredAsync(storageId, cancellationToken);
+        return storage
+            .GetTagsWithCounts()
+            .Select(entry => new TagWithCount(entry.Tag.Name, entry.ItemCount))
+            .ToList();
+    }
 }
 
 /// <summary>
@@ -55,7 +79,8 @@ public sealed record AddItemInput(
     decimal Amount,
     Unit Unit,
     DateOnly? ExpiryDate,
-    DateOnly? ProductionDate
+    DateOnly? ProductionDate,
+    IReadOnlyList<string>? Tags = null
 );
 
 /// <summary>AC-05/AC-06: add an item to a storage.</summary>
@@ -69,7 +94,8 @@ public sealed class AddItemUseCase(IStorageRepository repository)
             command.Amount,
             command.Unit,
             command.ExpiryDate,
-            command.ProductionDate
+            command.ProductionDate,
+            command.Tags
         );
         await repository.SaveChangesAsync(cancellationToken);
         return item;
@@ -84,7 +110,8 @@ public sealed record UpdateItemInput(
     decimal Amount,
     Unit Unit,
     DateOnly? ExpiryDate,
-    DateOnly? ProductionDate
+    DateOnly? ProductionDate,
+    IReadOnlyList<string>? Tags = null
 );
 
 /// <summary>
@@ -104,7 +131,8 @@ public sealed class UpdateItemUseCase(IStorageRepository repository)
             command.Amount,
             command.Unit,
             command.ExpiryDate,
-            command.ProductionDate
+            command.ProductionDate,
+            command.Tags
         );
         await repository.SaveChangesAsync(cancellationToken);
         return kept;

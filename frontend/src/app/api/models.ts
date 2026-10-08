@@ -18,6 +18,7 @@ export type { StorageMemberResponse } from './models/storage-member-response';
 export type { StorageRequest } from './models/storage-request';
 export type { StorageResponse } from './models/storage-response';
 export type { StorageStatisticsResponse } from './models/storage-statistics-response';
+export type { TagResponse } from './models/tag-response';
 export type { ThirdPartyComponentResponse } from './models/third-party-component-response';
 export type { TransferOwnershipRequest } from './models/transfer-ownership-request';
 export type { Unit } from './models/unit';

@@ -6,12 +6,17 @@ namespace StoreIt.Domain;
 /// </summary>
 public class Item
 {
+    private readonly List<Tag> _tags = [];
+
     public Guid Id { get; private set; }
     public string Name { get; private set; } = null!;
     public decimal Amount { get; private set; }
     public Unit Unit { get; private set; }
     public DateOnly? ExpiryDate { get; private set; }
     public DateOnly? ProductionDate { get; private set; }
+
+    /// <summary>SPEC-011: the storage's tags on this item (D4: at most <see cref="Tag.MaxPerItem"/>).</summary>
+    public IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
 
     private Item() { } // EF Core
 
@@ -45,6 +50,13 @@ public class Item
         ChangeAmount(amount);
         SetUnit(unit);
         SetDates(expiryDate, productionDate);
+    }
+
+    /// <summary>SPEC-011 AC-01: replace the item's tags (resolved by the storage, D2/AC-02).</summary>
+    internal void SetTags(IReadOnlyList<Tag> tags)
+    {
+        _tags.Clear();
+        _tags.AddRange(tags);
     }
 
     private void SetUnit(Unit unit)

@@ -838,6 +838,85 @@
         ]
       }
     },
+    "/api/v1/storages/{storageId}/tags": {
+      "get": {
+        "tags": [
+          "Items"
+        ],
+        "operationId": "getTags",
+        "parameters": [
+          {
+            "name": "storageId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookieSession": [ ]
+          }
+        ]
+      }
+    },
     "/api/v1/account": {
       "delete": {
         "tags": [
@@ -1948,6 +2027,15 @@
               "string"
             ],
             "format": "date"
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -1959,7 +2047,8 @@
           "unit",
           "expiryDate",
           "productionDate",
-          "expiryStatus"
+          "expiryStatus",
+          "tags"
         ],
         "type": "object",
         "properties": {
@@ -1993,6 +2082,12 @@
           },
           "expiryStatus": {
             "$ref": "#/components/schemas/ExpiryStatus"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -2182,6 +2277,22 @@
             "format": "int32"
           },
           "itemsPerStorageMax": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "TagResponse": {
+        "required": [
+          "name",
+          "itemCount"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "itemCount": {
             "type": "integer",
             "format": "int32"
           }
