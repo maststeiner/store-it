@@ -221,6 +221,17 @@ describe('AboutPage', () => {
     expect(text(platform[1] as HTMLElement, '.about-component-license')).toBe('BSD-2-Clause');
   });
 
+  it('D4: a runtime description without a version token is shown as given', async () => {
+    const fixture = await setup();
+    http.expectOne(ABOUT_URL).flush({ ...API_ABOUT, runtime: 'Mono' });
+    http.expectOne(WEB_NOTICES_URL).flush(WEB_NOTICES);
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const dotnet = el.querySelector('ul[data-group="platform"] .about-component') as HTMLElement;
+    expect(text(dotnet, '.about-component-version')).toBe('Mono');
+  });
+
   it('AC-11: keeps the page when the API refuses — error line, web and platform groups stay', async () => {
     const fixture = await setup();
     http.expectOne(ABOUT_URL).flush({}, { status: 500, statusText: 'Server Error' });

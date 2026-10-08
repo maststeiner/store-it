@@ -185,5 +185,5 @@ function shortRevision(revision: string | null): string | null {
  */
 function runtimeVersionOf(runtime: string): string {
   const tokens = runtime.trim().split(/\s+/);
-  return tokens.length > 1 ? tokens[tokens.length - 1] : runtime;
+  return tokens.length > 1 ? (tokens.at(-1) ?? runtime) : runtime;
 }
