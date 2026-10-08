@@ -161,7 +161,7 @@ describe('AboutPage', () => {
 
     const el = fixture.nativeElement as HTMLElement;
     expect(text(el, '.about-notice')).toBe('Web client and API run different versions.');
-    expect(el.querySelector('.about-notice')?.getAttribute('role')).toBe('status');
+    expect(el.querySelector('.about-notice')?.tagName).toBe('OUTPUT'); // implicit status role
   });
 
   it('AC-07: shows the MIT license with the copyright line and a link to the repository', async () => {

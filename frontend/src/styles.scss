@@ -222,6 +222,14 @@ h1 {
   font-size: 0.95rem;
 }
 
+/* Status lines are <output> elements (implicit status role, Sonar S6819); <output> is inline
+   by default, so the ones that replaced a <p> opt into block layout. Margins come from the
+   element's own class (rules below), so this must stay above them. */
+.status-block {
+  display: block;
+  margin: 1em 0;
+}
+
 .btn-primary {
   margin-left: auto;
   background: var(--accent);
