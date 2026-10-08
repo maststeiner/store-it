@@ -39,5 +39,13 @@ public sealed class DomainExceptionHandlerTests
             Written = context.ProblemDetails;
             return ValueTask.CompletedTask;
         }
+
+        // The interface's default TryWriteAsync negotiates a writer against the request's
+        // Accept header; a bare DefaultHttpContext has none, so answer directly here.
+        public ValueTask<bool> TryWriteAsync(ProblemDetailsContext context)
+        {
+            Written = context.ProblemDetails;
+            return ValueTask.FromResult(true);
+        }
     }
 }
