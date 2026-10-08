@@ -24,6 +24,7 @@ const TRANSLATIONS = {
     tags: {
       label: 'Tags',
       placeholder: 'Add a tag…',
+      add: 'Add tag',
       remove: 'Remove tag {{name}}',
       limit: 'At most 10 tags per item.',
       filterBy: 'Show only items tagged {{name}}',
@@ -677,7 +678,7 @@ describe('StorageDetailPage', () => {
       name.value = 'Half typed';
       name.dispatchEvent(new Event('input'));
 
-      (element.querySelector('.add-form .btn-ghost') as HTMLButtonElement).click();
+      (element.querySelector('.add-form .form-actions .btn-ghost') as HTMLButtonElement).click();
       fixture.detectChanges();
       await fixture.whenStable();
       expect(element.querySelector('form.add-form')).toBeNull();
@@ -1099,8 +1100,9 @@ describe('StorageDetailPage', () => {
       expect(tagField).not.toBeNull();
       tagField.value = 'Dosen, neu';
       tagField.dispatchEvent(new Event('input', { bubbles: true }));
-      // Leaving the field commits the text still in it (like clicking Save does in a browser).
-      tagField.dispatchEvent(new Event('blur'));
+      fixture.detectChanges();
+      // "Dosen" was added by the comma; "neu" is added with the tag field's own button (A1).
+      (element.querySelector('.field-tags .tag-add') as HTMLButtonElement).click();
       fixture.detectChanges();
       const name = element.querySelector('#item-name') as HTMLInputElement;
       name.value = 'Erbsen';

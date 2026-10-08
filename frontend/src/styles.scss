@@ -560,6 +560,16 @@ button.tag-chip:hover,
 }
 .tag-input {
   position: relative;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tag-input .inline-input {
+  flex: 1;
+}
+.tag-add {
+  flex: none;
+  white-space: nowrap;
 }
 .tag-suggestions {
   position: absolute;

@@ -53,6 +53,14 @@ the whole spec is a separate step (gate table).
 
 ---
 
+## Amendments (post-freeze)
+
+| # | Date | Change |
+|---|------|--------|
+| A1 | 2026-10-08 | **D13 — explicit *Add* button for tags.** The tag field gets its own *Add tag* button right after it (`items.tags.add`), disabled while the field is empty; the button, Enter or `,` add the typed text. Text left in the field is **not** committed when the field loses focus — the first implementation did that, which made the item's *Add* button look as if it also added the tag. Requested by Marcel Steiner during G2: "Einen eigenen Button um Tags hinzuzufügen, gleich hinter dem Textfeld für Tags. Dasselbe wie für das Hinzufügen der Items ist verwirrend." Scope and acceptance criteria unchanged (AC-09 names Enter and `,`; the button is an additional way). |
+
+---
+
 ## Acceptance Criteria (EARS Notation)
 
 ### Backend — tags on items
@@ -188,7 +196,7 @@ the whole spec is a separate step (gate table).
       the last chip, locked at 10); the storage page holds `tags`, `activeTag`, `filterActive` and
       combines the tag filter with SPEC-010's `filteredItems`; `getTags` is loaded with the items
       and after every add / save / delete (EC-04 clears a vanished active tag).
-      ⚠ Text left in the tag field is committed on blur, so a tag typed just before *Save* is not lost.
+      Text left in the tag field is not committed on blur (amendment A1): the field has its own *Add* button.
 - [x] Tests: `StorageTagsTests` (13, domain), `ItemTagsTests` (11, service incl. member access,
       cascade, 400s), `OpenApiContractTests` (`getTags`); web `tag-input.spec.ts` (10),
       `storage-detail-page.spec.ts` → block "tags (SPEC-011)" (8), `i18n.spec.ts`. ⚠ No new E2E:
@@ -213,7 +221,7 @@ the whole spec is a separate step (gate table).
 | AC-06 | `ItemTagsTests.AddItem_WithoutTagsField_HasNoTags` (EC-07) | ✅ |
 | AC-07 | `OpenApiContractTests` (`getTags`); CI job *API contract gate* (additive) | ✅ · ⏳ CI |
 | AC-08 | `tag-input.spec.ts` → "AC-08: shows the item tags as chips …"; page → "AC-08 / AC-11: the add form carries a tag input …", "… the inline edit starts with the item tags …" | ✅ |
-| AC-09 | `tag-input.spec.ts` → "Enter adds the typed text …", "a comma separates tags …" (EC-09), "lists existing tags that match …", "a suggestion is picked …", "D4: typing an existing tag in another case …" | ✅ |
+| AC-09 | `tag-input.spec.ts` → "Enter adds the typed text …", "a comma separates tags …" (EC-09), "lists existing tags that match …", "a suggestion is picked …", "D4: typing an existing tag in another case …", "A1: the Add button next to the field adds the typed text …", "A1: leaving the field commits nothing …" | ✅ |
 | AC-10 | `tag-input.spec.ts` → "AC-10: at ten tags the input is disabled …"; page → "AC-10: the API refusal for tags is shown in the form" | ✅ |
 | AC-11 | page → add form sends `tags: ['Dosen', 'neu']`, inline edit sends the changed set | ✅ |
 | AC-12 | page → "AC-12: shows the tags of an item as chips …" | ✅ |
