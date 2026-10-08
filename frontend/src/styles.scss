@@ -555,8 +555,11 @@ button.tag-chip:hover,
 .tag-chip-remove:hover {
   color: var(--text);
 }
-.tag-filter {
-  margin-bottom: 10px;
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
 }
 .tag-input {
   position: relative;
