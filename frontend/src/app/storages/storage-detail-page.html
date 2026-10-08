@@ -210,7 +210,7 @@
       }
     </div>
     @if (searching()) {
-      <p class="count-hint search-result" role="status">
+      <output class="count-hint search-result status-block">
         @if (filteredItems().length === 0) {
           {{ 'items.search.noMatches' | translate: { query: query().trim() } }}
         } @else if (filteredItems().length === 1) {
@@ -221,7 +221,7 @@
               | translate: { shown: filteredItems().length, total: items()?.length ?? 0 }
           }}
         }
-      </p>
+      </output>
     }
   }
 

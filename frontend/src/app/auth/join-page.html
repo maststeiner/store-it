@@ -21,7 +21,7 @@
         <a class="btn-ghost" routerLink="/storages">{{ 'actions.cancel' | translate }}</a>
       </div>
     } @else {
-      <p class="login-subtitle" role="status">{{ 'sharing.join.loading' | translate }}</p>
+      <output class="login-subtitle status-block">{{ 'sharing.join.loading' | translate }}</output>
       @if (error(); as message) {
         <p class="form-error" role="alert">{{ message }}</p>
       }

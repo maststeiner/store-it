@@ -801,7 +801,8 @@ describe('StorageDetailPage', () => {
       await type(fixture, element, 'milch');
       await type(fixture, element, 'milch b');
 
-      http.verify(); // no outstanding request beyond the initial load
+      // No request beyond the initial load: verify() throws on an unexpected one.
+      expect(() => http.verify()).not.toThrow();
       element.remove();
     });
 
@@ -812,7 +813,7 @@ describe('StorageDetailPage', () => {
 
       await type(fixture, element, 'milch');
       expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('2 of 4 items');
-      expect(element.querySelector('.search-result')?.getAttribute('role')).toBe('status');
+      expect(element.querySelector('.search-result')?.tagName).toBe('OUTPUT'); // implicit status role
 
       await type(fixture, element, 'käse');
       expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('1 of 4 items');

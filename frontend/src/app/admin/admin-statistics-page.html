@@ -14,7 +14,7 @@
   }
 
   @if (loading() && !statistics()) {
-    <p class="count-hint" role="status">{{ 'admin.statistics.loading' | translate }}</p>
+    <output class="count-hint status-block">{{ 'admin.statistics.loading' | translate }}</output>
   }
 
   @if (statistics()) {
