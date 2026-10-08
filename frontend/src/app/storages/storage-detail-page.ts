@@ -83,30 +83,26 @@ export class StorageDetailPage implements OnInit {
   /** SPEC-011 D10: the storage's tags (canonical spelling + item count) for suggestions and the filter. */
   protected readonly tags = signal<TagResponse[]>([]);
   protected readonly tagNames = computed(() => this.tags().map((tag) => tag.name));
-  /** SPEC-011 D12: the one active tag filter, or null. */
-  protected readonly activeTag = signal<string | null>(null);
-  protected readonly activeTagCount = computed(() => {
-    const active = this.activeTag();
-    return active === null
-      ? 0
-      : (this.tags().find((tag) => sameTag(tag.name, active))?.itemCount ?? 0);
-  });
+  /** SPEC-011 A2: the selected tags of the filter (any number; empty = no tag filter). */
+  protected readonly selectedTags = signal<string[]>([]);
+  protected readonly tagFilterActive = computed(() => this.selectedTags().length > 0);
 
   /** Either filter active → result line (SPEC-010 AC-07, SPEC-011 AC-15). */
-  protected readonly filterActive = computed(() => this.searching() || this.activeTag() !== null);
+  protected readonly filterActive = computed(() => this.searching() || this.tagFilterActive());
 
   /**
-   * SPEC-010 AC-04/AC-05 and SPEC-011 AC-13/AC-15: the filters run before grouping, on the
-   * loaded list only (AC-06) — text query AND active tag.
+   * SPEC-010 AC-04/AC-05 and SPEC-011 AC-13/AC-15 (A2): the filters run before grouping, on
+   * the loaded list only (AC-06) — text query AND (any of the selected tags, OR).
    */
   protected readonly filteredItems = computed(() => {
     const items = this.items() ?? [];
     const query = this.query();
-    const active = this.activeTag();
+    const selected = this.selectedTags();
     return items.filter(
       (item) =>
         (!this.searching() || matchesQuery(item.name, query)) &&
-        (active === null || item.tags.some((tag) => sameTag(tag, active))),
+        (selected.length === 0 ||
+          item.tags.some((tag) => selected.some((chosen) => sameTag(tag, chosen)))),
     );
   });
 
@@ -158,19 +154,24 @@ export class StorageDetailPage implements OnInit {
     this.loadTags();
   }
 
-  /** SPEC-011 AC-13/AC-14: a row chip toggles the tag filter; another chip replaces it. */
+  /** SPEC-011 A2: a chip in the tag list (or on a row) selects or deselects that tag. */
   protected toggleTag(tag: string): void {
-    const active = this.activeTag();
-    this.activeTag.set(active !== null && sameTag(active, tag) ? null : tag);
+    const selected = this.selectedTags();
+    this.selectedTags.set(
+      this.isSelectedTag(tag)
+        ? selected.filter((chosen) => !sameTag(chosen, tag))
+        : [...selected, tag],
+    );
   }
 
-  protected clearTagFilter(): void {
-    this.activeTag.set(null);
+  /** A row chip opens the search panel, so the selection is visible where it is made (A2). */
+  protected toggleTagFromRow(tag: string): void {
+    this.searchOpen.set(true);
+    this.toggleTag(tag);
   }
 
-  protected isActiveTag(tag: string): boolean {
-    const active = this.activeTag();
-    return active !== null && sameTag(active, tag);
+  protected isSelectedTag(tag: string): boolean {
+    return this.selectedTags().some((chosen) => sameTag(chosen, tag));
   }
 
   protected openAdd(): void {
@@ -200,7 +201,7 @@ export class StorageDetailPage implements OnInit {
    * field it closes again; with a value it only refocuses — a stray click never drops a query.
    */
   protected toggleSearch(): void {
-    if (this.searchOpen() && !this.searching()) {
+    if (this.searchOpen() && !this.filterActive()) {
       this.searchOpen.set(false);
       this.query.set('');
       return;
@@ -211,8 +212,10 @@ export class StorageDetailPage implements OnInit {
   }
 
   /** SPEC-010 AC-02: clear button or Escape — remove the filter, close, focus the button. */
+  /** SPEC-010 AC-02 / SPEC-011 A2: ✕ or Escape clear the text query and the tag selection. */
   protected clearSearch(): void {
     this.query.set('');
+    this.selectedTags.set([]);
     this.searchOpen.set(false);
     this.searchButton()?.nativeElement.focus();
   }
@@ -388,9 +391,12 @@ export class StorageDetailPage implements OnInit {
     this.itemsApi.getTags({ storageId: this.storageId }).subscribe({
       next: (tags) => {
         this.tags.set(tags);
-        const active = this.activeTag();
-        if (active !== null && !tags.some((tag) => sameTag(tag.name, active))) {
-          this.activeTag.set(null);
+        // EC-04: a selected tag that vanished with its last item drops out of the selection.
+        const still = this.selectedTags().filter((chosen) =>
+          tags.some((tag) => sameTag(tag.name, chosen)),
+        );
+        if (still.length !== this.selectedTags().length) {
+          this.selectedTags.set(still);
         }
       },
       error: () => this.tags.set([]),

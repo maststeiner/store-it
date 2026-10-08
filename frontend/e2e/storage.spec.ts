@@ -54,9 +54,9 @@ test('add an item and see it grouped by expiry status', async ({ page }) => {
   await expect(page.locator('.group.expired')).toContainText('Yogurt');
   await expect(page.locator('.group.expired .tag-chip')).toHaveText('Dairy');
 
-  // SPEC-011 AC-13: the chip filters the storage by that tag
+  // SPEC-011 AC-13 (A2): the row chip opens the search panel with the tag selected in the list
   await page.locator('.group.expired .tag-chip').click();
-  await expect(page.locator('.tag-filter')).toContainText('Dairy');
+  await expect(page.locator('.tag-list .tag-chip[aria-pressed="true"]')).toContainText('Dairy');
   await expect(page.locator('.item-row')).toHaveCount(1);
 });
 

@@ -28,7 +28,7 @@ const TRANSLATIONS = {
       remove: 'Remove tag {{name}}',
       limit: 'At most 10 tags per item.',
       filterBy: 'Show only items tagged {{name}}',
-      clearFilter: 'Clear tag filter',
+      filterLabel: 'Filter by tag',
     },
     search: {
       toggle: 'Search items',
@@ -1008,14 +1008,35 @@ describe('StorageDetailPage', () => {
       fixture: ComponentFixture<StorageDetailPage>,
       element: HTMLElement,
       name: string,
+      where: '.item-tags' | '.tag-list' = '.tag-list',
     ) => {
-      const chip = [...element.querySelectorAll('.item-tags .tag-chip')].find(
-        (c) => c.textContent?.trim() === name,
+      const chip = [...element.querySelectorAll(`${where} .tag-chip`)].find(
+        (c) =>
+          c.querySelector('span')?.textContent?.trim() === name || c.textContent?.trim() === name,
       ) as HTMLButtonElement;
       chip.click();
       fixture.detectChanges();
       await fixture.whenStable();
     };
+    const openSearchPanel = async (
+      fixture: ComponentFixture<StorageDetailPage>,
+      element: HTMLElement,
+    ) => {
+      (
+        element.querySelector(
+          '.detail-head .icon-btn[aria-label="Search items"]',
+        ) as HTMLButtonElement
+      ).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      await new Promise((resolve) => setTimeout(resolve));
+    };
+    const listChips = (element: HTMLElement) =>
+      [...element.querySelectorAll('.tag-list .tag-chip')].map((c) => ({
+        name: c.querySelector('span')?.textContent?.trim(),
+        count: c.querySelector('.tag-chip-count')?.textContent?.trim(),
+        pressed: c.getAttribute('aria-pressed'),
+      }));
 
     it('AC-12: shows the tags of an item as chips after its name, none for an untagged item', async () => {
       const { element } = await renderTagged();
@@ -1025,54 +1046,76 @@ describe('StorageDetailPage', () => {
       element.remove();
     });
 
-    it('AC-13: clicking a chip filters the list to that tag and shows the active-filter chip with its count', async () => {
+    it('A2: the search panel lists every tag of the storage with its count, none selected', async () => {
       const { fixture, element } = await renderTagged();
+      expect(element.querySelector('.tag-list')).toBeNull();
+
+      await openSearchPanel(fixture, element);
+
+      expect(listChips(element)).toEqual([
+        { name: 'Bio', count: '· 1', pressed: 'false' },
+        { name: 'Dosen', count: '· 2', pressed: 'false' },
+        { name: 'homemade', count: '· 1', pressed: 'false' },
+      ]);
+      expect(element.querySelector('.search-result')).toBeNull();
+      element.remove();
+    });
+
+    it('AC-13 (A2): selecting a tag in the list filters the items; the row chips mirror the selection', async () => {
+      const { fixture, element } = await renderTagged();
+      await openSearchPanel(fixture, element);
 
       await clickChip(fixture, element, 'Dosen');
 
       expect(shown(element)).toEqual(['Bohnen', 'Mais']);
-      const filter = element.querySelector('.tag-filter') as HTMLElement;
-      expect(filter.querySelector('.tag-chip-active > span')?.textContent?.trim()).toBe('Dosen');
-      expect(filter.querySelector('.tag-chip-count')?.textContent?.trim()).toBe('· 2');
-      expect(filter.querySelector('.tag-chip-remove')).not.toBeNull();
+      expect(listChips(element).find((c) => c.name === 'Dosen')?.pressed).toBe('true');
       expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('2 of 4 items');
-      const active = [...element.querySelectorAll('.item-tags .tag-chip')].filter(
+      const pressedRows = [...element.querySelectorAll('.item-tags .tag-chip')].filter(
         (c) => c.getAttribute('aria-pressed') === 'true',
       );
-      expect(active.map((c) => c.textContent?.trim())).toEqual(['Dosen', 'Dosen']);
+      expect(pressedRows.map((c) => c.textContent?.trim())).toEqual(['Dosen', 'Dosen']);
       element.remove();
     });
 
-    it('AC-14: the ✕ clears the filter, the same chip toggles it off, another chip replaces it', async () => {
+    it('AC-14 (A2): several tags combine with OR; deselecting and ✕ restore the full list', async () => {
       const { fixture, element } = await renderTagged();
+      await openSearchPanel(fixture, element);
 
       await clickChip(fixture, element, 'Dosen');
-      await clickChip(fixture, element, 'homemade');
-      expect(shown(element)).toEqual(['Bohnen']);
-
-      await clickChip(fixture, element, 'homemade');
-      expect(shown(element)).toHaveLength(4);
-      expect(element.querySelector('.tag-filter')).toBeNull();
-
       await clickChip(fixture, element, 'Bio');
-      (element.querySelector('.tag-filter .tag-chip-remove') as HTMLButtonElement).click();
+      expect(shown(element)).toEqual(['Bio Vollmilch', 'Bohnen', 'Mais']);
+      expect(element.querySelector('.search-result')?.textContent?.trim()).toBe('3 of 4 items');
+
+      await clickChip(fixture, element, 'Dosen');
+      expect(shown(element)).toEqual(['Bio Vollmilch']);
+
+      (
+        element.querySelector(
+          '.search-bar .icon-btn[aria-label="Clear search"]',
+        ) as HTMLButtonElement
+      ).click();
       fixture.detectChanges();
       expect(shown(element)).toHaveLength(4);
       expect(element.querySelector('.search-result')).toBeNull();
+      expect(element.querySelector('.tag-list')).toBeNull();
+      element.remove();
+    });
+
+    it('D6 (A2): a chip on an item row opens the search panel and selects that tag', async () => {
+      const { fixture, element } = await renderTagged();
+
+      await clickChip(fixture, element, 'homemade', '.item-tags');
+
+      expect(element.querySelector('.tag-list')).not.toBeNull();
+      expect(listChips(element).find((c) => c.name === 'homemade')?.pressed).toBe('true');
+      expect(shown(element)).toEqual(['Bohnen']);
       element.remove();
     });
 
     it('AC-15: tag filter and text search combine with AND and share the result line', async () => {
       const { fixture, element } = await renderTagged();
+      await openSearchPanel(fixture, element);
       await clickChip(fixture, element, 'Dosen');
-      (
-        element.querySelector(
-          '.detail-head .icon-btn[aria-label="Search items"]',
-        ) as HTMLButtonElement
-      ).click();
-      fixture.detectChanges();
-      await fixture.whenStable();
-      await new Promise((resolve) => setTimeout(resolve));
 
       const field = element.querySelector('#item-search') as HTMLInputElement;
       field.value = 'mais';
@@ -1181,10 +1224,12 @@ describe('StorageDetailPage', () => {
       element.remove();
     });
 
-    it('EC-04: the active filter is cleared when its tag no longer exists after a reload', async () => {
+    it('EC-04: a selected tag that no longer exists after a reload drops out of the selection', async () => {
       const { fixture, element } = await renderTagged();
+      await openSearchPanel(fixture, element);
       await clickChip(fixture, element, 'Bio');
-      expect(shown(element)).toEqual(['Bio Vollmilch']);
+      await clickChip(fixture, element, 'Dosen');
+      expect(shown(element)).toEqual(['Bio Vollmilch', 'Bohnen', 'Mais']);
 
       // Delete the only item with "Bio"; the reload no longer lists the tag.
       const row = element.querySelector('.item-row') as HTMLElement;
@@ -1198,8 +1243,10 @@ describe('StorageDetailPage', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      expect(element.querySelector('.tag-filter')).toBeNull();
-      expect(shown(element)).toHaveLength(3);
+      // "Bio" is gone, "Dosen" stays selected.
+      expect(listChips(element).map((c) => c.name)).toEqual(['Dosen', 'homemade']);
+      expect(listChips(element).find((c) => c.name === 'Dosen')?.pressed).toBe('true');
+      expect(shown(element)).toEqual(['Bohnen', 'Mais']);
       element.remove();
     });
   });
