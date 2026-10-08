@@ -19,6 +19,7 @@ import { ErrorMessages } from '../core/error-messages';
 import { LanguageService } from '../core/language.service';
 import { TranslatePipe } from '../core/translate';
 import { ConfirmDialog } from '../shared/confirm-dialog';
+import { matchesQuery, queryWords } from './item-search';
 import { SharingPanel } from './sharing-panel';
 import { StorageDeleteDialog } from './storage-delete-dialog';
 
@@ -65,9 +66,26 @@ export class StorageDetailPage implements OnInit {
   protected readonly items = signal<ItemResponse[] | null>(null);
   protected readonly loadError = signal<string | null>(null);
 
+  /** SPEC-010 D1: the search field is open (it stays open while it has a value). */
+  protected readonly searchOpen = signal(false);
+  /** SPEC-010 AC-04: the raw query; blank means "no filter". */
+  protected readonly query = signal('');
+  private readonly searchField = viewChild<ElementRef<HTMLInputElement>>('searchField');
+  private readonly searchButton = viewChild<ElementRef<HTMLButtonElement>>('searchButton');
+
+  /** True while the query carries at least one word (EC-01: whitespace is not a query). */
+  protected readonly searching = computed(() => queryWords(this.query()).length > 0);
+
+  /** SPEC-010 AC-04/AC-05: the filter runs before grouping, on the loaded list only (AC-06). */
+  protected readonly filteredItems = computed(() => {
+    const items = this.items() ?? [];
+    const query = this.query();
+    return this.searching() ? items.filter((item) => matchesQuery(item.name, query)) : items;
+  });
+
   /** Pure presentation: grouping relies solely on the API-computed expiryStatus. */
   protected readonly groups = computed(() => {
-    const items = this.items() ?? [];
+    const items = this.filteredItems();
     return [
       {
         key: 'expired',
@@ -132,6 +150,34 @@ export class StorageDetailPage implements OnInit {
     if (this.addOpen()) {
       this.cancelAdd();
     }
+  }
+
+  /**
+   * SPEC-010 AC-01/AC-03: the header button opens the field and focuses it; with an empty
+   * field it closes again; with a value it only refocuses — a stray click never drops a query.
+   */
+  protected toggleSearch(): void {
+    if (this.searchOpen() && !this.searching()) {
+      this.searchOpen.set(false);
+      this.query.set('');
+      return;
+    }
+    this.searchOpen.set(true);
+    // The field exists only after the next render; focus it then.
+    setTimeout(() => this.searchField()?.nativeElement.focus());
+  }
+
+  /** SPEC-010 AC-02: clear button or Escape — remove the filter, close, focus the button. */
+  protected clearSearch(): void {
+    this.query.set('');
+    this.searchOpen.set(false);
+    this.searchButton()?.nativeElement.focus();
+  }
+
+  /** D6: Escape inside the field is the field's; it must not also close the add form. */
+  protected onSearchEscape(event: Event): void {
+    event.stopPropagation();
+    this.clearSearch();
   }
 
   protected addItem(): void {

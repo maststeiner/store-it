@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 
 import { App } from './app';
 import { AuthService, AuthUser } from './core/auth.service';
@@ -14,6 +14,7 @@ const BASE_TRANSLATIONS = {
   header: { language: 'Language' },
   actions: { cancel: 'Cancel', delete: 'Delete' },
   errors: { generic: 'Something went wrong.' },
+  about: { menu: 'About' },
   auth: {
     session: {
       menu: 'Account menu — signed in as {{name}}',
@@ -140,9 +141,32 @@ describe('App — session menu', () => {
     (element.querySelector('.session-chip') as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
-    (element.querySelector('[role="menuitem"]') as HTMLButtonElement).click();
+    (element.querySelectorAll('[role="menuitem"]')[1] as HTMLButtonElement).click();
 
     expect(logout).toHaveBeenCalledTimes(1);
+    element.remove();
+  });
+
+  // SPEC-009 AC-01: the About entry leads to /about.
+  it('About_WhenChosenFromTheMenu_NavigatesToTheAboutPage', async () => {
+    await configure({ displayName: 'Alice Example', email: 'alice@example.com', isAdmin: false });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    const fixture = TestBed.createComponent(App);
+    const element = fixture.nativeElement as HTMLElement;
+    document.body.appendChild(element);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    (element.querySelector('.session-chip') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const items = element.querySelectorAll('[role="menuitem"]');
+    expect(items[0].textContent?.trim()).toBe('About');
+    (items[0] as HTMLButtonElement).click();
+
+    expect(navigate).toHaveBeenCalledWith(['/about']);
+    expect(logout).not.toHaveBeenCalled();
     element.remove();
   });
 
@@ -162,7 +186,7 @@ describe('App — session menu', () => {
       (element.querySelector('.session-chip') as HTMLButtonElement).click();
       fixture.detectChanges();
       await fixture.whenStable();
-      (element.querySelectorAll('[role="menuitem"]')[1] as HTMLButtonElement).click();
+      (element.querySelectorAll('[role="menuitem"]')[2] as HTMLButtonElement).click();
       fixture.detectChanges();
       await fixture.whenStable();
       TestBed.inject(HttpTestingController)
@@ -230,7 +254,7 @@ describe('App — session menu', () => {
       (element.querySelector('.session-chip') as HTMLButtonElement).click();
       fixture.detectChanges();
       await fixture.whenStable();
-      (element.querySelectorAll('[role="menuitem"]')[1] as HTMLButtonElement).click();
+      (element.querySelectorAll('[role="menuitem"]')[2] as HTMLButtonElement).click();
       fixture.detectChanges();
       await fixture.whenStable();
       TestBed.inject(HttpTestingController)

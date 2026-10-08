@@ -90,6 +90,10 @@ jobs:
           context: backend
           target: runtime
           platforms: ${{ matrix.platform }}
+          # SPEC-009 D1: stamp the release tag + commit into the API (GET /api/v1/about).
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            REVISION=${{ github.sha }}
           labels: |
             ${{ steps.labels.outputs.common }}
             org.opencontainers.image.title=store-it-backend
@@ -107,6 +111,10 @@ jobs:
           context: backend
           target: migrate
           platforms: ${{ matrix.platform }}
+          # Same build args as the runtime image, so the shared `build` stage stays cache-identical.
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            REVISION=${{ github.sha }}
           labels: |
             ${{ steps.labels.outputs.common }}
             org.opencontainers.image.title=store-it-migrate
@@ -121,6 +129,10 @@ jobs:
         with:
           context: frontend
           platforms: ${{ matrix.platform }}
+          # SPEC-009 D1: stamp the release tag + commit into the web bundle (About page).
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            REVISION=${{ github.sha }}
           labels: |
             ${{ steps.labels.outputs.common }}
             org.opencontainers.image.title=store-it-web
@@ -144,7 +156,7 @@ jobs:
             touch "/tmp/digests/${image}/${digest#sha256:}"
           done
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: digests-${{ matrix.arch }}
           path: /tmp/digests/*
@@ -162,7 +174,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: /tmp/digests
           pattern: digests-*

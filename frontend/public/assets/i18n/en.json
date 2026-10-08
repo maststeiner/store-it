@@ -59,7 +59,18 @@
       "production": "Production date",
       "dateHint": "Provide at least one date (expiry or production)."
     },
-    "new": "New item"
+    "new": "New item",
+    "search": {
+      "toggle": "Search items",
+      "label": "Search items by name",
+      "placeholder": "Search…",
+      "clear": "Clear search",
+      "result": {
+        "one": "1 of {{total}} items",
+        "other": "{{shown}} of {{total}} items"
+      },
+      "noMatches": "No items match “{{query}}”."
+    }
   },
   "groups": {
     "expired": "Expired",
@@ -222,5 +233,32 @@
         "byUnit": "By unit"
       }
     }
+  },
+  "about": {
+    "menu": "About",
+    "title": "About store-it",
+    "version": {
+      "title": "Version",
+      "web": "Web client",
+      "api": "API",
+      "runtime": "Runtime",
+      "release": "Release notes on GitHub",
+      "loading": "Loading…"
+    },
+    "versionMismatch": "Web client and API are running different versions. Deploy both from the same release.",
+    "license": {
+      "title": "License",
+      "text": "store-it is open-source software, published under the MIT License.",
+      "link": "License in the repository"
+    },
+    "thirdParty": {
+      "title": "Third-party software",
+      "intro": "store-it is built on the following open-source components. Names, license identifiers and license texts are shown as their authors published them.",
+      "web": "Web client",
+      "api": "API",
+      "platform": "Platform",
+      "licenseText": "Show license text"
+    },
+    "notAvailableInDev": "Not available in development builds."
   }
 }

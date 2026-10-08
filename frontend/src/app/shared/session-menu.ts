@@ -17,8 +17,8 @@ import { TranslatePipe } from '../core/translate';
 
 /**
  * Header control for the signed-in session: an initials chip that opens a menu
- * carrying the full identity, the sign-out action, account deletion (SPEC-006) and,
- * for the operator, the usage statistics (SPEC-008).
+ * carrying the full identity, the sign-out action, account deletion (SPEC-006), the
+ * About page (SPEC-009) and, for the operator, the usage statistics (SPEC-008).
  *
  * The identity deliberately lives behind a click rather than a hover tooltip —
  * tooltips do not exist on touch devices, rarely surface on keyboard focus and
@@ -72,6 +72,17 @@ import { TranslatePipe } from '../core/translate';
           role="menuitem"
           tabindex="-1"
           class="session-menu-item"
+          (click)="emitAbout()"
+          (keydown)="onMenuKeydown($event)"
+        >
+          {{ 'about.menu' | translate }}
+        </button>
+        <button
+          #item
+          type="button"
+          role="menuitem"
+          tabindex="-1"
+          class="session-menu-item"
           (click)="emitSignOut()"
           (keydown)="onMenuKeydown($event)"
         >
@@ -99,6 +110,8 @@ export class SessionMenu {
   readonly deleteAccount = output<void>();
   /** SPEC-008 AC-10: the operator opens the usage statistics (rendered only for admins). */
   readonly statistics = output<void>();
+  /** SPEC-009 AC-01: version, license and third-party notices. */
+  readonly about = output<void>();
 
   protected readonly open = signal(false);
 
@@ -146,6 +159,11 @@ export class SessionMenu {
   protected emitStatistics(): void {
     this.open.set(false);
     this.statistics.emit();
+  }
+
+  protected emitAbout(): void {
+    this.open.set(false);
+    this.about.emit();
   }
 
   protected emitSignOut(): void {

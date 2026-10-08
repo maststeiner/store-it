@@ -21,6 +21,7 @@ describe('SessionMenu', () => {
           deleteAccount: 'Delete account',
         },
       },
+      about: { menu: 'About' },
     });
   });
 
@@ -110,7 +111,10 @@ describe('SessionMenu', () => {
     expect(menu.getAttribute('aria-labelledby')).toBe('session-chip');
     expect(menu.querySelector('.session-name')?.textContent).toContain('Alice Example');
     expect(menu.querySelector('.session-email')?.textContent).toContain('alice@example.com');
-    expect(menu.querySelector('[role="menuitem"]')?.textContent?.trim()).toBe('Sign out');
+    const labels = [...menu.querySelectorAll('[role="menuitem"]')].map((item) =>
+      item.textContent?.trim(),
+    );
+    expect(labels).toContain('Sign out');
   });
 
   it('Menu_WhenOpened_MovesFocusToTheFirstItem', async () => {
@@ -132,13 +136,14 @@ describe('SessionMenu', () => {
     expect(document.activeElement).toBe(el.querySelector('.session-chip'));
   });
 
-  // Two items (SPEC-006 added "Delete account"): from the first item, ArrowDown and End land
-  // on the last, ArrowUp wraps to the last, Home stays on the first — and none scrolls the page.
+  // Three items (SPEC-006 added "Delete account", SPEC-009 "About"): from the first item,
+  // ArrowDown moves to the second, End lands on the last, ArrowUp wraps to the last, Home stays
+  // on the first — and none scrolls the page.
   it.each([
     ['ArrowDown', 1],
-    ['ArrowUp', 1],
+    ['ArrowUp', 2],
     ['Home', 0],
-    ['End', 1],
+    ['End', 2],
   ])('Menu_When%sPressed_MovesFocusToItem%iAndSuppressesScrolling', async (key, expected) => {
     const { fixture, el } = await render();
     const menu = await openMenu(fixture, el);
@@ -151,14 +156,36 @@ describe('SessionMenu', () => {
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it('Menu_WhenOpened_ListsSignOutThenDeleteAccountAsDestructive', async () => {
+  it('Menu_WhenOpened_ListsAboutThenSignOutThenDeleteAccountAsDestructive', async () => {
     const { fixture, el } = await render();
     const menu = await openMenu(fixture, el);
     const items = Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
 
-    expect(items.map((item) => item.textContent?.trim())).toEqual(['Sign out', 'Delete account']);
-    expect(items[1].classList.contains('session-menu-item-danger')).toBe(true);
+    expect(items.map((item) => item.textContent?.trim())).toEqual([
+      'About',
+      'Sign out',
+      'Delete account',
+    ]);
+    expect(items[2].classList.contains('session-menu-item-danger')).toBe(true);
     expect(items[0].classList.contains('session-menu-item-danger')).toBe(false);
+    expect(items[1].classList.contains('session-menu-item-danger')).toBe(false);
+  });
+
+  it('About_WhenChosen_EmitsAndClosesTheMenu', async () => {
+    const { fixture, el } = await render();
+    const about = vi.fn();
+    const signOut = vi.fn();
+    fixture.componentInstance.about.subscribe(about);
+    fixture.componentInstance.signOut.subscribe(signOut);
+    const menu = await openMenu(fixture, el);
+
+    (menu.querySelectorAll<HTMLElement>('[role="menuitem"]')[0] as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(about).toHaveBeenCalledTimes(1);
+    expect(signOut).not.toHaveBeenCalled();
+    expect(el.querySelector('.session-menu')).toBeNull();
   });
 
   it('DeleteAccount_WhenChosen_EmitsAndClosesTheMenu', async () => {
@@ -169,7 +196,7 @@ describe('SessionMenu', () => {
     fixture.componentInstance.signOut.subscribe(signOut);
     const menu = await openMenu(fixture, el);
 
-    (menu.querySelectorAll<HTMLElement>('[role="menuitem"]')[1] as HTMLButtonElement).click();
+    (menu.querySelectorAll<HTMLElement>('[role="menuitem"]')[2] as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -253,7 +280,7 @@ describe('SessionMenu', () => {
     let signedOut = 0;
     fixture.componentInstance.signOut.subscribe(() => (signedOut += 1));
 
-    (menu.querySelector('[role="menuitem"]') as HTMLButtonElement).click();
+    (menu.querySelectorAll<HTMLElement>('[role="menuitem"]')[1] as HTMLButtonElement).click();
     fixture.detectChanges();
     await fixture.whenStable();
 
@@ -280,6 +307,7 @@ describe('SessionMenu — SPEC-008 statistics entry', () => {
         },
       },
       admin: { menu: { statistics: 'Statistics' } },
+      about: { menu: 'About' },
     });
   });
 
@@ -312,7 +340,7 @@ describe('SessionMenu — SPEC-008 statistics entry', () => {
     const emitted = vi.fn();
     fixture.componentInstance.statistics.subscribe(emitted);
 
-    expect(itemLabels(el)).toEqual(['Statistics', 'Sign out', 'Delete account']);
+    expect(itemLabels(el)).toEqual(['Statistics', 'About', 'Sign out', 'Delete account']);
 
     (el.querySelector('[role="menuitem"]') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -324,6 +352,6 @@ describe('SessionMenu — SPEC-008 statistics entry', () => {
   it('AC-10: renders no Statistics item for a regular user', async () => {
     const { el } = await openMenu({ ...OPERATOR, isAdmin: false });
 
-    expect(itemLabels(el)).toEqual(['Sign out', 'Delete account']);
+    expect(itemLabels(el)).toEqual(['About', 'Sign out', 'Delete account']);
   });
 });

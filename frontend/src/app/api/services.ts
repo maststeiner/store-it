@@ -7,3 +7,4 @@ export { ItemsService } from './services/items.service';
 export { AccountService } from './services/account.service';
 export { SharingService } from './services/sharing.service';
 export { AdminService } from './services/admin.service';
+export { AboutService } from './services/about.service';

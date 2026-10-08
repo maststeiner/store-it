@@ -7,6 +7,7 @@ export { RequestBuilder } from './request-builder';
 export type { StrictHttpResponse } from './strict-http-response';
 export { Api } from './api';
 
+export type { AboutResponse } from './models/about-response';
 export type { AcceptedInvitationResponse } from './models/accepted-invitation-response';
 export type { AccountSummaryResponse } from './models/account-summary-response';
 export type { CreatedInvitationResponse } from './models/created-invitation-response';
@@ -23,6 +24,7 @@ export type { StorageMemberResponse } from './models/storage-member-response';
 export type { StorageRequest } from './models/storage-request';
 export type { StorageResponse } from './models/storage-response';
 export type { StorageStatisticsResponse } from './models/storage-statistics-response';
+export type { ThirdPartyComponentResponse } from './models/third-party-component-response';
 export type { TransferOwnershipRequest } from './models/transfer-ownership-request';
 export type { Unit } from './models/unit';
 export type { UsageStatisticsResponse } from './models/usage-statistics-response';
@@ -35,6 +37,7 @@ export { ItemsService } from './services/items.service';
 export { AccountService } from './services/account.service';
 export { SharingService } from './services/sharing.service';
 export { AdminService } from './services/admin.service';
+export { AboutService } from './services/about.service';
 
 export type { Login$Params as Login$Params } from './fn/auth/login';
 export { login as login } from './fn/auth/login';
@@ -86,3 +89,5 @@ export type { AcceptInvitation$Params as AcceptInvitation$Params } from './fn/sh
 export { acceptInvitation as acceptInvitation } from './fn/sharing/accept-invitation';
 export type { GetUsageStatistics$Params as GetUsageStatistics$Params } from './fn/admin/get-usage-statistics';
 export { getUsageStatistics as getUsageStatistics } from './fn/admin/get-usage-statistics';
+export type { GetAbout$Params as GetAbout$Params } from './fn/about/get-about';
+export { getAbout as getAbout } from './fn/about/get-about';

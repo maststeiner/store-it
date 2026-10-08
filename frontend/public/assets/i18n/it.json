@@ -59,7 +59,18 @@
       "production": "Data di produzione",
       "dateHint": "Indicare almeno una data (scadenza o produzione)."
     },
-    "new": "Nuovo articolo"
+    "new": "Nuovo articolo",
+    "search": {
+      "toggle": "Cerca articoli",
+      "label": "Cerca articoli per nome",
+      "placeholder": "Cerca…",
+      "clear": "Cancella ricerca",
+      "result": {
+        "one": "1 articolo su {{total}}",
+        "other": "{{shown}} articoli su {{total}}"
+      },
+      "noMatches": "Nessun articolo corrisponde a “{{query}}”."
+    }
   },
   "groups": {
     "expired": "Scaduti",
@@ -222,5 +233,32 @@
         "byUnit": "Per unità"
       }
     }
+  },
+  "about": {
+    "menu": "Informazioni",
+    "title": "Informazioni su store-it",
+    "version": {
+      "title": "Versione",
+      "web": "Client web",
+      "api": "API",
+      "runtime": "Runtime",
+      "release": "Note di rilascio su GitHub",
+      "loading": "Caricamento…"
+    },
+    "versionMismatch": "Client web e API hanno versioni diverse. Distribuisci entrambi dalla stessa release.",
+    "license": {
+      "title": "Licenza",
+      "text": "store-it è software open source, pubblicato con licenza MIT.",
+      "link": "Licenza nel repository"
+    },
+    "thirdParty": {
+      "title": "Software di terze parti",
+      "intro": "store-it si basa sui seguenti componenti open source. Nomi, identificatori di licenza e testi di licenza sono mostrati come pubblicati dai loro autori.",
+      "web": "Client web",
+      "api": "API",
+      "platform": "Piattaforma",
+      "licenseText": "Mostra il testo della licenza"
+    },
+    "notAvailableInDev": "Non disponibile nelle build di sviluppo."
   }
 }
