@@ -199,9 +199,10 @@ the whole spec is a separate step (gate table).
       Text left in the tag field is not committed on blur (amendment A1): the field has its own *Add* button.
 - [x] Tests: `StorageTagsTests` (13, domain), `ItemTagsTests` (11, service incl. member access,
       cascade, 400s), `OpenApiContractTests` (`getTags`); web `tag-input.spec.ts` (10),
-      `storage-detail-page.spec.ts` → block "tags (SPEC-011)" (8), `i18n.spec.ts`. ⚠ No new E2E:
-      the existing Playwright item flow is unaffected (the tag field is optional) and the chip
-      interaction is covered by the component specs.
+      `storage-detail-page.spec.ts` → block "tags (SPEC-011)" (8), `i18n.spec.ts`; E2E: the
+      Playwright item flow adds a tag with the *Add tag* button and filters by its chip
+      (`e2e/storage.spec.ts`). The item's *Add* is now located exactly — the tag button also
+      matches `/add/i`.
 - [x] Docs: release PR must say "migration included" (`migrate` before `backend`, runtime contract
       §2 rule 1); no new variables, so `runtime-contract.md` is unchanged.
 - [x] Dependencies: none new.
