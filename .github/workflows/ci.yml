@@ -112,7 +112,7 @@ jobs:
       - name: Mutation testing skipped
         if: steps.scope.outputs.mode == 'skip'
         run: echo "No backend/ changes to mutate (or a post-merge push — covered by the nightly backstop); skipping."
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always() && steps.scope.outputs.mode != 'skip'
         with:
           name: mutation-report
@@ -207,7 +207,7 @@ jobs:
       - name: Run E2E (Playwright starts ng serve, proxies to backend)
         working-directory: frontend
         run: npm run e2e
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
           name: playwright-report
@@ -286,7 +286,7 @@ jobs:
           trivy fs . \
             --format cyclonedx \
             --output sbom.cdx.json
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: SBOM
           path: sbom.cdx.json
