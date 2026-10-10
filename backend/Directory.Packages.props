@@ -35,7 +35,7 @@
         <!-- Test tooling. xunit.v3 runs on Microsoft.Testing.Platform (MTP): no Microsoft.NET.Test.Sdk,
            no VSTest adapter, and coverage comes from coverlet.MTP (coverlet.msbuild/.collector are
            VSTest-only and do not work with the .NET 10 `dotnet test` MTP mode). -->
-        <PackageVersion Include="xunit.v3" Version="4.0.1" />
+        <PackageVersion Include="xunit.v3" Version="4.0.2" />
         <PackageVersion Include="coverlet.MTP" Version="10.1.0" />
         <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
         <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
