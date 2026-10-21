@@ -14,7 +14,7 @@
     "generate:api": "ng-openapi-gen"
   },
   "private": true,
-  "packageManager": "npm@12.2.0",
+  "packageManager": "npm@12.2.1",
   "dependencies": {
     "@angular/common": "^22.0.0",
     "@angular/compiler": "^22.0.0",
