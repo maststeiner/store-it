@@ -1,9 +1,9 @@
 # Spec: Mobile layout — usable on a phone without sideways scrolling
 
-> **Status:** Draft
+> **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-24 (issue #250)
 > **Sprint:** 2026-S43
 > **Author:** Claude Fable 5.1 (analyst agent), from Marcel Steiner's request and iPhone screenshot (issue #250, 2026-10-24)
-> **Last updated:** 2026-10-24 (second draft: standards referenced, axe-core and UI guideline added — Marcel: „ja, beides“)
+> **Last updated:** 2026-10-24 (frozen after the second draft; implementation on `feature/mobile-layout`)
 
 ---
 
@@ -41,7 +41,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 | O3 | Icons and buttons are hard to hit (✎, 🗑, header icon buttons). | `.icon-btn` is 36 × 36 px, the row actions render a 14 px glyph — below the 44 pt minimum of the Apple HIG / WCAG 2.5.5. |
 | O4 | With tags on an item the quantity jumps next to the chips and the date drops to a third line; rows with and without tags look different. | `.item-row` under 780 px pins only `.item-actions`; the other cells are auto-placed, so an extra tag cell shifts everything after it. |
 
-## Decisions taken by the draft (to be confirmed at G1)
+## Decisions taken by the draft (confirmed at G1, 2026-10-24)
 
 | # | Decision | Rationale / alternative |
 |---|----------|-------------------------|
@@ -231,6 +231,6 @@ can be managed where it is used: in the kitchen, on the phone.**
 
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
-| G1 · Spec Freeze | ⬜ | | |
+| G1 · Spec Freeze | ✅ | 2026-10-24 | Marcel Steiner |
 | G2 · Review | ⬜ | | |
 | G3 · DoD/Merge | ⬜ | | |
