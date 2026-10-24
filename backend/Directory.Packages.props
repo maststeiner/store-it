@@ -18,16 +18,16 @@
         <!-- Runtime / src -->
         <PackageVersion
             Include="Microsoft.AspNetCore.Authentication.OpenIdConnect"
-            Version="10.0.12"
+            Version="10.0.13"
         />
-        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
-        <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
+        <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13" />
         <PackageVersion
             Include="Microsoft.Extensions.DependencyInjection.Abstractions"
-            Version="10.0.12"
+            Version="10.0.13"
         />
-        <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.12" />
-        <PackageVersion Include="Microsoft.OpenApi" Version="2.12.2" />
+        <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.13" />
+        <PackageVersion Include="Microsoft.OpenApi" Version="2.13.0" />
         <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     </ItemGroup>
 
@@ -35,14 +35,14 @@
         <!-- Test tooling. xunit.v3 runs on Microsoft.Testing.Platform (MTP): no Microsoft.NET.Test.Sdk,
            no VSTest adapter, and coverage comes from coverlet.MTP (coverlet.msbuild/.collector are
            VSTest-only and do not work with the .NET 10 `dotnet test` MTP mode). -->
-        <PackageVersion Include="xunit.v3" Version="4.0.1" />
+        <PackageVersion Include="xunit.v3" Version="4.0.2" />
         <PackageVersion Include="coverlet.MTP" Version="10.1.0" />
-        <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
+        <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
         <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
         <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
         <PackageVersion Include="ReferencesRuler" Version="1.3.2" />
         <!-- Used only by an architecture-test fixture project -->
         <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
-        <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.0" />
+        <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
     </ItemGroup>
 </Project>

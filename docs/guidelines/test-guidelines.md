@@ -2,7 +2,7 @@
 
 > **Owner:** Marcel Steiner (Architecture / QA Stewardship)
 > **Test frameworks:** see [`docs/project/tech-stack.md`](../project/tech-stack.md)
-> **Last updated:** 2026-08-30
+> **Last updated:** 2026-10-24
 
 ---
 
@@ -16,6 +16,7 @@ Tests verify **required behavior** (from acceptance criteria), not the implement
 - **Service tests (Contract/API):** verify the service contract from the outside — endpoints, response shapes, status codes, error contracts. Use an in-process test host or equivalent; no mocking of internal layers. Clearly marked (e.g. `*.Service.Tests`).
 - **Integration tests:** full stack including external resources (DB, message bus). Clearly marked (e.g. `*.Integration.Tests`).
 - **E2E tests (Playwright):** drive the real UI against the live backend + PostgreSQL (`frontend/e2e/`). Cover core user flows only — expensive, so kept few and meaningful. Each test creates its own uniquely-named data so runs are independent.
+- **Layout tests (Playwright project `mobile`, SPEC-012):** `e2e/mobile-layout.spec.ts` runs in Chromium phone emulation (390 × 844, one block at 320 × 568) and asserts **layout facts** read from the browser — document width ≤ viewport, controls inside their card, 44 px tap targets, 16 px inputs, row structure — plus an **axe-core scan** (`@axe-core/playwright`, WCAG 2.x A/AA rule set, zero violations) in every visited state. jsdom has no layout engine, so these assertions live here and nowhere else. Rules in [`ui-guidelines.md`](ui-guidelines.md); the desktop project ignores this spec, so the flows above are not run twice.
 - **Arrange-Act-Assert:** always, no logic inside the test.
 
 ### Running E2E locally (Podman)
@@ -27,6 +28,8 @@ cd backend && ConnectionStrings__storeit="Host=localhost;Port=5432;Database=stor
 ConnectionStrings__storeit="Host=localhost;Port=5432;Database=storeit;Username=storeit;Password=storeit" \
   dotnet run --project src/StoreIt.Api --no-launch-profile --urls http://localhost:5000 &
 cd ../frontend && npx playwright install chromium && npm run e2e   # Playwright starts ng serve itself
+# only the layout project:  npx playwright test --project=mobile
+# browser refuses to start (missing libglib etc.): sudo npx playwright install-deps chromium
 ```
 
 CI (`1b · End-to-end`) uses a postgres service container and the runner's browser deps — no Podman needed there.
@@ -86,4 +89,5 @@ Failing tests block the Developer Agent. No feature is done before tests are gre
 
 - **Coverage threshold confirmed at 70%** after the SPEC-001 pilot (2026-07-27). Actuals sit comfortably above (snapshot 2026-07-27: backend domain ~98%, frontend ~87% vitest line coverage; SonarCloud reports frontend ~84% as it counts template lines differently), so the gate catches regressions without being noise. Enforced as a pipeline gate (backend coverlet.MTP · frontend `vitest-base.config.ts`). Revisit only if a later spec shows it miscalibrated.
 - **E2E tests (Playwright)** added with SPEC-001 (2026-07-20) — the pyramid is now unit → service → integration → E2E; CI job `1b · End-to-end` runs the full stack.
+- **Layout and accessibility assertions moved to Playwright** with SPEC-012 (2026-10-24): a dedicated `mobile` project with geometric assertions and axe-core, because jsdom cannot measure layout and visual-regression screenshots were rejected (they break on every intended change without saying what is wrong). Effectiveness was proven by swapping in the previous stylesheet: all seven tests failed.
 - **Frontend mutation testing (StrykerJS): consciously dropped** (2026-07-20). Weak value/effort ratio — the frontend is logic-thin (template + delegation, server-computed status per ADR-002), while the branch-heavy logic lives in the backend domain, already gated by Stryker.NET (60%). Revisit only if substantial client-side logic appears.

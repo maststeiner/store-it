@@ -38,73 +38,76 @@
       }
     } @else {
       <h1>{{ storage()?.name }}</h1>
-      <button
-        type="button"
-        class="icon-btn"
-        (click)="startRename()"
-        [title]="'actions.rename' | translate"
-        [attr.aria-label]="'actions.rename' | translate"
-      >
-        ✎
-      </button>
-      <button
-        type="button"
-        class="icon-btn"
-        [class.active]="addOpen()"
-        (click)="addOpen() ? cancelAdd() : openAdd()"
-        [attr.aria-expanded]="addOpen()"
-        [title]="'items.new' | translate"
-        [attr.aria-label]="'items.new' | translate"
-      >
-        ＋
-      </button>
-      <button
-        #searchButton
-        type="button"
-        class="icon-btn"
-        [class.active]="searchOpen()"
-        (click)="toggleSearch()"
-        [attr.aria-expanded]="searchOpen()"
-        aria-controls="item-search"
-        [title]="'items.search.toggle' | translate"
-        [attr.aria-label]="'items.search.toggle' | translate"
-      >
-        🔍
-      </button>
-      @if (storage(); as s) {
+      <!-- SPEC-012 D7: one group, wraps as a whole below the title on narrow screens -->
+      <div class="detail-actions">
         <button
           type="button"
           class="icon-btn"
-          [class.active]="sharingOpen()"
-          (click)="sharingOpen.set(!sharingOpen())"
-          [attr.aria-expanded]="sharingOpen()"
-          [title]="(s.isOwner ? 'sharing.share' : 'sharing.members.title') | translate"
-          [attr.aria-label]="(s.isOwner ? 'sharing.share' : 'sharing.members.title') | translate"
+          (click)="startRename()"
+          [title]="'actions.rename' | translate"
+          [attr.aria-label]="'actions.rename' | translate"
         >
-          👥
+          ✎
         </button>
-        @if (s.isOwner) {
+        <button
+          type="button"
+          class="icon-btn"
+          [class.active]="addOpen()"
+          (click)="addOpen() ? cancelAdd() : openAdd()"
+          [attr.aria-expanded]="addOpen()"
+          [title]="'items.new' | translate"
+          [attr.aria-label]="'items.new' | translate"
+        >
+          ＋
+        </button>
+        <button
+          #searchButton
+          type="button"
+          class="icon-btn"
+          [class.active]="searchOpen()"
+          (click)="toggleSearch()"
+          [attr.aria-expanded]="searchOpen()"
+          aria-controls="item-search"
+          [title]="'items.search.toggle' | translate"
+          [attr.aria-label]="'items.search.toggle' | translate"
+        >
+          🔍
+        </button>
+        @if (storage(); as s) {
           <button
             type="button"
             class="icon-btn"
-            (click)="deleteOpen.set(true)"
-            [title]="'actions.delete' | translate"
-            [attr.aria-label]="'actions.delete' | translate"
+            [class.active]="sharingOpen()"
+            (click)="sharingOpen.set(!sharingOpen())"
+            [attr.aria-expanded]="sharingOpen()"
+            [title]="(s.isOwner ? 'sharing.share' : 'sharing.members.title') | translate"
+            [attr.aria-label]="(s.isOwner ? 'sharing.share' : 'sharing.members.title') | translate"
           >
-            🗑
+            👥
           </button>
-        } @else {
-          <button
-            type="button"
-            class="icon-btn"
-            (click)="leaveOpen.set(true)"
-            [title]="'sharing.leave' | translate"
-            [attr.aria-label]="'sharing.leave' | translate"
-          >
-            ↩
-          </button>
+          @if (s.isOwner) {
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="deleteOpen.set(true)"
+              [title]="'actions.delete' | translate"
+              [attr.aria-label]="'actions.delete' | translate"
+            >
+              🗑
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="icon-btn"
+              (click)="leaveOpen.set(true)"
+              [title]="'sharing.leave' | translate"
+              [attr.aria-label]="'sharing.leave' | translate"
+            >
+              ↩
+            </button>
+          }
         }
-      }
+      </div>
     }
   </div>
 
@@ -127,7 +130,7 @@
 
   @if (addOpen()) {
     <form class="add-form" (ngSubmit)="addItem()">
-      <div class="field">
+      <div class="field field-name">
         <label for="item-name">{{ 'items.form.name' | translate }}</label>
         <input
           #addNameField
@@ -138,7 +141,7 @@
           [placeholder]="'items.form.namePlaceholder' | translate"
         />
       </div>
-      <div class="field">
+      <div class="field field-amount">
         <label for="item-amount">{{ 'items.form.amount' | translate }}</label>
         <input
           id="item-amount"
@@ -149,7 +152,7 @@
           [(ngModel)]="form.amount"
         />
       </div>
-      <div class="field">
+      <div class="field field-unit">
         <label for="item-unit">{{ 'items.form.unit' | translate }}</label>
         <select id="item-unit" name="unit" [(ngModel)]="form.unit">
           @for (unit of units; track unit) {
@@ -157,11 +160,11 @@
           }
         </select>
       </div>
-      <div class="field">
+      <div class="field field-expiry">
         <label for="item-expiry">{{ 'items.form.expiry' | translate }}</label>
         <input id="item-expiry" name="expiryDate" type="date" [(ngModel)]="form.expiryDate" />
       </div>
-      <div class="field">
+      <div class="field field-production">
         <label for="item-production">{{ 'items.form.production' | translate }}</label>
         <input
           id="item-production"
@@ -266,14 +269,14 @@
           @if (editItemId() === item.id) {
             <form class="item-row item-edit" (ngSubmit)="saveItem(item)">
               <input
-                class="inline-input"
+                class="inline-input edit-name"
                 name="editName"
                 type="text"
                 [(ngModel)]="editModel.name"
                 [attr.aria-label]="'items.form.name' | translate"
               />
               <input
-                class="inline-input"
+                class="inline-input edit-amount"
                 name="editAmount"
                 type="number"
                 step="0.1"
@@ -282,7 +285,7 @@
                 [attr.aria-label]="'items.form.amount' | translate"
               />
               <select
-                class="inline-input"
+                class="inline-input edit-unit"
                 name="editUnit"
                 [(ngModel)]="editModel.unit"
                 [attr.aria-label]="'items.form.unit' | translate"
@@ -292,14 +295,14 @@
                 }
               </select>
               <input
-                class="inline-input"
+                class="inline-input edit-expiry"
                 name="editExpiry"
                 type="date"
                 [(ngModel)]="editModel.expiryDate"
                 [attr.aria-label]="'items.form.expiry' | translate"
               />
               <input
-                class="inline-input"
+                class="inline-input edit-production"
                 name="editProduction"
                 type="date"
                 [(ngModel)]="editModel.productionDate"
