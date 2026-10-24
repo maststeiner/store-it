@@ -3,8 +3,17 @@
 :root {
   --ground: #edf5f2;
   --text: #16343a;
-  --text-soft: rgba(22, 52, 58, 0.62);
+  /* 0.72 (was 0.62): secondary text at 5.5 : 1 on white, 5.2 : 1 on the page background —
+     WCAG 1.4.3 needs 4.5 : 1, the old value gave 4.1 (SPEC-012 D9, found by axe) */
+  --text-soft: rgba(22, 52, 58, 0.72);
   --accent: #3e9c93;
+  /* SPEC-012 D9 / ui-guidelines: filled buttons and link text need 4.5 : 1 against white
+     (WCAG 1.4.3); --accent gives 3.3 : 1, so text sits on the strong variants (5.4 / 5.8 / 5.6 : 1;
+     still ≥ 4.8 : 1 on the tinted expired/expiring rows). Tints, dots, borders and the focus
+     ring keep --accent / --expired / --expiring. */
+  --accent-strong: #2b766e;
+  --expired-strong: #a84456;
+  --expiring-strong: #8f5e15;
   --accent-2: #6fa8d6;
   --panel: rgba(255, 255, 255, 0.55);
   --panel-tint: rgba(62, 156, 147, 0.1);
@@ -216,6 +225,8 @@ h1 {
   font-weight: 600;
   letter-spacing: -0.02em;
   margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .count-hint {
   color: var(--text-soft);
@@ -232,7 +243,7 @@ h1 {
 
 .btn-primary {
   margin-left: auto;
-  background: var(--accent);
+  background: var(--accent-strong);
   color: #fff;
   border: 0;
   padding: 10px 18px;
@@ -252,7 +263,8 @@ h1 {
 
 .storage-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* min(): a card never exceeds its container (SPEC-012 D7) */
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
   gap: 20px;
 }
 
@@ -306,6 +318,7 @@ h1 {
 .storage-name {
   font-weight: 600;
   font-size: 1.12rem;
+  overflow-wrap: anywhere;
 }
 .storage-meta {
   color: var(--text-soft);
@@ -381,15 +394,30 @@ h1 {
   margin-bottom: 10px;
 }
 .breadcrumb a {
-  color: var(--accent);
+  color: var(--accent-strong);
   text-decoration: none;
 }
 
 .detail-head {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
   margin-bottom: 26px;
+}
+/* The icon buttons are one group: when the title leaves no room they wrap together
+   onto the next line, never one by one (SPEC-012 D7). */
+.detail-head h1 {
+  flex: 1 1 200px;
+}
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+}
+.detail-head .form-error {
+  flex-basis: 100%;
 }
 .icon-btn {
   border: 1px solid var(--line);
@@ -529,6 +557,14 @@ h1 {
   font-size: 0.82rem;
   line-height: 1.5;
   cursor: pointer;
+  /* a 30-character tag without spaces (SPEC-011 D4) wraps inside the chip instead of widening
+     its row or card (SPEC-012 EC-01; CodeRabbit on #251) */
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tag-chip > span {
+  min-width: 0;
 }
 button.tag-chip:hover,
 .tag-chip-active {
@@ -626,13 +662,13 @@ button.tag-chip:hover,
   border-radius: 50%;
 }
 .group.expired .group-head {
-  color: var(--expired);
+  color: var(--expired-strong);
 }
 .group.expired .dot {
   background: var(--expired);
 }
 .group.expiring .group-head {
-  color: var(--expiring);
+  color: var(--expiring-strong);
 }
 .group.expiring .dot {
   background: var(--expiring);
@@ -677,17 +713,19 @@ button.tag-chip:hover,
 
 .item-name {
   font-weight: 500;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .item-qty,
 .item-date {
   color: var(--text-soft);
 }
 .item-date.overdue {
-  color: var(--expired);
+  color: var(--expired-strong);
   font-weight: 600;
 }
 .item-date.soon {
-  color: var(--expiring);
+  color: var(--expiring-strong);
   font-weight: 600;
 }
 .item-actions {
@@ -790,7 +828,7 @@ button.tag-chip:hover,
 }
 .btn-danger {
   border: 0;
-  background: var(--expired);
+  background: var(--expired-strong);
   color: #fff;
   padding: 9px 16px;
   border-radius: 10px;
@@ -883,31 +921,272 @@ button.tag-chip:hover,
 }
 
 /* ── Responsive ─────────────────────────────── */
+/* SPEC-012 — narrow screens (≤ 780 px, 320 px is the smallest supported width), rules
+   per docs/guidelines/ui-guidelines.md: no horizontal page scroll (WCAG 1.4.10), 44 px tap
+   targets (Apple HIG / WCAG 2.5.5), 16 px inputs (no iOS focus zoom), explicit grid areas so a
+   new field cannot shift its neighbours. Nothing here is hidden with overflow-x. */
 @media (max-width: 780px) {
   header {
-    padding: 12px 20px;
-    gap: 16px;
+    padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left));
+    gap: 12px;
   }
   nav {
     display: none;
   }
+  .header-right {
+    gap: 10px;
+  }
+  .header-alert {
+    padding: 0 16px;
+  }
   main {
-    padding: 32px 20px 60px;
+    padding: 24px max(16px, env(safe-area-inset-right)) 60px max(16px, env(safe-area-inset-left));
   }
-  .add-form,
-  .item-edit {
-    grid-template-columns: 1fr 1fr;
+  .page-head {
+    flex-wrap: wrap;
+    gap: 6px 16px;
   }
-  .add-form .field:first-child {
-    grid-column: 1 / -1;
+
+  /* 16 px in every text control: iOS Safari zooms into anything smaller on focus (D6);
+     44 px high so selects are tap targets and the fields line up with the buttons (D2) */
+  .field input,
+  .field select,
+  .item-edit input,
+  .item-edit select,
+  .inline-input,
+  .lang {
+    font-size: 1rem;
+    min-height: 44px;
   }
-  .item-row {
-    grid-template-columns: 1fr auto;
-    row-gap: 4px;
+
+  /* 44 × 44 CSS px tap targets (D2); the desktop sizes stay above the breakpoint (AC-08) */
+  .icon-btn,
+  .session-chip {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
   }
   .item-actions {
-    grid-column: 2;
-    grid-row: 1;
+    gap: 0;
+  }
+  .item-actions button {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    font-size: 18px;
+  }
+  .btn-primary,
+  .btn-ghost,
+  .btn-danger,
+  .btn-provider,
+  .btn-small,
+  .lang,
+  .session-menu-item {
+    min-height: 44px;
+  }
+  .tag-list .tag-chip {
+    min-height: 44px;
+  }
+  .tag-chips .tag-chip {
+    padding: 0 0 0 12px;
+  }
+  .tag-chip-remove {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+  }
+  .tag-suggestions li {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  /* Row chips are inline text: 32 px, 8 px apart — the 44 px version of the same filter is
+     the tag list under 🔍 (D2) */
+  .item-tags {
+    gap: 8px;
+  }
+  .item-tags .tag-chip {
+    min-height: 32px;
+  }
+
+  /* Detail head: the rename field takes the whole line, the icon group wraps as one (D7) */
+  .detail-head {
+    gap: 10px;
+  }
+  .detail-head .inline-edit {
+    flex-wrap: wrap;
+  }
+  .detail-head .title-input,
+  .detail-head .inline-input {
+    flex: 1 1 100%;
+  }
+  .detail-actions {
+    gap: 6px;
+  }
+
+  /* Item row (D5): name + actions · tags (only with tags) · quantity + date — identical with
+     and without tags apart from the chip line */
+  .item-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'name actions'
+      'tags tags'
+      'qty date';
+    gap: 4px 12px;
+    padding: 8px 12px 12px 14px;
+  }
+  .item-name {
+    grid-area: name;
+    align-self: center;
+  }
+  .item-tags {
+    grid-area: tags;
+    display: flex;
+    margin: 2px 0 4px;
+  }
+  .item-qty {
+    grid-area: qty;
+  }
+  .item-date {
+    grid-area: date;
+    text-align: right;
+  }
+  .item-actions {
+    grid-area: actions;
+  }
+
+  /* Inline edit (D4): name · amount + unit · expiry + production · tags · actions · error —
+     every cell has its area, so no cell can push another out of the card */
+  .item-edit {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'name name'
+      'amount unit'
+      'expiry production'
+      'tags tags'
+      'actions actions'
+      'error error';
+    gap: 10px;
+    padding: 14px 14px 14px 14px;
+  }
+  .item-edit .edit-name {
+    grid-area: name;
+  }
+  .item-edit .edit-amount {
+    grid-area: amount;
+  }
+  .item-edit .edit-unit {
+    grid-area: unit;
+  }
+  .item-edit .edit-expiry {
+    grid-area: expiry;
+  }
+  .item-edit .edit-production {
+    grid-area: production;
+  }
+  .item-edit-tags {
+    grid-area: tags;
+    min-width: 0;
+  }
+  .item-edit .item-actions {
+    grid-area: actions;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .item-edit .form-error {
+    grid-area: error;
+  }
+  .item-edit .inline-input {
+    width: 100%;
+  }
+
+  /* Add form (D4): the same stacking with labels; Add and Cancel side by side */
+  .add-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'name name'
+      'amount unit'
+      'expiry production'
+      'tags tags'
+      'actions actions'
+      'hint hint'
+      'error error';
+    padding: 16px 14px;
+  }
+  .add-form .field-name {
+    grid-area: name;
+  }
+  .add-form .field-amount {
+    grid-area: amount;
+  }
+  .add-form .field-unit {
+    grid-area: unit;
+  }
+  .add-form .field-expiry {
+    grid-area: expiry;
+  }
+  .add-form .field-production {
+    grid-area: production;
+  }
+  .add-form .field-tags {
+    grid-area: tags;
+    min-width: 0;
+  }
+  .add-form .form-actions {
+    grid-area: actions;
+    flex-direction: row;
+  }
+  .add-form .form-actions .btn-primary,
+  .add-form .form-actions .btn-ghost {
+    flex: 1 1 0;
+    width: auto;
+  }
+  .add-form .form-hint {
+    grid-area: hint;
+  }
+  .add-form .form-error {
+    grid-area: error;
+  }
+
+  /* Tag control: the input keeps a usable width; the button wraps below it when needed (EC-06) */
+  .tag-input {
+    flex-wrap: wrap;
+  }
+  .tag-input .inline-input {
+    flex: 1 1 160px;
+  }
+  .tag-add {
+    flex: 1 0 auto;
+  }
+
+  /* Search bar, sharing panel, dialogs, login card */
+  .search-bar .icon-btn {
+    flex: none;
+  }
+  .sharing-panel {
+    padding: 16px 14px;
+  }
+  .sharing-link-row,
+  .sharing-panel .inline-actions,
+  .member-row {
+    flex-wrap: wrap;
+  }
+  /* the desktop rule for .sharing-link sits further down and would win on specificity */
+  .sharing-panel .sharing-link {
+    flex: 1 1 160px;
+    font-size: 1rem; /* readonly, but focusable — D6 applies */
+  }
+  .dialog {
+    padding: 20px 16px;
+  }
+  .dialog-actions {
+    flex-wrap: wrap;
+  }
+  .dialog-actions button {
+    flex: 1 1 auto;
+  }
+  .login-card {
+    padding: 28px 20px;
   }
 }
 
@@ -1134,7 +1413,7 @@ button.tag-chip:hover,
   border: 1px solid rgba(201, 138, 46, 0.35);
 }
 .about-link {
-  color: var(--accent);
+  color: var(--accent-strong);
   overflow-wrap: anywhere;
 }
 .about-license-text,
@@ -1191,7 +1470,7 @@ button.tag-chip:hover,
 }
 .about-component-text summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--accent-strong);
   font-size: 0.9rem;
 }
 .about-component-text pre {

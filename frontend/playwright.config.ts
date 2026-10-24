@@ -16,7 +16,24 @@ export default defineConfig({
     // locale from navigator.language, falling back to English).
     locale: 'en-US',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /mobile-layout\.spec\.ts/,
+    },
+    {
+      // SPEC-012 D8: phone emulation in Chromium (the only browser installed in CI job 1b).
+      // Runs the layout spec only; the flows above stay desktop.
+      name: 'mobile',
+      testMatch: /mobile-layout\.spec\.ts/,
+      use: {
+        ...devices['iPhone 13'],
+        browserName: 'chromium',
+        viewport: { width: 390, height: 844 },
+      },
+    },
+  ],
   webServer: {
     command: 'npm start',
     url: 'http://localhost:4200',
