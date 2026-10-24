@@ -69,6 +69,19 @@ added to the test guidelines' local-run snippet. CI already runs `install --with
 iPhone, whether Safari still zooms into any field, the look of the darker buttons and secondary
 text on desktop, and the row chips at 32 px.
 
+## Review (G2, automated part) and first CI run
+
+CodeRabbit (ASSERTIVE) posted two findings on `74e7295`, both taken; CI job `1b` failed once:
+
+| Finding / failure | Fix |
+|---|---|
+| **CI 1b:** "320 inline edit, ten tags: document wider than viewport — received 328" (passed locally: the runner's Ubuntu fonts are wider) | the same defect CodeRabbit's Major described: an editable chip with a 30-character word cannot wrap → `.tag-chip { max-width: 100%; min-width: 0; overflow-wrap: anywhere }` (+ `> span { min-width: 0 }`); the fixture pads the long tags with `W` so chip width no longer depends on fonts |
+| **Major:** long tag text must wrap inside editable chips at 320 px | see above |
+| **Trivial:** the fixture had only `Ok` rows, so axe never saw the expired / expiring-soon status colours; "use strong text tokens for those selectors" | fixture gains one expired and one expiring-soon row (count 5); `--expired-strong` now `#a84456`, new `--expiring-strong #8f5e15` for the group heads and dates (both ≥ 4.8 : 1 on the tinted rows); dots, borders and tints keep the light tokens |
+
+Lesson for the harness: a layout test that passes locally can still fail in CI through font
+metrics — fixtures for "longest possible text" should use the widest glyph, not `x`.
+
 ## Human Interventions
 
 | # | Intervention | Reason |
@@ -76,6 +89,7 @@ text on desktop, and the row chips at 32 px.
 | 1 | Asked for widely used UI guidelines to lean on | before G1 — led to the second draft |
 | 2 | "ja, beides": standards in the spec **and** a repo UI guideline (plus axe-core) | G1 input |
 | 3 | Froze the spec ("ja") | G1 |
+| 4 | "review ist durch und build hat gefailed" — pointed at the CodeRabbit findings and the red `1b` | G2 |
 
 ## Outcome
 

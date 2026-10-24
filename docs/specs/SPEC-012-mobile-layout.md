@@ -206,11 +206,18 @@ can be managed where it is used: in the kitchen, on the phone.**
       MPL-2.0, test-time only); `@playwright/test` already present, Chromium mobile emulation is
       built in. CI job `1b` needs nothing new (`npx playwright install --with-deps chromium` already
       installs the browser's system libraries).
-- [x] Colour tokens (D9, found by axe): `--accent-strong #2b766e` for filled buttons and link text
-      (5.4 : 1 on white; `--accent` gave 3.3 : 1), `--expired-strong #b04a5c` for the danger button
-      (5.3 : 1), `--text-soft` alpha 0.62 → 0.72 (5.5 : 1 on white, was 4.1 : 1). Tints, dots,
-      borders and the focus ring keep `--accent` / `--expired`. ⚠ Visible on desktop too — a
-      contrast correction, not a layout change (AC-08 is about sizes and placement).
+- [x] Colour tokens (D9, found by axe and the G2 review): `--accent-strong #2b766e` for filled
+      buttons and link text (5.4 : 1 on white; `--accent` gave 3.3 : 1), `--expired-strong #a84456`
+      for the danger button, the *expired* group head and overdue dates (5.8 : 1 on white, 5.0 : 1
+      on the tinted row), `--expiring-strong #8f5e15` for the *expiring soon* group head and dates
+      (5.6 : 1 / 4.8 : 1; `--expiring` gave 2.9 : 1), `--text-soft` alpha 0.62 → 0.72 (5.5 : 1 on
+      white, was 4.1 : 1). Tints, dots, borders and the focus ring keep `--accent` / `--expired` /
+      `--expiring`. ⚠ Visible on desktop too — a contrast correction, not a layout change (AC-08 is
+      about sizes and placement).
+- [x] Tag chips wrap their text (`max-width: 100%; overflow-wrap: anywhere`): a 30-character tag
+      without spaces (SPEC-011 D4) otherwise widens the card at 320 px — CI job `1b` caught it on
+      Ubuntu fonts (328 px document) where the local run had passed; the fixture now pads the long
+      tags with the widest glyph so the result no longer depends on the runner's fonts.
 - [x] ADR required: no.
 
 ---
