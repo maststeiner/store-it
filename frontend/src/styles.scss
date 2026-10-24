@@ -8,10 +8,12 @@
   --text-soft: rgba(22, 52, 58, 0.72);
   --accent: #3e9c93;
   /* SPEC-012 D9 / ui-guidelines: filled buttons and link text need 4.5 : 1 against white
-     (WCAG 1.4.3); --accent gives 3.3 : 1, so text sits on the strong variants (5.4 / 5.3 : 1).
-     Tints, dots, borders and the focus ring keep --accent / --expired. */
+     (WCAG 1.4.3); --accent gives 3.3 : 1, so text sits on the strong variants (5.4 / 5.8 / 5.6 : 1;
+     still ≥ 4.8 : 1 on the tinted expired/expiring rows). Tints, dots, borders and the focus
+     ring keep --accent / --expired / --expiring. */
   --accent-strong: #2b766e;
-  --expired-strong: #b04a5c;
+  --expired-strong: #a84456;
+  --expiring-strong: #8f5e15;
   --accent-2: #6fa8d6;
   --panel: rgba(255, 255, 255, 0.55);
   --panel-tint: rgba(62, 156, 147, 0.1);
@@ -555,6 +557,14 @@ h1 {
   font-size: 0.82rem;
   line-height: 1.5;
   cursor: pointer;
+  /* a 30-character tag without spaces (SPEC-011 D4) wraps inside the chip instead of widening
+     its row or card (SPEC-012 EC-01; CodeRabbit on #251) */
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tag-chip > span {
+  min-width: 0;
 }
 button.tag-chip:hover,
 .tag-chip-active {
@@ -652,13 +662,13 @@ button.tag-chip:hover,
   border-radius: 50%;
 }
 .group.expired .group-head {
-  color: var(--expired);
+  color: var(--expired-strong);
 }
 .group.expired .dot {
   background: var(--expired);
 }
 .group.expiring .group-head {
-  color: var(--expiring);
+  color: var(--expiring-strong);
 }
 .group.expiring .dot {
   background: var(--expiring);
@@ -711,11 +721,11 @@ button.tag-chip:hover,
   color: var(--text-soft);
 }
 .item-date.overdue {
-  color: var(--expired);
+  color: var(--expired-strong);
   font-weight: 600;
 }
 .item-date.soon {
-  color: var(--expiring);
+  color: var(--expiring-strong);
   font-weight: 600;
 }
 .item-actions {

@@ -171,11 +171,29 @@ const DAY = 86_400_000;
 const isoDate = (offsetDays: number): string =>
   new Date(Date.now() + offsetDays * DAY).toISOString().slice(0, 10);
 
-/** The storage every detail test works on: three rows that exercise D5 and the edge cases. */
+/** The storage every detail test works on: five rows — all three expiry groups, D5 and the edge cases. */
 async function seedStorage(page: Page): Promise<{ id: string; name: string }> {
   const headers = await xsrfHeaders(page);
   const name = uniqueName('Phone');
   const id = await createStorage(page.request, headers, name);
+  // one row per expiry group, so the axe scan covers the status colours of the group heads
+  // and dates (CodeRabbit on #251)
+  await addItem(page.request, headers, id, {
+    name: 'Expired yoghurt',
+    amount: 1,
+    unit: 'Piece',
+    expiryDate: isoDate(-1),
+    productionDate: null,
+    tags: [],
+  });
+  await addItem(page.request, headers, id, {
+    name: 'Expiring milk',
+    amount: 1,
+    unit: 'Milliliter',
+    expiryDate: isoDate(1),
+    productionDate: null,
+    tags: [],
+  });
   await addItem(page.request, headers, id, {
     name: 'Plain pasta',
     amount: 2,
@@ -199,7 +217,9 @@ async function seedStorage(page: Page): Promise<{ id: string; name: string }> {
     unit: 'Gram',
     expiryDate: isoDate(200),
     productionDate: null,
-    tags: Array.from({ length: 10 }, (_, i) => `Tag${i}`.padEnd(30, 'x')),
+    // padded with the widest glyph, so the chip width does not depend on the runner's fonts
+    // (CI job 1b failed at 320 px with 'x' padding on Ubuntu fonts while it passed locally)
+    tags: Array.from({ length: 10 }, (_, i) => `Tag${i}`.padEnd(30, 'W')),
   });
   return { id, name };
 }
@@ -244,7 +264,7 @@ test.describe('storage detail on a phone', () => {
   test.beforeEach(async ({ page }) => {
     storage = await seedStorage(page);
     await page.goto(`/storages/${storage.id}`);
-    await expect(page.locator('.item-row')).toHaveCount(3);
+    await expect(page.locator('.item-row')).toHaveCount(5);
   });
 
   test('AC-02 / AC-07 / AC-09 / AC-10: rows with and without tags, plain state', async ({
@@ -434,7 +454,7 @@ test.describe('smallest supported width (320 px)', () => {
     await expectTapTargets(page, '320 storage list');
 
     await page.goto(`/storages/${storage.id}`);
-    await expect(page.locator('.item-row')).toHaveCount(3);
+    await expect(page.locator('.item-row')).toHaveCount(5);
     await expectStateOk(page, '320 detail');
     await expectTapTargets(page, '320 detail');
 
