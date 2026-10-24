@@ -124,6 +124,37 @@ async function expectInputFontSizes(page: Page, state: string): Promise<void> {
 
 // ── Test data through the API (same cookie session as the page) ──────────────
 
+// SPEC-012 A1 / AC-15: ✎ and 🗑 (and the quantity) sit at the same place in every row,
+// whether the row has tags or not — same x and width, on the line of the item name.
+async function expectActionsAligned(page: Page, state: string): Promise<void> {
+  const rows = page.locator('.item-row:not(.item-edit)');
+  const count = await rows.count();
+  expect(count, `${state}: needs several rows`).toBeGreaterThan(1);
+  const reference = await box(rows.first().locator('.item-actions'));
+  const referenceQty = await box(rows.first().locator('.item-qty'));
+  for (let i = 0; i < count; i++) {
+    const row = rows.nth(i);
+    const name = await box(row.locator('.item-name'));
+    const actions = await box(row.locator('.item-actions'));
+    const qty = await box(row.locator('.item-qty'));
+    expect(Math.abs(actions.x - reference.x), `${state}: actions x, row ${i}`).toBeLessThan(
+      TOLERANCE + 1,
+    );
+    expect(
+      Math.abs(actions.width - reference.width),
+      `${state}: actions width, row ${i}`,
+    ).toBeLessThan(TOLERANCE + 1);
+    expect(Math.abs(qty.x - referenceQty.x), `${state}: quantity x, row ${i}`).toBeLessThan(
+      TOLERANCE + 1,
+    );
+    // on the name line: the vertical centres overlap within the actions' own height
+    expect(
+      Math.abs(name.y + name.height / 2 - (actions.y + actions.height / 2)),
+      `${state}: actions on the name line, row ${i}`,
+    ).toBeLessThan(actions.height);
+  }
+}
+
 function uniqueName(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
@@ -272,6 +303,7 @@ test.describe('storage detail on a phone', () => {
   }) => {
     await expectStateOk(page, 'detail plain');
     await expectTapTargets(page, 'detail plain');
+    await expectActionsAligned(page, 'detail plain');
 
     // AC-09: a row without tags — name + actions on one line, quantity + date on the next
     const plain = page.locator('.item-row', { hasText: 'Plain pasta' });
@@ -457,6 +489,7 @@ test.describe('smallest supported width (320 px)', () => {
     await expect(page.locator('.item-row')).toHaveCount(5);
     await expectStateOk(page, '320 detail');
     await expectTapTargets(page, '320 detail');
+    await expectActionsAligned(page, '320 detail');
 
     await page
       .locator('.item-row', { hasText: 'Dosentomaten230g' })
@@ -484,5 +517,35 @@ test.describe('smallest supported width (320 px)', () => {
     await expectInside(form.locator('#item-unit'), form, '320 #item-unit');
     await expectInside(form.getByRole('button', { name: 'Add', exact: true }), form, '320 Add');
     await expectInside(form.getByRole('button', { name: 'Cancel' }), form, '320 Cancel');
+  });
+});
+
+// ── AC-15: the same row contract on a wide screen ─────────────────────────────
+// Marcel (G3, 2026-10-24): ✎/🗑 moved to a second line as soon as a row had tags — the
+// desktop grid auto-placed its cells. Same seed, same assertions, desktop viewport.
+
+test.describe('wide viewport (1280 px)', () => {
+  test.use({ viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false });
+
+  test('AC-15: quantity, date and actions keep their column with and without tags', async ({
+    page,
+  }) => {
+    const storage = await seedStorage(page);
+    await page.goto(`/storages/${storage.id}`);
+    await expect(page.locator('.item-row')).toHaveCount(5);
+    await expectStateOk(page, '1280 detail');
+    await expectActionsAligned(page, '1280 detail');
+
+    // the chip line hangs under the name; quantity and date stay on the name line
+    const tagged = page.locator('.item-row', { hasText: 'Canned tomatoes' });
+    const name = await box(tagged.locator('.item-name'));
+    const chips = await box(tagged.locator('.item-tags'));
+    const qty = await box(tagged.locator('.item-qty'));
+    const date = await box(tagged.locator('.item-date'));
+    expect(chips.y).toBeGreaterThanOrEqual(name.y + name.height - TOLERANCE);
+    expect(Math.abs(chips.x - name.x)).toBeLessThan(TOLERANCE + 1);
+    expect(Math.abs(name.y + name.height / 2 - (qty.y + qty.height / 2))).toBeLessThan(qty.height);
+    expect(Math.abs(qty.y - date.y)).toBeLessThan(TOLERANCE + 1);
+    expect(qty.x).toBeLessThan(date.x);
   });
 });

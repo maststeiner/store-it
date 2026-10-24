@@ -40,6 +40,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 | O2 | Sideways scrolling on several views on a narrow screen. | O1, plus iOS Safari zooming into any input/select below **16 px** font size (ours are 0.95 rem = 15.2 px); the zoom leaves the page wider than the viewport. |
 | O3 | Icons and buttons are hard to hit (✎, 🗑, header icon buttons). | `.icon-btn` is 36 × 36 px, the row actions render a 14 px glyph — below the 44 pt minimum of the Apple HIG / WCAG 2.5.5. |
 | O4 | With tags on an item the quantity jumps next to the chips and the date drops to a third line; rows with and without tags look different. | `.item-row` under 780 px pins only `.item-actions`; the other cells are auto-placed, so an extra tag cell shifts everything after it. |
+| O5 | *(added at G3, A1)* On a wide screen ✎ and 🗑 are not at the same place in every row: as soon as an item has tags they drop to a second line on the left. | The desktop `.item-row` grid (`1fr 130px 150px 80px`) auto-places its cells; the tag cell takes the quantity column and pushes the actions out of the four columns. Same cause as O4, other breakpoint. |
 
 ## Decisions taken by the draft (confirmed at G1, 2026-10-24)
 
@@ -55,6 +56,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 | D8 | **Tests are Playwright, in a dedicated `mobile` project** (Chromium mobile emulation: 390 × 844, `isMobile`, `hasTouch`, device scale 3; one case at 320 × 568) running `e2e/mobile-layout.spec.ts` only; the existing desktop project keeps its tests. The assertions are **layout facts** read from the real browser: document scroll width ≤ viewport width (D3), bounding boxes of every form control inside the bounding box of its card (D4), tap targets ≥ 44 px (D2), computed input font size ≥ 16 px (D6), chip row below the name and quantity/date on one line (D5). | jsdom (the unit-test runner) has no layout engine, so these facts can only be asserted in a real browser. One project with its own spec keeps CI cost near the existing E2E job (same backend, same `ng serve`). WebKit is **not** added: the fixes are CSS the engines share, and Chromium is the only browser installed in CI (`1b`); a WebKit run can be a follow-up if a Safari-only defect ever appears. |
 | D9 | **axe-core runs in the mobile tests**: every page state the `mobile` project visits is scanned with `@axe-core/playwright` (rule tags `wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa`); **zero violations** is the assertion. A rule is excluded only with a comment naming the criterion and the reason, plus a tech-debt issue. | Turns the standard into a gate instead of a reading list: target size (2.5.8), contrast (1.4.3/1.4.11), labels and roles are checked by the same engine Lighthouse uses. New dev dependency `@axe-core/playwright` (Deque, MPL-2.0, no runtime footprint); justification recorded here and in the PR. |
 | D10 | **A binding UI guideline** `docs/guidelines/ui-guidelines.md` is added and linked from the coding guidelines and `CLAUDE.md`: standards (WCAG 2.2 AA, Apple HIG, Material 3 for spacing), the layout rules of this spec (reflow, one breakpoint, intrinsic sizing, explicit grid areas, 16 px inputs, safe areas), target sizes, contrast, how layout is tested, and a reviewer checklist. | The repo had coding and test guidelines but none for the UI, so the Reviewer persona had no yardstick for layout — the tag field slipped through for that reason. The guideline is the harness fix (orchestrator loop: sharpen the harness, not only the output). |
+| D11 | *(A1)* **The item row has fixed grid areas at every width.** Wide screens: name · quantity · date · actions in four columns on one line, the chip line (only when the item has tags) under the name in the first column. Narrow screens: D5 unchanged. Quantity, date and the actions never change column or line because of optional content. | Marcel at G3: the actions must always sit at the same place. Explicit areas instead of auto-placement, the same remedy as D4/D5 applied to the desktop grid; the UI guideline's rule "explicit grid areas" now reads "at every width". |
 
 ---
 
@@ -62,7 +64,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 
 | # | Date | Change |
 |---|------|--------|
-| | | |
+| A1 | 2026-10-24 | Marcel Steiner (G3 on the branch): ✎/🗑 move when a row has tags on a wide screen (O5). Adds D11, AC-15 and a 1280 px block in the mobile test file; `ui-guidelines.md` layout rule extended to every width. No change to any other criterion. |
 
 ---
 
@@ -111,6 +113,10 @@ can be managed where it is used: in the kitchen, on the phone.**
 - [ ] AC-11: WHEN an item name or storage title is longer than the available width THE client
       SHALL wrap it (breaking long words) instead of widening the row or the page (D7); the
       detail-head icon buttons SHALL wrap onto a further line when the title leaves no room.
+- [ ] AC-15 *(A1)*: WHEN items with and without tags are shown at any viewport width THE client
+      SHALL render the quantity, the date and the edit/delete actions of every row at the same
+      horizontal position and on the line of the item name; the chips, when present, SHALL
+      take their own line below the name without moving any other cell (D11).
 
 ### Accessibility gate and guideline
 
@@ -242,10 +248,13 @@ can be managed where it is used: in the kitchen, on the phone.**
 | AC-12 | `playwright.config.ts` project `mobile` (`testMatch` mobile-layout.spec.ts; desktop project ignores it); CI job `1b` runs both | ✅ · ⏳ CI |
 | AC-13 | → `expectAccessible` (axe, tags wcag2a/wcag2aa/wcag21aa/wcag22aa) in every visited state — three colour-contrast findings fixed on the way (see Technical Constraints) | ✅ |
 | AC-14 | `docs/guidelines/ui-guidelines.md`, linked from `coding-guidelines.md` and `CLAUDE.md` | ✅ |
+| AC-15 | → `expectActionsAligned` (same x and width of `.item-actions` and `.item-qty` across all five rows, actions on the name line) in "detail plain", "320 detail" and the new "wide viewport (1280 px)" block, which also runs the overflow and axe checks on the desktop layout | ✅ |
 
 **Regression proof (test effectiveness):** with the `develop` stylesheet swapped in, all 7 mobile
 tests fail — document wider than viewport (detail, search, add form, inline edit), tap targets
 below 44 px (list), controls below 16 px (rename). Local run 2026-10-24, documented in the agent log.
+A1: with the stylesheet of the previous commit the 1280 px block fails at "actions x, row 2" while
+the phone row test still passes — the desktop defect was invisible to the narrow-only tests.
 
 ---
 

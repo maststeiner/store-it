@@ -82,6 +82,16 @@ CodeRabbit (ASSERTIVE) posted two findings on `74e7295`, both taken; CI job `1b`
 Lesson for the harness: a layout test that passes locally can still fail in CI through font
 metrics — fixtures for "longest possible text" should use the widest glyph, not `x`.
 
+## Amendment A1 (G3 feedback on the branch)
+
+| Step | Result |
+|------|--------|
+| Cause | desktop `.item-row` grid `1fr 130px 150px 80px` with auto-placement: the tag cell took the quantity column, ✎/🗑 wrapped to a second line |
+| Fix | `.item-row:not(.item-edit)` gets `grid-template-areas` ('name qty date actions' / 'tags . . .'), `row-gap: 0`, chips `margin-top: 6px`; the mobile selector is aligned so it still wins |
+| Test | `expectActionsAligned` (x and width of `.item-actions`/`.item-qty` equal across rows, actions on the name line) in "detail plain", "320 detail" and a new 1280 px block with overflow + axe |
+| Proof | previous stylesheet → 1280 block fails ("actions x, row 2"), phone test passes; new stylesheet → 8/8 mobile, 224 unit |
+| Screenshots | desktop 1280 and phone 390 with rows with/without tags — icons in one column on every row |
+
 ## Human Interventions
 
 | # | Intervention | Reason |
@@ -90,10 +100,11 @@ metrics — fixtures for "longest possible text" should use the widest glyph, no
 | 2 | "ja, beides": standards in the spec **and** a repo UI guideline (plus axe-core) | G1 input |
 | 3 | Froze the spec ("ja") | G1 |
 | 4 | "review ist durch und build hat gefailed" — pointed at the CodeRabbit findings and the red `1b` | G2 |
+| 5 | "edit und löschen icon nicht immer am gleichen ort, je nachdem ob es tags gibt" — the desktop row auto-placed its cells; the mobile spec had only pinned the narrow grid | G3 → amendment A1 (O5, D11, AC-15) |
 
 ## Outcome
 
-- **Result:** PR open, awaiting G2/G3
+- **Result:** PR open, awaiting G2/G3; amendment A1 (desktop row areas, AC-15, 1280 px test block) added after Marcel's first look on the branch
 - **Deviations from spec:** `.detail-actions` wrapper (D7, noted in Technical Constraints);
   contrast tokens visible on desktop (D9/AC-08, noted)
 - **Harness follow-up:** `docs/guidelines/ui-guidelines.md` (new), linked from

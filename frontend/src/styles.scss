@@ -702,6 +702,29 @@ button.tag-chip:hover,
   border-radius: 11px;
   padding: 12px 18px;
 }
+/* SPEC-012 A1: the plain row has fixed areas at every width. Quantity, date and ✎/🗑 stay on
+   the name line in their own columns; the optional chip line hangs under the name. With
+   auto-placement a fifth cell (tags) pushed the actions into a second line on the left. */
+.item-row:not(.item-edit) {
+  grid-template-columns: minmax(0, 1fr) 130px 150px 80px;
+  grid-template-areas:
+    'name qty date actions'
+    'tags . . .';
+  row-gap: 0;
+}
+.item-tags {
+  grid-area: tags;
+  margin-top: 6px;
+}
+.item-qty {
+  grid-area: qty;
+}
+.item-date {
+  grid-area: date;
+}
+.item-row:not(.item-edit) .item-actions {
+  grid-area: actions;
+}
 .group.expired .item-row {
   border-left-color: var(--expired);
   background: rgba(193, 90, 108, 0.07);
@@ -712,6 +735,7 @@ button.tag-chip:hover,
 }
 
 .item-name {
+  grid-area: name;
   font-weight: 500;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -1026,7 +1050,7 @@ button.tag-chip:hover,
 
   /* Item row (D5): name + actions · tags (only with tags) · quantity + date — identical with
      and without tags apart from the chip line */
-  .item-row {
+  .item-row:not(.item-edit) {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
       'name actions'

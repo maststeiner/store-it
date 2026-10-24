@@ -33,9 +33,11 @@ and the mockup wins on desktop — the two are reconciled in the responsive bloc
 - **Intrinsic sizing over fixed widths:** `minmax(0, 1fr)`, `min()`, `clamp()`, `flex-wrap`,
   `min-width: 0` on grid/flex children that hold text or inputs; `overflow-wrap: anywhere` on
   user-provided text (item names, storage titles, e-mail addresses).
-- **Forms and rows use explicit grid areas on narrow screens**, never auto-placement. Adding a
-  field must not move its neighbours (SPEC-012 O1/O4 was exactly this). Each cell gets a class
-  that maps to its area.
+- **Forms and repeated rows use explicit grid areas at every width**, never auto-placement.
+  Adding a field or an optional cell (tags, hints) must not move its neighbours — SPEC-012
+  O1/O4 (narrow) and O5 (wide: the actions dropped to a second line once a row had tags) were
+  exactly this. Each cell gets a class that maps to its area; optional content gets its own
+  area or line. Controls that repeat per row (edit, delete) sit at the same place in every row.
 - **Zoom (WCAG 1.4.4):** the viewport meta stays `width=device-width, initial-scale=1` — no
   `maximum-scale`, no `user-scalable=no`. Inputs and selects are **≥ 16 px** on narrow screens so
   iOS Safari does not zoom on focus.
