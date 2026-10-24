@@ -92,6 +92,14 @@ metrics — fixtures for "longest possible text" should use the widest glyph, no
 | Proof | previous stylesheet → 1280 block fails ("actions x, row 2"), phone test passes; new stylesheet → 8/8 mobile, 224 unit |
 | Screenshots | desktop 1280 and phone 390 with rows with/without tags — icons in one column on every row |
 
+## Amendment A2 (G3 feedback on the branch)
+
+| Step | Result |
+|------|--------|
+| Cause | `.chips` / `.chip.expired|expiring|ok` on the storage cards never had a stylesheet rule (since SPEC-001) |
+| Fix | pill chips with status dot and strong text colour on a tint, wrapping inside the card |
+| Test | `expectStatusChips` in the list states (390 and 320): visible, inside the card, background set, pill radius; second seeded storage with one fresh item for the `ok` chip |
+
 ## Human Interventions
 
 | # | Intervention | Reason |
@@ -101,6 +109,7 @@ metrics — fixtures for "longest possible text" should use the widest glyph, no
 | 3 | Froze the spec ("ja") | G1 |
 | 4 | "review ist durch und build hat gefailed" — pointed at the CodeRabbit findings and the red `1b` | G2 |
 | 5 | "edit und löschen icon nicht immer am gleichen ort, je nachdem ob es tags gibt" — the desktop row auto-placed its cells; the mobile spec had only pinned the narrow grid | G3 → amendment A1 (O5, D11, AC-15) |
+| 6 | "gleich in dieser story umsetzen" — the unstyled storage-card status chips (side finding) go into this PR | G3 → amendment A2 (O6, D12, AC-16) |
 
 ## Outcome
 

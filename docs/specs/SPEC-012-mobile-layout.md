@@ -41,6 +41,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 | O3 | Icons and buttons are hard to hit (✎, 🗑, header icon buttons). | `.icon-btn` is 36 × 36 px, the row actions render a 14 px glyph — below the 44 pt minimum of the Apple HIG / WCAG 2.5.5. |
 | O4 | With tags on an item the quantity jumps next to the chips and the date drops to a third line; rows with and without tags look different. | `.item-row` under 780 px pins only `.item-actions`; the other cells are auto-placed, so an extra tag cell shifts everything after it. |
 | O5 | *(added at G3, A1)* On a wide screen ✎ and 🗑 are not at the same place in every row: as soon as an item has tags they drop to a second line on the left. | The desktop `.item-row` grid (`1fr 130px 150px 80px`) auto-places its cells; the tag cell takes the quantity column and pushes the actions out of the four columns. Same cause as O4, other breakpoint. |
+| O6 | *(added at G3, A2)* The status hints on the storage cards ("3 expired", "2 expiring soon", "All fresh") are plain text in the default colour. | `storage-list-page.html` has used `chip expired` / `chip expiring` / `chip ok` since SPEC-001; `styles.scss` never got a rule for `.chips` or `.chip`. |
 
 ## Decisions taken by the draft (confirmed at G1, 2026-10-24)
 
@@ -57,6 +58,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 | D9 | **axe-core runs in the mobile tests**: every page state the `mobile` project visits is scanned with `@axe-core/playwright` (rule tags `wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa`); **zero violations** is the assertion. A rule is excluded only with a comment naming the criterion and the reason, plus a tech-debt issue. | Turns the standard into a gate instead of a reading list: target size (2.5.8), contrast (1.4.3/1.4.11), labels and roles are checked by the same engine Lighthouse uses. New dev dependency `@axe-core/playwright` (Deque, MPL-2.0, no runtime footprint); justification recorded here and in the PR. |
 | D10 | **A binding UI guideline** `docs/guidelines/ui-guidelines.md` is added and linked from the coding guidelines and `CLAUDE.md`: standards (WCAG 2.2 AA, Apple HIG, Material 3 for spacing), the layout rules of this spec (reflow, one breakpoint, intrinsic sizing, explicit grid areas, 16 px inputs, safe areas), target sizes, contrast, how layout is tested, and a reviewer checklist. | The repo had coding and test guidelines but none for the UI, so the Reviewer persona had no yardstick for layout — the tag field slipped through for that reason. The guideline is the harness fix (orchestrator loop: sharpen the harness, not only the output). |
 | D11 | *(A1)* **The item row has fixed grid areas at every width.** Wide screens: name · quantity · date · actions in four columns on one line, the chip line (only when the item has tags) under the name in the first column. Narrow screens: D5 unchanged. Quantity, date and the actions never change column or line because of optional content. | Marcel at G3: the actions must always sit at the same place. Explicit areas instead of auto-placement, the same remedy as D4/D5 applied to the desktop grid; the UI guideline's rule "explicit grid areas" now reads "at every width". |
+| D12 | *(A2)* **Storage-card status chips are styled**: pill with a dot in the light status colour (`--expired` / `--expiring` / `--accent`) and text in the strong one (`--expired-strong` / `--expiring-strong` / `--accent-strong`) on a light tint, wrapping inside the card. Not interactive, so D2 does not apply. | Marcel at G3: "gleich in dieser Story umsetzen". Same colour vocabulary as the group heads and item dates (D9), so the list and the detail read the same way; the strong tokens keep 4.5 : 1 on the tint. |
 
 ---
 
@@ -65,6 +67,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 | # | Date | Change |
 |---|------|--------|
 | A1 | 2026-10-24 | Marcel Steiner (G3 on the branch): ✎/🗑 move when a row has tags on a wide screen (O5). Adds D11, AC-15 and a 1280 px block in the mobile test file; `ui-guidelines.md` layout rule extended to every width. No change to any other criterion. |
+| A2 | 2026-10-24 | Marcel Steiner (G3 on the branch): style the storage-card status chips that had no rule since SPEC-001 (O6). Adds D12 and AC-16; the list state of the mobile test seeds a fresh storage as well and asserts all three chips. |
 
 ---
 
@@ -117,6 +120,9 @@ can be managed where it is used: in the kitchen, on the phone.**
       SHALL render the quantity, the date and the edit/delete actions of every row at the same
       horizontal position and on the line of the item name; the chips, when present, SHALL
       take their own line below the name without moving any other cell (D11).
+- [ ] AC-16 *(A2)*: WHEN a storage card shows a status hint THE client SHALL render it as a chip
+      (tinted pill with a status dot, text in the strong status colour) inside the card at every
+      width, for the states expired, expiring soon and all fresh (D12).
 
 ### Accessibility gate and guideline
 
@@ -249,6 +255,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 | AC-13 | → `expectAccessible` (axe, tags wcag2a/wcag2aa/wcag21aa/wcag22aa) in every visited state — three colour-contrast findings fixed on the way (see Technical Constraints) | ✅ |
 | AC-14 | `docs/guidelines/ui-guidelines.md`, linked from `coding-guidelines.md` and `CLAUDE.md` | ✅ |
 | AC-15 | → `expectActionsAligned` (same x and width of `.item-actions` and `.item-qty` across all five rows, actions on the name line) in "detail plain", "320 detail" and the new "wide viewport (1280 px)" block, which also runs the overflow and axe checks on the desktop layout | ✅ |
+| AC-16 | → `expectStatusChips` (all three chips visible, inside their card, non-transparent background, pill radius) in "storage list" and "320 storage list"; axe covers the text contrast | ✅ |
 
 **Regression proof (test effectiveness):** with the `develop` stylesheet swapped in, all 7 mobile
 tests fail — document wider than viewport (detail, search, add form, inline edit), tap targets
