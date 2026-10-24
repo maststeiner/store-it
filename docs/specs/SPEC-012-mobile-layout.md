@@ -3,7 +3,7 @@
 > **Status:** Frozen (Gate 1) — approved by Marcel Steiner, 2026-10-24 (issue #250)
 > **Sprint:** 2026-S43
 > **Author:** Claude Fable 5.1 (analyst agent), from Marcel Steiner's request and iPhone screenshot (issue #250, 2026-10-24)
-> **Last updated:** 2026-10-24 (frozen after the second draft; implementation on `feature/mobile-layout`)
+> **Last updated:** 2026-10-24 (implementation on `feature/mobile-layout`, verification table filled)
 
 ---
 
@@ -195,12 +195,23 @@ can be managed where it is used: in the kitchen, on the phone.**
 
 ## Technical Constraints (from Architect Agent)
 
-<!-- Filled in after G1 -->
+<!-- Proposed before G1, confirmed during implementation; deviations from the proposal marked ⚠ -->
 
-- [ ] Layering: web only (`frontend/src/styles.scss`, two templates for the area classes,
-      `frontend/playwright.config.ts`, `frontend/e2e/mobile-layout.spec.ts`); no API or backend change.
-- [ ] Dependencies: **one new dev dependency** `@axe-core/playwright` (D9); `@playwright/test` already present, Chromium mobile emulation is built in.
-- [ ] ADR required: no.
+- [x] Layering: web only — `frontend/src/styles.scss` (responsive block rewritten, wrap rules,
+      two contrast tokens), `storage-detail-page.html` (area classes `edit-*` / `field-*`, the
+      `.detail-actions` group — ⚠ one wrapper `div` more than the draft said, so the icon buttons
+      wrap as a group, D7), `frontend/playwright.config.ts` (project `mobile`),
+      `frontend/e2e/mobile-layout.spec.ts`; no API or backend change, no new strings.
+- [x] Dependencies: **one new dev dependency** `@axe-core/playwright` ^4.14.0 (D9; Deque,
+      MPL-2.0, test-time only); `@playwright/test` already present, Chromium mobile emulation is
+      built in. CI job `1b` needs nothing new (`npx playwright install --with-deps chromium` already
+      installs the browser's system libraries).
+- [x] Colour tokens (D9, found by axe): `--accent-strong #2b766e` for filled buttons and link text
+      (5.4 : 1 on white; `--accent` gave 3.3 : 1), `--expired-strong #b04a5c` for the danger button
+      (5.3 : 1), `--text-soft` alpha 0.62 → 0.72 (5.5 : 1 on white, was 4.1 : 1). Tints, dots,
+      borders and the focus ring keep `--accent` / `--expired`. ⚠ Visible on desktop too — a
+      contrast correction, not a layout change (AC-08 is about sizes and placement).
+- [x] ADR required: no.
 
 ---
 
@@ -210,20 +221,24 @@ can be managed where it is used: in the kitchen, on the phone.**
 
 | AC | Test | Status |
 |----|------|--------|
-| AC-01 | `mobile-layout.spec.ts` → "AC-01: no page is wider than the viewport" | ⬜ |
-| AC-02 | → "AC-02: the storage detail stays inside the viewport in every state" | ⬜ |
-| AC-03 | → "AC-03: inputs and selects are at least 16 px" | ⬜ |
-| AC-04 | → "AC-04: every control of the inline edit lies inside its card" | ⬜ |
-| AC-05 | → "AC-05: every control of the add form lies inside the form" | ⬜ |
-| AC-06 | → covered by AC-02 (suggestion list open) | ⬜ |
-| AC-07 | → "AC-07: every button has a 44 px tap target" | ⬜ |
-| AC-08 | desktop project unchanged (existing `storage.spec.ts`); G3 visual check | ⬜ |
-| AC-09 | → "AC-09: a row without tags is name/actions over quantity/date" | ⬜ |
-| AC-10 | → "AC-10: a row with tags keeps quantity and date on one line below the chips" | ⬜ |
-| AC-11 | → "AC-11: long names wrap instead of widening the page" | ⬜ |
-| AC-12 | `playwright.config.ts` project `mobile`; CI job `1b` | ⬜ |
-| AC-13 | `mobile-layout.spec.ts` → axe scan in every state (shared helper) | ⬜ |
-| AC-14 | `docs/guidelines/ui-guidelines.md` present and linked; G2 review | ⬜ |
+| AC-01 | `mobile-layout.spec.ts` → "AC-01: no page is wider than the viewport (storage list, about, join, login)"; "… at 320 px" (`expectNoHorizontalOverflow`) | ✅ |
+| AC-02 | → "AC-02 / AC-07 / AC-09 / AC-10: … plain state", "AC-02 / AC-03 / AC-05: the add form …" (incl. suggestions open), "AC-02 / AC-04: the inline edit (with 0 and with 10 tags) …", "AC-02: search panel with the tag list, sharing panel and the delete dialog", "… at 320 px" | ✅ |
+| AC-03 | → `expectInputFontSizes` in the add form, inline edit, search, sharing and rename states | ✅ |
+| AC-04 | → "AC-02 / AC-04: the inline edit (with 0 and with 10 tags) lies inside its card" (`expectInside` for every control, ✓, ✕, chips); 320 px variant | ✅ |
+| AC-05 | → "AC-02 / AC-03 / AC-05: the add form lies inside its card, 16 px controls"; 320 px variant | ✅ |
+| AC-06 | → add-form test: `.tag-suggestions` within the viewport, state "add form with suggestions" | ✅ |
+| AC-07 | → `expectTapTargets` in every state (buttons, selects, options, session chip ≥ 44; row chips ≥ 32) | ✅ |
+| AC-08 | desktop project (`storage.spec.ts`, `auth.spec.ts`) green and untouched; visual check at G3 | ✅ · G3 ⬜ |
+| AC-09 | → plain-state test: name/actions on one line, quantity left + date right on the next | ✅ |
+| AC-10 | → plain-state test: chips start under the name, quantity/date share one line below the chips | ✅ |
+| AC-11 | → plain-state test (long name, ten long tags grow the row in height only); "AC-11 / EC-03: a long storage title wraps and the icon buttons move below it" | ✅ |
+| AC-12 | `playwright.config.ts` project `mobile` (`testMatch` mobile-layout.spec.ts; desktop project ignores it); CI job `1b` runs both | ✅ · ⏳ CI |
+| AC-13 | → `expectAccessible` (axe, tags wcag2a/wcag2aa/wcag21aa/wcag22aa) in every visited state — three colour-contrast findings fixed on the way (see Technical Constraints) | ✅ |
+| AC-14 | `docs/guidelines/ui-guidelines.md`, linked from `coding-guidelines.md` and `CLAUDE.md` | ✅ |
+
+**Regression proof (test effectiveness):** with the `develop` stylesheet swapped in, all 7 mobile
+tests fail — document wider than viewport (detail, search, add form, inline edit), tap targets
+below 44 px (list), controls below 16 px (rename). Local run 2026-10-24, documented in the agent log.
 
 ---
 

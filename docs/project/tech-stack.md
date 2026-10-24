@@ -32,7 +32,7 @@
 | Kind | Backend | Frontend |
 |------|---------|----------|
 | Unit / service / integration | xUnit v3 (Microsoft.Testing.Platform) + coverlet.MTP; Testcontainers (PostgreSQL; local house standard: Podman) | Angular default setup (vitest, `vitest-base.config.ts`) |
-| End-to-end | — | Playwright (`frontend/e2e/`), full stack |
+| End-to-end | — | Playwright (`frontend/e2e/`), full stack; project `mobile` (phone emulation) with axe-core (`@axe-core/playwright`) for layout and WCAG 2.x A/AA checks (SPEC-012) |
 | Mutation testing | Stryker.NET (CI job `1a`) | Consciously dropped (see [test-guidelines](../guidelines/test-guidelines.md)) |
 
 Gate thresholds (coverage, mutation score) are defined in
