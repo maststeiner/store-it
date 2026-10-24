@@ -3,7 +3,7 @@
 > **Status:** Draft
 > **Sprint:** 2026-S43
 > **Author:** Claude Fable 5.1 (analyst agent), from Marcel Steiner's request and iPhone screenshot (issue #250, 2026-10-24)
-> **Last updated:** 2026-10-24
+> **Last updated:** 2026-10-24 (second draft: standards referenced, axe-core and UI guideline added — Marcel: „ja, beides“)
 
 ---
 
@@ -25,6 +25,12 @@ can be managed where it is used: in the kitchen, on the phone.**
   field and the tag input in both forms. None of them states a requirement for narrow screens —
   this spec adds it without changing their behaviour.
 - The web client is the only client (SPEC-002); no API change.
+- **Standards:** the requirements below apply [WCAG 2.2](https://www.w3.org/TR/WCAG22/) level AA
+  (reflow 1.4.10, resize text 1.4.4, target size 2.5.8; 2.5.5 AAA for the 44 px targets) and the
+  [Apple Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)
+  (44 pt targets, 16 px inputs). They are written down as the project's
+  [`docs/guidelines/ui-guidelines.md`](../guidelines/ui-guidelines.md), introduced with this spec
+  (D10), so that the Developer and Reviewer personas have a binding reference for every later UI change.
 
 ## Observed on an iPhone (Marcel Steiner, 2026-10-24)
 
@@ -40,13 +46,15 @@ can be managed where it is used: in the kitchen, on the phone.**
 | # | Decision | Rationale / alternative |
 |---|----------|-------------------------|
 | D1 | **"Narrow" = viewport width ≤ 780 px** (the existing breakpoint), **320 px is the smallest supported width** (iPhone SE 1st gen / small Android). Everything in this spec is verified at **320 px and 390 px** (iPhone 13–16 class). | One breakpoint keeps the stylesheet simple; 320 is the smallest phone still in use. Tablets in portrait (768 px) fall under the same rules. |
-| D2 | **Tap targets ≥ 44 × 44 CSS px on narrow screens** for every button, link-button, select and chip-remove ✕; icon glyphs grow to about 18–20 px. Desktop (> 780 px) keeps the 36 px icon buttons. | Apple HIG / WCAG 2.5.5 (AAA) minimum; the visual design stays as approved on desktop. Tag chips on rows (filter) are text buttons: they get at least 32 px height and 8 px wrap gap — a full 44 px chip would double the row height; the same filter is reachable through the tag list under 🔍 with 44 px chips. |
-| D3 | **No horizontal page scroll in any state**: storage list, storage detail (plain, search open with tag list, add form open, inline edit open — with 0 and with 10 tags —, sharing panel open, dialogs), about, admin statistics, login, join. The document's scroll width equals the viewport width. | This is the user-visible symptom; stating it for every view makes it testable with one assertion per state. Achieved by fixing the causes (O1/O2), **not** by hiding overflow — a hidden overflow would hide the regression from the test as well. |
+| D2 | **Tap targets ≥ 44 × 44 CSS px on narrow screens** for every button, link-button, select and chip-remove ✕; icon glyphs grow to about 18–20 px; adjacent targets keep ≥ 8 px spacing. Desktop (> 780 px) keeps the 36 px icon buttons (≥ 24 px, WCAG 2.5.8 AA, holds there too). | Apple HIG 44 pt / WCAG 2.5.5 (AAA); 2.5.8 (AA) is the floor everywhere; the visual design stays as approved on desktop. Tag chips on rows (filter) are text buttons: they get at least 32 px height and 8 px wrap gap — a full 44 px chip would double the row height; the same filter is reachable through the tag list under 🔍 with 44 px chips. |
+| D3 | **No horizontal page scroll in any state**: storage list, storage detail (plain, search open with tag list, add form open, inline edit open — with 0 and with 10 tags —, sharing panel open, dialogs), about, admin statistics, login, join. The document's scroll width equals the viewport width. | WCAG 1.4.10 Reflow (320 px without horizontal scrolling). This is the user-visible symptom; stating it for every view makes it testable with one assertion per state. Achieved by fixing the causes (O1/O2), **not** by hiding overflow — a hidden overflow would hide the regression from the test as well. |
 | D4 | **Inline edit on narrow screens** is a card of stacked rows: name (full width) · amount + unit (side by side) · expiry + production (side by side) · tags (full width) · actions ✓/✕ right-aligned on their own row · error line (full width). Every field lies inside the card. The **add form** uses the same stacking with its labels, the *Add* / *Cancel* buttons side by side in one full-width row. | Mirrors the desktop column order top-to-bottom; two short fields per row keep the card compact. Explicit grid areas replace auto-placement so a later field cannot shift the others again. |
 | D5 | **Item row on narrow screens**: row 1 name (wrapping) + actions on the right; row 2 the tag chips (only when the item has tags, wrapping, full width); row 3 quantity on the left, date on the right. The layout is identical with and without tags apart from the optional chip row. | The quantity/date pair stays where the eye expects it; the chip row is an insert, not a shift. |
-| D6 | **Inputs, selects and the search field are 16 px on narrow screens** (`1rem`); desktop keeps 0.95 rem. | Removes the iOS focus zoom (O2) without a `maximum-scale` viewport hack, which would also disable the user's pinch zoom (WCAG 1.4.4). |
+| D6 | **Inputs, selects and the search field are 16 px on narrow screens** (`1rem`); desktop keeps 0.95 rem. | Apple HIG input behaviour: removes the iOS focus zoom (O2) without a `maximum-scale` viewport hack, which would also disable the user's pinch zoom (WCAG 1.4.4). |
 | D7 | **Detail head and header on narrow screens**: the storage title may wrap over several lines (long words break), the icon buttons wrap onto a second line when the title leaves no room; the header keeps logo, language select and session chip in one line within the viewport at 320 px. Storage cards use `minmax(min(280px, 100%), 1fr)` so a card never exceeds its container. | Nothing is hidden or truncated; a wrapped button row beats an overflowing one. |
 | D8 | **Tests are Playwright, in a dedicated `mobile` project** (Chromium mobile emulation: 390 × 844, `isMobile`, `hasTouch`, device scale 3; one case at 320 × 568) running `e2e/mobile-layout.spec.ts` only; the existing desktop project keeps its tests. The assertions are **layout facts** read from the real browser: document scroll width ≤ viewport width (D3), bounding boxes of every form control inside the bounding box of its card (D4), tap targets ≥ 44 px (D2), computed input font size ≥ 16 px (D6), chip row below the name and quantity/date on one line (D5). | jsdom (the unit-test runner) has no layout engine, so these facts can only be asserted in a real browser. One project with its own spec keeps CI cost near the existing E2E job (same backend, same `ng serve`). WebKit is **not** added: the fixes are CSS the engines share, and Chromium is the only browser installed in CI (`1b`); a WebKit run can be a follow-up if a Safari-only defect ever appears. |
+| D9 | **axe-core runs in the mobile tests**: every page state the `mobile` project visits is scanned with `@axe-core/playwright` (rule tags `wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa`); **zero violations** is the assertion. A rule is excluded only with a comment naming the criterion and the reason, plus a tech-debt issue. | Turns the standard into a gate instead of a reading list: target size (2.5.8), contrast (1.4.3/1.4.11), labels and roles are checked by the same engine Lighthouse uses. New dev dependency `@axe-core/playwright` (Deque, MPL-2.0, no runtime footprint); justification recorded here and in the PR. |
+| D10 | **A binding UI guideline** `docs/guidelines/ui-guidelines.md` is added and linked from the coding guidelines and `CLAUDE.md`: standards (WCAG 2.2 AA, Apple HIG, Material 3 for spacing), the layout rules of this spec (reflow, one breakpoint, intrinsic sizing, explicit grid areas, 16 px inputs, safe areas), target sizes, contrast, how layout is tested, and a reviewer checklist. | The repo had coding and test guidelines but none for the UI, so the Reviewer persona had no yardstick for layout — the tag field slipped through for that reason. The guideline is the harness fix (orchestrator loop: sharpen the harness, not only the output). |
 
 ---
 
@@ -103,6 +111,14 @@ can be managed where it is used: in the kitchen, on the phone.**
 - [ ] AC-11: WHEN an item name or storage title is longer than the available width THE client
       SHALL wrap it (breaking long words) instead of widening the row or the page (D7); the
       detail-head icon buttons SHALL wrap onto a further line when the title leaves no room.
+
+### Accessibility gate and guideline
+
+- [ ] AC-13: WHEN the mobile tests visit a page state (every state of AC-01/AC-02) THE axe-core
+      scan with the WCAG 2.x A/AA rule set SHALL report zero violations (D9).
+- [ ] AC-14: THE repository SHALL contain `docs/guidelines/ui-guidelines.md` (D10), linked from
+      `docs/guidelines/coding-guidelines.md` and `CLAUDE.md`, and this spec's rules SHALL be
+      consistent with it.
 
 ### Tests
 
@@ -170,6 +186,9 @@ can be managed where it is used: in the kitchen, on the phone.**
 - Redesign of the desktop layout, dark mode, landscape-specific layouts (EC-09).
 - WebKit/Safari in CI (D8) and visual-regression screenshots (pixel diffs) — the assertions are
   geometric facts, not images.
+- Fixing axe findings on **desktop-only** states or pages the mobile tests do not visit: the scan
+  runs where the mobile tests go; a desktop axe run is a possible follow-up.
+- Contrast changes to the approved desktop palette beyond what axe flags on the scanned states.
 - Swipe gestures or pull-to-refresh.
 
 ---
@@ -180,7 +199,7 @@ can be managed where it is used: in the kitchen, on the phone.**
 
 - [ ] Layering: web only (`frontend/src/styles.scss`, two templates for the area classes,
       `frontend/playwright.config.ts`, `frontend/e2e/mobile-layout.spec.ts`); no API or backend change.
-- [ ] Dependencies: none new (`@playwright/test` already present; Chromium mobile emulation is built in).
+- [ ] Dependencies: **one new dev dependency** `@axe-core/playwright` (D9); `@playwright/test` already present, Chromium mobile emulation is built in.
 - [ ] ADR required: no.
 
 ---
@@ -203,6 +222,8 @@ can be managed where it is used: in the kitchen, on the phone.**
 | AC-10 | → "AC-10: a row with tags keeps quantity and date on one line below the chips" | ⬜ |
 | AC-11 | → "AC-11: long names wrap instead of widening the page" | ⬜ |
 | AC-12 | `playwright.config.ts` project `mobile`; CI job `1b` | ⬜ |
+| AC-13 | `mobile-layout.spec.ts` → axe scan in every state (shared helper) | ⬜ |
+| AC-14 | `docs/guidelines/ui-guidelines.md` present and linked; G2 review | ⬜ |
 
 ---
 

@@ -2,9 +2,11 @@
 
 > **Owner:** Marcel Steiner (Architecture Stewardship)
 > **Stack, formatters, static analysis:** see [`docs/project/tech-stack.md`](../project/tech-stack.md)
-> **Last updated:** 2026-08-30
+> **Last updated:** 2026-10-24
 
 These guidelines are the primary reference for the Developer Agent and the Reviewer Agent.
+Everything the user sees — templates, stylesheet, layout tests — is additionally governed by
+[`ui-guidelines.md`](ui-guidelines.md) (WCAG 2.2 AA, touch targets, reflow, layout tests).
 
 ---
 
