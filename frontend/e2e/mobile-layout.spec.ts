@@ -255,6 +255,40 @@ async function seedStorage(page: Page): Promise<{ id: string; name: string }> {
   return { id, name };
 }
 
+// SPEC-012 A2 / AC-16: the status chips on the storage cards are rendered as chips — a
+// tinted pill inside the card — for all three states (expired, expiring soon, all fresh).
+async function seedFreshStorage(page: Page): Promise<string> {
+  const headers = await xsrfHeaders(page);
+  const name = uniqueName('Fresh');
+  const id = await createStorage(page.request, headers, name);
+  await addItem(page.request, headers, id, {
+    name: 'Rice',
+    amount: 1,
+    unit: 'Piece',
+    expiryDate: isoDate(400),
+    productionDate: null,
+    tags: [],
+  });
+  return name;
+}
+
+async function expectStatusChips(page: Page, state: string): Promise<void> {
+  for (const kind of ['expired', 'expiring', 'ok']) {
+    const card = page.locator('.storage-card', { has: page.locator(`.chip.${kind}`) }).first();
+    const chip = card.locator(`.chip.${kind}`);
+    await expect(chip, `${state}: chip ${kind} present`).toBeVisible();
+    await expectInside(chip, card, `${state}: chip ${kind}`);
+    const style = await chip.evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { background: cs.backgroundColor, radius: parseFloat(cs.borderRadius) };
+    });
+    expect(style.background, `${state}: chip ${kind} has a background`).not.toBe(
+      'rgba(0, 0, 0, 0)',
+    );
+    expect(style.radius, `${state}: chip ${kind} is a pill`).toBeGreaterThan(8);
+  }
+}
+
 test.beforeEach(async ({ page }) => {
   const response = await page.request.post('/auth/dev-login');
   expect(response.status()).toBe(204);
@@ -266,11 +300,13 @@ test('AC-01: no page is wider than the viewport (storage list, about, join, logi
   page,
 }) => {
   await seedStorage(page);
+  await seedFreshStorage(page);
 
   await page.goto('/storages');
   await expect(page.locator('.storage-card').first()).toBeVisible();
   await expectStateOk(page, 'storage list');
   await expectTapTargets(page, 'storage list');
+  await expectStatusChips(page, 'storage list');
 
   await page.goto('/about');
   await expect(page.locator('.about-page')).toBeVisible();
@@ -479,11 +515,13 @@ test.describe('smallest supported width (320 px)', () => {
     page,
   }) => {
     const storage = await seedStorage(page);
+    await seedFreshStorage(page);
 
     await page.goto('/storages');
     await expect(page.locator('.storage-card').first()).toBeVisible();
     await expectStateOk(page, '320 storage list');
     await expectTapTargets(page, '320 storage list');
+    await expectStatusChips(page, '320 storage list');
 
     await page.goto(`/storages/${storage.id}`);
     await expect(page.locator('.item-row')).toHaveCount(5);

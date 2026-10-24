@@ -330,6 +330,59 @@ h1 {
   margin-top: 2px;
 }
 
+/* Status chips on the storage cards (SPEC-012 A2). The classes date from SPEC-001 but never had
+   a rule, so "3 expired" rendered as plain text. Same vocabulary as the group heads: a dot in the
+   light status colour, text in the strong one (≥ 4.5 : 1 on the tint), pill shape. Not
+   interactive, so no 44 px target applies. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.chip::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.chip.expired {
+  color: var(--expired-strong);
+  background: rgba(193, 90, 108, 0.12);
+  border-color: rgba(193, 90, 108, 0.3);
+}
+.chip.expired::before {
+  background: var(--expired);
+}
+.chip.expiring {
+  color: var(--expiring-strong);
+  background: rgba(201, 138, 46, 0.14);
+  border-color: rgba(201, 138, 46, 0.32);
+}
+.chip.expiring::before {
+  background: var(--expiring);
+}
+.chip.ok {
+  color: var(--accent-strong);
+  background: var(--panel-tint);
+  border-color: rgba(62, 156, 147, 0.3);
+}
+.chip.ok::before {
+  background: var(--accent);
+}
+
 .storage-card.ghost {
   border: 1.5px dashed rgba(22, 52, 58, 0.22);
   background: transparent;
