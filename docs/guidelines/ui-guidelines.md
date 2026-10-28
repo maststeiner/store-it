@@ -38,6 +38,10 @@ and the mockup wins on desktop — the two are reconciled in the responsive bloc
   O1/O4 (narrow) and O5 (wide: the actions dropped to a second line once a row had tags) were
   exactly this. Each cell gets a class that maps to its area; optional content gets its own
   area or line. Controls that repeat per row (edit, delete) sit at the same place in every row.
+  A cell in an `auto` column that must keep its x across rows gets `justify-self: end` (or
+  `start`): the column is as wide as the row's widest cell, so a stretched cell starts wherever
+  the row's own date or quantity happens to start (CI job 1b went red on 2026-10-27 when a
+  seeded date first fell on a single-digit day).
 - **Zoom (WCAG 1.4.4):** the viewport meta stays `width=device-width, initial-scale=1` — no
   `maximum-scale`, no `user-scalable=no`. Inputs and selects are **≥ 16 px** on narrow screens so
   iOS Safari does not zoom on focus.

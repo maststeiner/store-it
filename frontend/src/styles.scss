@@ -1130,6 +1130,10 @@ button.tag-chip:hover,
   }
   .item-actions {
     grid-area: actions;
+    /* The auto column is as wide as the date, which varies per row ("Oct 27" vs "Dec 2"); shrink
+       the actions to their two buttons at the right edge, so ✎/🗑 sit at the same x in every row
+       (AC-15) instead of starting where the row's own date happens to start. */
+    justify-self: end;
   }
 
   /* Inline edit (D4): name · amount + unit · expiry + production · tags · actions · error —
