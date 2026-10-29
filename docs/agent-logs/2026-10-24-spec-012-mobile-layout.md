@@ -113,7 +113,12 @@ metrics — fixtures for "longest possible text" should use the widest glyph, no
 
 ## Outcome
 
-- **Result:** PR open, awaiting G2/G3; amendment A1 (desktop row areas, AC-15, 1280 px test block) added after Marcel's first look on the branch
+- **Result:** PR #251 merged to `develop` 2026-10-24 (G2); released as `v0.6.0` through release PR #252 2026-10-24;
+  G3 passed on `prod-oracle` 2026-10-25 (Marcel, iPhone). Amendments A1 (desktop row areas, AC-15, 1280 px test block)
+  and A2 (styled status chips, AC-16) were added after Marcel's first look on the branch
+- **Release note:** the `v0.6.0` tag was first pushed before #252 was merged and pointed at the old `main` tip; the release
+  run was cancelled before publishing, the tag moved to the merge commit `5ae710d` (fast-forward, the tag ruleset forbids
+  deletion) and the second run published the images
 - **Deviations from spec:** `.detail-actions` wrapper (D7, noted in Technical Constraints);
   contrast tokens visible on desktop (D9/AC-08, noted)
 - **Harness follow-up:** `docs/guidelines/ui-guidelines.md` (new), linked from

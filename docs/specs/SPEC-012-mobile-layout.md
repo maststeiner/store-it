@@ -270,5 +270,5 @@ the phone row test still passes — the desktop defect was invisible to the narr
 | Gate | Status | Date | Person |
 |------|--------|------|--------|
 | G1 · Spec Freeze | ✅ | 2026-10-24 | Marcel Steiner |
-| G2 · Review | ⬜ | | |
-| G3 · DoD/Merge | ⬜ | | |
+| G2 · Review | ✅ PR #251 (CodeRabbit 2 findings fixed, 2 threads resolved; CI 18/18 green incl. axe-core gate), human review | 2026-10-24 | Marcel Steiner |
+| G3 · DoD/Merge | ✅ #251 merged to `develop` 2026-10-24 (amendments A1/A2 included), released as `v0.6.0` via #252 2026-10-24, human test on `prod-oracle` with an iPhone 2026-10-25 | 2026-10-24 / 2026-10-25 | Marcel Steiner |
