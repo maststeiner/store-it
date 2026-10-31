@@ -3,7 +3,7 @@
 # the browser sees a single origin. That is what keeps the SPEC-003 cookie session and the
 # X-XSRF-TOKEN double-submit contract working without any CORS configuration (AC-07).
 
-FROM docker.io/library/node:24-alpine AS build
+FROM docker.io/library/node:26-alpine AS build
 WORKDIR /src
 
 # npm ci from the lockfile only; copying package files first keeps this layer cached
