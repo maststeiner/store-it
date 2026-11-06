@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
@@ -25,6 +27,25 @@ public static class AuthenticationSetup
 
     /// <summary>OIDC challenge scheme for Google.</summary>
     public const string GoogleScheme = "Google";
+
+    /// <summary>
+    /// Inactivity timeout of a session: the ticket (and a persistent cookie) expires this
+    /// long after the last renewal; the cookie handler renews it on use (sliding).
+    /// </summary>
+    public static readonly TimeSpan SessionSlidingExpiration = TimeSpan.FromDays(14);
+
+    /// <summary>
+    /// Hard upper bound of a session, counted from sign-in: sliding renewal never extends
+    /// past this. A "stay signed in" cookie is therefore never older than 30 days — the
+    /// cap that keeps a stolen or forgotten cookie from living indefinitely.
+    /// </summary>
+    public static readonly TimeSpan SessionAbsoluteLifetime = TimeSpan.FromDays(30);
+
+    /// <summary>
+    /// Ticket property carrying the sign-in instant (ISO 8601, UTC). Sliding renewal
+    /// rewrites <c>IssuedUtc</c>, so the original sign-in time has to be kept separately.
+    /// </summary>
+    internal const string SignedInAtProperty = "store-it.signed_in_at";
 
     /// <summary>
     /// Returns <see langword="true"/> when a provider section has both a non-empty
@@ -64,6 +85,15 @@ public static class AuthenticationSetup
                     options.Cookie.SecurePolicy = env.IsDevelopment()
                         ? CookieSecurePolicy.SameAsRequest
                         : CookieSecurePolicy.Always;
+                    // Session lifetime. A sign-in without "stay signed in" (the default) is
+                    // a browser-session cookie: no Expires attribute, gone when the browser
+                    // closes. With IsPersistent (the opt-in on the sign-in page) the cookie
+                    // carries the ticket expiry and survives a browser restart. Either way
+                    // the ticket slides on use and is capped by SessionAbsoluteLifetime.
+                    options.ExpireTimeSpan = SessionSlidingExpiration;
+                    options.SlidingExpiration = true;
+                    options.Events.OnSigningIn = StampSignedInAt;
+                    options.Events.OnValidatePrincipal = RejectWhenPastAbsoluteLifetime;
                     // It's an API, not an MVC app: never redirect to a login/denied page.
                     options.Events.OnRedirectToLogin = ReturnStatus(
                         StatusCodes.Status401Unauthorized
@@ -73,6 +103,14 @@ public static class AuthenticationSetup
                     );
                 }
             );
+
+        // The cookie handler measures ticket expiry and sliding renewal with its own clock
+        // (TimeProvider.System unless told otherwise). Hand it the application's TimeProvider
+        // so the session rules above run on one clock — in production the system clock, in
+        // the service tests a controllable one.
+        services
+            .AddOptions<CookieAuthenticationOptions>(CookieScheme)
+            .Configure<TimeProvider>((options, clock) => options.TimeProvider = clock);
 
         // Register each OIDC provider only when BOTH ClientId and Authority are present.
         // A missing ClientId or Authority at startup causes AddOpenIdConnect to throw on
@@ -189,6 +227,48 @@ public static class AuthenticationSetup
                 new Claim(CurrentUser.LocalIdClaim, user.Id.ToString())
             );
         };
+    }
+
+    /// <summary>
+    /// Records the sign-in instant on the ticket. Sliding renewal rewrites the cookie
+    /// without this event and keeps the items, so the stamp survives until the next
+    /// explicit sign-in.
+    /// </summary>
+    private static Task StampSignedInAt(CookieSigningInContext context)
+    {
+        var clock = context.HttpContext.RequestServices.GetRequiredService<TimeProvider>();
+        context.Properties.Items[SignedInAtProperty] = clock
+            .GetUtcNow()
+            .ToString("O", CultureInfo.InvariantCulture);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// The absolute cap: a ticket older than <see cref="SessionAbsoluteLifetime"/> (or one
+    /// without a readable sign-in stamp) is rejected and its cookie expired, so the request
+    /// runs anonymous — 401 from the fallback policy — and the SPA sends the user back to
+    /// sign in. No database access: the check is a pure ticket read (SPEC-003).
+    /// </summary>
+    private static async Task RejectWhenPastAbsoluteLifetime(CookieValidatePrincipalContext context)
+    {
+        var clock = context.HttpContext.RequestServices.GetRequiredService<TimeProvider>();
+        if (
+            context.Properties.Items.TryGetValue(SignedInAtProperty, out var stamp)
+            && DateTimeOffset.TryParseExact(
+                stamp,
+                "O",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.RoundtripKind,
+                out var signedInAt
+            )
+            && clock.GetUtcNow() - signedInAt <= SessionAbsoluteLifetime
+        )
+        {
+            return;
+        }
+
+        context.RejectPrincipal();
+        await context.HttpContext.SignOutAsync(CookieScheme);
     }
 
     private static Func<CookieRedirectContext, Task> ReturnStatus(int statusCode) =>

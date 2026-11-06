@@ -99,7 +99,8 @@
       "title": "Sign in to store-it",
       "subtitle": "Choose your identity provider to continue.",
       "microsoft": "Sign in with Microsoft",
-      "google": "Sign in with Google"
+      "google": "Sign in with Google",
+      "staySignedIn": "Stay signed in on this device"
     },
     "session": {
       "menu": "Account menu — signed in as {{name}}",

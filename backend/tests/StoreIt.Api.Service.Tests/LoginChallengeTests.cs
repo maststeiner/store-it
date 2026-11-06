@@ -2,7 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 
 namespace StoreIt.Api.Service.Tests;
 
@@ -37,6 +39,21 @@ public sealed class LoginChallengeTests(ForwardedHeadersFixture factory)
         );
 
         var response = await client.GetAsync("/auth/login/GOOGLE");
+
+        Assert.Equal(HttpStatusCode.Found, response.StatusCode);
+        ChallengeAssertions.AssertAuthorizationCodeChallenge(response.Headers.Location);
+    }
+
+    [Fact]
+    public async Task Login_StaySignedIn_StartsTheSameChallenge()
+    {
+        var client = factory.CreateClient(
+            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false }
+        );
+
+        // The opt-in rides inside the OIDC state parameter; the authorization request
+        // itself must not change (the provider knows nothing about it).
+        var response = await client.GetAsync("/auth/login/google?persistent=true");
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         ChallengeAssertions.AssertAuthorizationCodeChallenge(response.Headers.Location);
@@ -80,6 +97,54 @@ internal static class ChallengeAssertions
         Assert.Contains("openid", scopes);
         Assert.Contains("email", scopes); // the provisioning callback reads the email claim
         Assert.EndsWith("/auth/callback/google", query["redirect_uri"], StringComparison.Ordinal);
+    }
+}
+
+/// <summary>
+/// What the challenge carries into the session: the "stay signed in" opt-in and the return
+/// target. Asserted on the result object — over HTTP both are sealed inside the OIDC
+/// <c>state</c> parameter and only come back out in the callback.
+/// </summary>
+public sealed class LoginChallengePropertiesTests
+{
+    private static IConfiguration GoogleConfigured() =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["Authentication:Google:ClientId"] = "test-client-id",
+                    ["Authentication:Google:Authority"] = "https://login.test.local",
+                }
+            )
+            .Build();
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void HandleLogin_CarriesStaySignedInAndReturnTargetIntoTheChallenge(bool persistent)
+    {
+        var result = AuthEndpoints.HandleLogin(
+            "google",
+            "/storages/7",
+            GoogleConfigured(),
+            persistent
+        );
+
+        var challenge = Assert.IsType<ChallengeHttpResult>(result);
+        Assert.Equal([AuthenticationSetup.GoogleScheme], challenge.AuthenticationSchemes);
+        Assert.NotNull(challenge.Properties);
+        Assert.Equal(persistent, challenge.Properties.IsPersistent);
+        Assert.Equal("/storages/7", challenge.Properties.RedirectUri);
+    }
+
+    [Fact]
+    public void HandleLogin_DefaultsToABrowserSession()
+    {
+        var result = AuthEndpoints.HandleLogin("google", null, GoogleConfigured());
+
+        var challenge = Assert.IsType<ChallengeHttpResult>(result);
+        Assert.NotNull(challenge.Properties);
+        Assert.False(challenge.Properties.IsPersistent);
     }
 }
 
