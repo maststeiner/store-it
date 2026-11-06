@@ -2,9 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace StoreIt.Api.Service.Tests;
 
@@ -29,6 +33,8 @@ public sealed class LoginChallengeTests(ForwardedHeadersFixture factory)
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         ChallengeAssertions.AssertAuthorizationCodeChallenge(response.Headers.Location);
+        // Without the opt-in the session is a browser session.
+        Assert.False(ChallengeProperties(response.Headers.Location).IsPersistent);
     }
 
     [Fact]
@@ -53,10 +59,35 @@ public sealed class LoginChallengeTests(ForwardedHeadersFixture factory)
 
         // The opt-in rides inside the OIDC state parameter; the authorization request
         // itself must not change (the provider knows nothing about it).
-        var response = await client.GetAsync("/auth/login/google?persistent=true");
+        var response = await client.GetAsync(
+            "/auth/login/google?persistent=true&returnUrl=%2Fstorages%2F7"
+        );
 
         Assert.Equal(HttpStatusCode.Found, response.StatusCode);
         ChallengeAssertions.AssertAuthorizationCodeChallenge(response.Headers.Location);
+        // The route must bind the query parameter — the properties sealed into `state`
+        // are what the callback signs the cookie in with.
+        var properties = ChallengeProperties(response.Headers.Location);
+        Assert.True(properties.IsPersistent);
+        Assert.Equal("/storages/7", properties.RedirectUri);
+    }
+
+    /// <summary>
+    /// Unseals the <c>state</c> parameter of the authorization request with the Google
+    /// handler's own <see cref="OpenIdConnectOptions.StateDataFormat"/> (same host, same
+    /// key ring) — the authentication properties the callback will sign in with.
+    /// </summary>
+    private AuthenticationProperties ChallengeProperties(Uri? location)
+    {
+        Assert.NotNull(location);
+        var state = HttpUtility.ParseQueryString(location.Query)["state"];
+        Assert.False(string.IsNullOrEmpty(state));
+        var options = factory
+            .Services.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>()
+            .Get(AuthenticationSetup.GoogleScheme);
+        var properties = options.StateDataFormat.Unprotect(state);
+        Assert.NotNull(properties);
+        return properties;
     }
 
     [Fact]
