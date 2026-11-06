@@ -68,7 +68,7 @@ Recorded as an amendment in [ADR-004](../architecture/ADR-004-identity-auth.md) 
 | Check | Result |
 |---|---|
 | `dotnet build` (solution) | clean, 0 warnings, no key-ring failure in the OpenAPI step |
-| `dotnet test` (solution, Testcontainers) | 277 passed — incl. 2 challenge-property tests, 1 HTTP challenge with the flag, 5 lifetime tests (browser-session cookie has no `Expires`; persistent cookie expires at +14 d; renewal after 10 d; 401 + expired cookie at day 31 despite use; cap also for browser sessions) |
+| `dotnet test` (solution, Testcontainers) | 277 passed — incl. 2 challenge-property tests, 2 HTTP challenges whose sealed `state` is unprotected to assert `IsPersistent` (route binding, after a CodeRabbit remark), 6 lifetime/key-ring tests (browser-session cookie has no `Expires`; persistent cookie expires at +14 d; renewal after 10 d; 401 + expired cookie at day 31 despite use; cap also for browser sessions) |
 | Stryker (local, `--mutate` on the five changed source files) | 66 % before the key-table test — above the 60 % break; the survivors are the known ones (OIDC callback has no coverage without an IdP, option-lambda attribution to the first test, `<=`→`<` boundary) |
 | `npm run lint` · `npm run test:coverage` · `npm run build` | clean · 227 passed · clean |
 | `prettier --check` · `csharpier` | clean |
