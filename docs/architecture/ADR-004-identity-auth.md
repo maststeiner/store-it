@@ -35,6 +35,18 @@ Constraints and forces:
    **server-side**; the API issues a secure **HttpOnly, SameSite** session cookie. The
    browser holds **no access/ID tokens**. Endpoints: `/auth/login/{provider}`,
    `/auth/callback/{provider}`, `POST /auth/logout`, `GET /auth/me`.
+
+   > **Amendment 2026-11-06 (decided with Marcel):** session lifetime made explicit.
+   > The cookie is a **browser-session cookie by default**; the sign-in page offers an
+   > opt-in *stay signed in* (`?persistent=true` on `/auth/login/{provider}`) that makes
+   > it persistent. Every session **slides on use (14 days of inactivity)** and is
+   > **capped at 30 days from sign-in**; the cap is a pure ticket check — no per-request
+   > database access, SPEC-006 D6 stands. Refresh tokens stay out: the app calls no
+   > provider API on the user's behalf. The data-protection **key ring is persisted in
+   > PostgreSQL** (`data_protection_keys`) so a recreated container (every release) no
+   > longer invalidates sessions and CSRF tokens. The keys are stored unencrypted: the
+   > database is the trust boundary and already holds what the keys protect;
+   > `ProtectKeysWithCertificate` is the documented step up if that changes.
 4. **Local user, JIT-provisioned.** A local `User` (GUID PK) is created on first login,
    keyed by the OIDC **`(Issuer, Subject)`** pair (a `sub` is only unique per issuer, and
    we federate several issuers directly). Ownership FKs point at the local `User.Id`, not

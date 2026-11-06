@@ -30,7 +30,7 @@ internal static class StartupConfigurationCheck
     /// and that is the reliable way to tell the two contexts apart.
     /// </para>
     /// </summary>
-    private static bool IsBuildTimeDocumentGeneration =>
+    internal static bool IsBuildTimeDocumentGeneration =>
         (Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty).StartsWith(
             "GetDocument",
             StringComparison.Ordinal

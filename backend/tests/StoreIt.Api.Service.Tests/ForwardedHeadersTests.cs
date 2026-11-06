@@ -3,9 +3,11 @@ using System.Web;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using StoreIt.Infrastructure;
 using Testcontainers.PostgreSql;
 
 namespace StoreIt.Api.Service.Tests;
@@ -88,7 +90,16 @@ public sealed class ForwardedHeadersFixture : WebApplicationFactory<Program>, IA
         "postgres:18-alpine"
     ).Build();
 
-    public ValueTask InitializeAsync() => new(_postgres.StartAsync());
+    public async ValueTask InitializeAsync()
+    {
+        await _postgres.StartAsync();
+
+        // The challenge seals its state with data protection, and the key ring lives in the
+        // database (ADR-004 amendment 2026-11-06) — so the schema has to exist.
+        using var scope = Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<StoreItDbContext>();
+        await dbContext.Database.MigrateAsync();
+    }
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {

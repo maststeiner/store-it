@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AuthService, appLocalPath } from '../core/auth.service';
@@ -21,12 +21,19 @@ export class LoginPage implements OnInit {
   protected readonly accountDeleted =
     this.route.snapshot.queryParamMap.get('account') === 'deleted';
 
+  /** "Stay signed in on this device" — opt-in, so a shared device gets a browser session. */
+  protected readonly staySignedIn = signal(false);
+
   ngOnInit(): void {
     void this.skipWhenAlreadySignedIn();
   }
 
   protected signIn(provider: 'microsoft' | 'google'): void {
-    this.auth.login(provider, this.returnUrl);
+    this.auth.login(provider, this.returnUrl, this.staySignedIn());
+  }
+
+  protected onStaySignedInChange(event: Event): void {
+    this.staySignedIn.set((event.target as HTMLInputElement).checked);
   }
 
   /**

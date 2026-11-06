@@ -14,6 +14,7 @@ const TRANSLATIONS = {
       subtitle: 'Choose your identity provider to continue.',
       microsoft: 'Sign in with Microsoft',
       google: 'Sign in with Google',
+      staySignedIn: 'Stay signed in on this device',
     },
     deleteAccount: { done: 'Your account and all your data have been deleted.' },
   },
@@ -118,7 +119,7 @@ describe('LoginPage', () => {
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('button.btn-provider');
     (buttons[0] as HTMLButtonElement).click();
 
-    expect(loginSpy).toHaveBeenCalledWith('microsoft', '/');
+    expect(loginSpy).toHaveBeenCalledWith('microsoft', '/', false);
   });
 
   it('hands the returnUrl from the query string to the provider sign-in', async () => {
@@ -134,7 +135,7 @@ describe('LoginPage', () => {
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('button.btn-provider');
     (buttons[1] as HTMLButtonElement).click();
 
-    expect(loginSpy).toHaveBeenCalledWith('google', '/storages/7');
+    expect(loginSpy).toHaveBeenCalledWith('google', '/storages/7', false);
   });
 
   it('never sends the visitor back to the sign-in page', async () => {
@@ -150,7 +151,34 @@ describe('LoginPage', () => {
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('button.btn-provider');
     (buttons[0] as HTMLButtonElement).click();
 
-    expect(loginSpy).toHaveBeenCalledWith('microsoft', '/');
+    expect(loginSpy).toHaveBeenCalledWith('microsoft', '/', false);
+  });
+
+  // ADR-004 amendment 2026-11-06: "stay signed in" is an opt-in; ticking it is what turns
+  // the browser session into a persistent one.
+  it('asks for a persistent session only when the stay-signed-in box is ticked', async () => {
+    ctrl = await setup();
+    const fixture = TestBed.createComponent(LoginPage);
+    fixture.detectChanges();
+    answerAnonymous();
+    await fixture.whenStable();
+
+    const loginSpy = vi.spyOn(TestBed.inject(AuthService), 'login');
+    stubLocation();
+    const host = fixture.nativeElement as HTMLElement;
+
+    const box = host.querySelector<HTMLInputElement>('.login-remember input[type="checkbox"]');
+    expect(box).not.toBeNull();
+    expect(box!.checked).toBe(false);
+    expect(host.querySelector('.login-remember')?.textContent).toContain(
+      'Stay signed in on this device',
+    );
+
+    box!.click();
+    fixture.detectChanges();
+    (host.querySelectorAll('button.btn-provider')[0] as HTMLButtonElement).click();
+
+    expect(loginSpy).toHaveBeenCalledWith('microsoft', '/', true);
   });
 
   it('leaves the page immediately when a session already exists', async () => {
