@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using StoreIt.Infrastructure;
 
 namespace StoreIt.Api.Service.Tests;
 
@@ -156,4 +159,151 @@ public class DevLoginTests(DevLoginFixture factory) : IClassFixture<DevLoginFixt
         var storagesResponse = await client.GetAsync("/api/v1/storages");
         Assert.Equal(HttpStatusCode.OK, storagesResponse.StatusCode);
     }
+
+    // ── Session lifetime (persistent sign-in) ──────────────────────────────────
+    // The fixture's clock drives the cookie handler and the lifetime rules; these tests
+    // only ever move it forward relative to their own sign-in, so their order is free.
+
+    /// <summary>Without the opt-in the cookie is a browser-session cookie: no Expires.</summary>
+    [Fact]
+    public async Task SignIn_Default_IssuesABrowserSessionCookie()
+    {
+        var client = factory.CreateClient();
+
+        var response = await client.PostAsync("/auth/dev-login", null);
+
+        var session = SessionCookie(response);
+        Assert.DoesNotContain("expires=", session, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("max-age=", session, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// With the opt-in the cookie carries the ticket expiry — the sliding window from now —
+    /// so it survives a browser restart.
+    /// </summary>
+    [Fact]
+    public async Task SignIn_StaySignedIn_IssuesACookieThatExpiresWithTheSlidingWindow()
+    {
+        var client = factory.CreateClient();
+        var signedInAt = factory.Clock.GetUtcNow();
+
+        var response = await client.PostAsync("/auth/dev-login?persistent=true", null);
+
+        var expires = ExpiresOf(SessionCookie(response));
+        // Set-Cookie has second precision; the window is measured from the sign-in instant.
+        AssertWithinAMinute(signedInAt + AuthenticationSetup.SessionSlidingExpiration, expires);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/auth/me")).StatusCode);
+    }
+
+    /// <summary>
+    /// Sliding expiration: a request past the half-way point of the window re-issues the
+    /// cookie with a later Expires, so a device in regular use stays signed in.
+    /// </summary>
+    [Fact]
+    public async Task Session_UsedAfterHalfTheWindow_IsRenewed()
+    {
+        var client = factory.CreateClient();
+        await client.PostAsync("/auth/dev-login?persistent=true", null);
+
+        factory.Clock.Advance(TimeSpan.FromDays(10));
+        var response = await client.GetAsync("/auth/me");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var renewed = ExpiresOf(SessionCookie(response));
+        AssertWithinAMinute(
+            factory.Clock.GetUtcNow() + AuthenticationSetup.SessionSlidingExpiration,
+            renewed
+        );
+    }
+
+    /// <summary>
+    /// The absolute cap: a session in continuous use is still ended 30 days after sign-in.
+    /// Renewals every 10 days keep the sliding window open the whole time, so the 401 at
+    /// day 31 can only come from the cap — and it expires the cookie, like a logout.
+    /// </summary>
+    [Fact]
+    public async Task Session_PastAbsoluteLifetime_IsRejectedEvenWhenInUse()
+    {
+        var client = factory.CreateClient();
+        await client.PostAsync("/auth/dev-login?persistent=true", null);
+
+        foreach (var day in new[] { 10, 10, 9 })
+        {
+            factory.Clock.Advance(TimeSpan.FromDays(day));
+            Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/auth/me")).StatusCode);
+        }
+
+        factory.Clock.Advance(TimeSpan.FromDays(2)); // day 31
+        var response = await client.GetAsync("/auth/me");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Contains(
+            "expires=Thu, 01 Jan 1970",
+            SessionCookie(response),
+            StringComparison.OrdinalIgnoreCase
+        );
+    }
+
+    /// <summary>
+    /// ADR-004 amendment 2026-11-06: the key ring that encrypts the cookie is persisted in the
+    /// database, so a recreated container (every release) keeps decrypting existing sessions.
+    /// Issuing a cookie is what creates the first key — it must land in the table.
+    /// </summary>
+    [Fact]
+    public async Task SignIn_PersistsTheDataProtectionKeyRingInTheDatabase()
+    {
+        var client = factory.CreateClient();
+
+        await client.PostAsync("/auth/dev-login", null);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StoreItDbContext>();
+        Assert.NotEmpty(await db.DataProtectionKeys.ToListAsync());
+    }
+
+    /// <summary>The cap applies to browser-session cookies too — not only to persistent ones.</summary>
+    [Fact]
+    public async Task BrowserSession_PastAbsoluteLifetime_IsRejected()
+    {
+        var client = factory.CreateClient();
+        await client.PostAsync("/auth/dev-login", null);
+
+        foreach (var day in new[] { 10, 10, 9 })
+        {
+            factory.Clock.Advance(TimeSpan.FromDays(day));
+            Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/auth/me")).StatusCode);
+        }
+
+        factory.Clock.Advance(TimeSpan.FromDays(2));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/auth/me")).StatusCode);
+    }
+
+    private static string SessionCookie(HttpResponseMessage response)
+    {
+        Assert.True(response.Headers.TryGetValues("Set-Cookie", out var cookies));
+        return Assert.Single(
+            cookies,
+            c => c.StartsWith(".AspNetCore.Cookies=", StringComparison.Ordinal)
+        );
+    }
+
+    private static DateTimeOffset ExpiresOf(string setCookie)
+    {
+        var expires = setCookie
+            .Split(';', StringSplitOptions.TrimEntries)
+            .Select(part => part.Split('=', 2))
+            .FirstOrDefault(kv =>
+                kv.Length == 2 && kv[0].Equals("expires", StringComparison.OrdinalIgnoreCase)
+            );
+        Assert.NotNull(expires);
+        return DateTimeOffset.Parse(expires[1], System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private static void AssertWithinAMinute(DateTimeOffset expected, DateTimeOffset actual) =>
+        Assert.InRange(
+            actual,
+            expected - TimeSpan.FromMinutes(1),
+            expected + TimeSpan.FromMinutes(1)
+        );
 }

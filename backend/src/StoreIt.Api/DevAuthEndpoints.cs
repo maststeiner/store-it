@@ -34,7 +34,12 @@ public static class DevAuthEndpoints
         // registered separately so the production MapAuthEndpoints() is untouched.
         app.MapPost(
                 "/auth/dev-login",
-                async (ProvisionUserUseCase provision, HttpContext http, CancellationToken ct) =>
+                async (
+                    ProvisionUserUseCase provision,
+                    HttpContext http,
+                    CancellationToken ct,
+                    bool persistent = false
+                ) =>
                 {
                     // 1. Provision (find-or-create) the synthetic user — same call as OnTokenValidated.
                     var user = await provision.ExecuteAsync(
@@ -61,8 +66,14 @@ public static class DevAuthEndpoints
                     );
                     var principal = new ClaimsPrincipal(identity);
 
-                    // 3. Sign in — writes the session cookie to the response.
-                    await http.SignInAsync(AuthenticationSetup.CookieScheme, principal);
+                    // 3. Sign in — writes the session cookie to the response. `persistent`
+                    //    mirrors the "stay signed in" opt-in of the real sign-in so the
+                    //    cookie lifetime rules can be exercised end-to-end without an IdP.
+                    await http.SignInAsync(
+                        AuthenticationSetup.CookieScheme,
+                        principal,
+                        new AuthenticationProperties { IsPersistent = persistent }
+                    );
 
                     return Results.NoContent();
                 }

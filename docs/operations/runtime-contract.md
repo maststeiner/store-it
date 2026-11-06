@@ -65,7 +65,10 @@ Rules a deployment must keep:
 4. **Configuration errors are terminal.** A missing connection string makes `backend` exit
    with code 1 and a message naming the variable; do not restart-loop it into "healthy".
 5. **Persistence:** the PostgreSQL data directory (`/var/lib/postgresql` for the 18 images)
-   is the only state. Back it up (`pg_dump`). The application containers are stateless.
+   is the only state. Back it up (`pg_dump`). The application containers are stateless —
+   this includes the cookie-encryption key ring (table `data_protection_keys`), so a
+   restored database restores live sessions, and a recreated `backend` container keeps
+   them.
 
 ---
 

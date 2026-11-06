@@ -11,6 +11,7 @@ import { RequestBuilder } from '../../request-builder';
 export interface Login$Params {
   provider: string;
   returnUrl?: string;
+  persistent?: boolean;
 }
 
 export function login(http: HttpClient, rootUrl: string, params: Login$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
@@ -18,6 +19,7 @@ export function login(http: HttpClient, rootUrl: string, params: Login$Params, c
   if (params) {
     rb.path('provider', params.provider, {});
     rb.query('returnUrl', params.returnUrl, {});
+    rb.query('persistent', params.persistent, {});
   }
 
   return http.request(

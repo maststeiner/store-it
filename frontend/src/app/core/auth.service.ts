@@ -91,11 +91,17 @@ export class AuthService {
    * that is <code>/login</code>, so the OIDC callback returned the user to the sign-in
    * page and a successful sign-in looked like a failed one. Anything unusable becomes
    * <code>/</code>, which the router resolves to the storage list.</p>
+   *
+   * <p><b>staySignedIn</b> is the opt-in from the sign-in page: the API then issues a
+   * persistent session cookie that survives a browser restart (sliding, capped at 30
+   * days — see ADR-004). Off by default, so a shared device gets a browser session.</p>
    */
-  login(provider: 'microsoft' | 'google', returnUrl?: string | null): void {
-    window.location.assign(
-      '/auth/login/' + provider + '?returnUrl=' + encodeURIComponent(appLocalPath(returnUrl)),
-    );
+  login(provider: 'microsoft' | 'google', returnUrl?: string | null, staySignedIn = false): void {
+    const query =
+      '?returnUrl=' +
+      encodeURIComponent(appLocalPath(returnUrl)) +
+      (staySignedIn ? '&persistent=true' : '');
+    window.location.assign('/auth/login/' + provider + query);
   }
 
   /**

@@ -955,6 +955,24 @@ button.tag-chip:hover,
   margin: 0 0 32px;
 }
 
+.login-remember {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  color: var(--text-soft);
+  font-size: 0.95rem;
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+}
+
 .login-actions {
   display: flex;
   flex-direction: column;
