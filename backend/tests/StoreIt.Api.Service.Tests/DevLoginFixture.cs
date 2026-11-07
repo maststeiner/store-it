@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 using StoreIt.Infrastructure;
 using Testcontainers.PostgreSql;
 
@@ -19,9 +20,16 @@ namespace StoreIt.Api.Service.Tests;
 ///
 /// Cookie.SecurePolicy is SameAsRequest in Development, so the session cookie round-trips
 /// over the plain-HTTP test transport without being dropped.
+///
+/// <see cref="Clock"/> is the application's <see cref="TimeProvider"/> — the cookie handler
+/// and the session-lifetime rules run on it, so a test can let days pass. It starts at the
+/// real time on purpose: the client's cookie jar judges a persistent cookie's Expires
+/// against the real clock, and a cookie dated in the past would silently never be sent.
 /// </summary>
 public sealed class DevLoginFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
+    public FakeTimeProvider Clock { get; } = new(DateTimeOffset.UtcNow);
+
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder(
         "postgres:18-alpine"
     ).Build();
@@ -56,9 +64,13 @@ public sealed class DevLoginFixture : WebApplicationFactory<Program>, IAsyncLife
             );
         }
 
-        // No auth-scheme override — the real cookie pipeline must run. The only test-service
-        // tweak is the EF model cache (see EfServiceProviderCaching.cs).
-        builder.ConfigureTestServices(services => services.DisableEfServiceProviderCaching());
+        // No auth-scheme override — the real cookie pipeline must run. Test-service tweaks:
+        // the EF model cache (see EfServiceProviderCaching.cs) and the controllable clock.
+        builder.ConfigureTestServices(services =>
+        {
+            services.DisableEfServiceProviderCaching();
+            services.AddSingleton<TimeProvider>(Clock);
+        });
     }
 
     public override async ValueTask DisposeAsync()

@@ -99,7 +99,8 @@
       "title": "Bei store-it anmelden",
       "subtitle": "Identity-Provider auswählen, um fortzufahren.",
       "microsoft": "Mit Microsoft anmelden",
-      "google": "Mit Google anmelden"
+      "google": "Mit Google anmelden",
+      "staySignedIn": "Auf diesem Gerät angemeldet bleiben"
     },
     "session": {
       "menu": "Kontomenü — angemeldet als {{name}}",

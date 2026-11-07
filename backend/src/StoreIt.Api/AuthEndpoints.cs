@@ -38,7 +38,19 @@ public static class AuthEndpoints
         return app;
     }
 
-    private static IResult HandleLogin(string provider, string? returnUrl, IConfiguration config)
+    /// <summary>
+    /// Starts the OIDC challenge. <paramref name="persistent"/> is the "stay signed in"
+    /// opt-in from the sign-in page: it travels with the challenge and makes the session
+    /// cookie survive a browser restart (see <see cref="AuthenticationSetup"/> for the
+    /// lifetime rules). Internal so the challenge properties can be asserted directly —
+    /// over HTTP they are sealed inside the OIDC state parameter.
+    /// </summary>
+    internal static IResult HandleLogin(
+        string provider,
+        string? returnUrl,
+        IConfiguration config,
+        bool persistent = false
+    )
     {
         // Allowlist the provider to a fixed scheme BEFORE challenge — the raw
         // path segment never reaches the auth system (400 for anything else).
@@ -69,7 +81,11 @@ public static class AuthEndpoints
         }
 
         return Results.Challenge(
-            new AuthenticationProperties { RedirectUri = SafeReturnUrl(returnUrl) },
+            new AuthenticationProperties
+            {
+                RedirectUri = SafeReturnUrl(returnUrl),
+                IsPersistent = persistent,
+            },
             [scheme]
         );
     }

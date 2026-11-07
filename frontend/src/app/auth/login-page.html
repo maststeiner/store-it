@@ -5,6 +5,10 @@
     @if (accountDeleted) {
       <output class="login-notice status-block">{{ 'auth.deleteAccount.done' | translate }}</output>
     }
+    <label class="login-remember">
+      <input type="checkbox" [checked]="staySignedIn()" (change)="onStaySignedInChange($event)" />
+      <span>{{ 'auth.login.staySignedIn' | translate }}</span>
+    </label>
     <div class="login-actions">
       <button class="btn-provider" type="button" (click)="signIn('microsoft')">
         <svg

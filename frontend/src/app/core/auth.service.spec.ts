@@ -215,6 +215,22 @@ describe('AuthService', () => {
 
       expect(captured.url()).toBe('/auth/login/microsoft?returnUrl=%2F');
     });
+
+    it('asks the API for a persistent session when stay-signed-in is chosen', () => {
+      const captured = captureChallengeUrl();
+
+      service.login('google', '/storages/7', true);
+
+      expect(captured.url()).toBe('/auth/login/google?returnUrl=%2Fstorages%2F7&persistent=true');
+    });
+
+    it('leaves the persistent flag out when stay-signed-in is declined', () => {
+      const captured = captureChallengeUrl();
+
+      service.login('google', '/storages/7', false);
+
+      expect(captured.url()).toBe('/auth/login/google?returnUrl=%2Fstorages%2F7');
+    });
   });
 
   describe('appLocalPath', () => {

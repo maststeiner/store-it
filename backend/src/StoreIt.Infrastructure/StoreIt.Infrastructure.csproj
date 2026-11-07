@@ -5,6 +5,10 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <!-- Session durability: the data-protection key ring lives in the database so a
+           recreated container (every release) keeps decrypting existing session and CSRF
+           cookies instead of signing everyone out. -->
+        <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     </ItemGroup>
 
     <PropertyGroup>

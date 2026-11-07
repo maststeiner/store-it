@@ -99,7 +99,8 @@
       "title": "Se connecter à store-it",
       "subtitle": "Choisissez votre fournisseur d'identité pour continuer.",
       "microsoft": "Se connecter avec Microsoft",
-      "google": "Se connecter avec Google"
+      "google": "Se connecter avec Google",
+      "staySignedIn": "Rester connecté sur cet appareil"
     },
     "session": {
       "menu": "Menu du compte — connecté en tant que {{name}}",

@@ -31,7 +31,12 @@ if (
 }
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure();
+
+// The data-protection key ring lives in the database; the build-time OpenAPI generator
+// starts the host without one, and the key-ring preload would log a failure there.
+builder.Services.AddInfrastructure(
+    persistDataProtectionKeys: !StartupConfigurationCheck.IsBuildTimeDocumentGeneration
+);
 
 // SPEC-003: BFF cookie session + per-provider OIDC challenge schemes.
 builder.Services.AddStoreItAuthentication(builder.Configuration, builder.Environment);
