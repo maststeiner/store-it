@@ -35,7 +35,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '11.x'
       - name: Build
         run: dotnet build --configuration Release
       # Coverage gate: coverlet.MTP (xunit.v3 runs on Microsoft.Testing.Platform, selected in
@@ -65,7 +65,7 @@ jobs:
           ref: ${{ github.event_name == 'schedule' && 'refs/heads/develop' || github.ref }}
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '11.x'
       # Mutation testing is expensive, so scope it to when it adds value: a nightly
       # full run on develop (backstop against coverage erosion in untouched files;
       # also runnable on demand via "Run workflow"/workflow_dispatch), only the
@@ -177,7 +177,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '11.x'
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '26'
@@ -305,7 +305,7 @@ jobs:
           fetch-tags: true
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '11.x'
       # ADR-006 stage 1 — drift: the committed contract must match the code
       - name: Regenerate OpenAPI spec
         run: dotnet build src/StoreIt.Api --configuration Release
@@ -404,7 +404,7 @@ jobs:
           persist-credentials: false # full history for accurate new-code detection
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '11.x'
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6
         with:
           distribution: 'temurin'
@@ -480,7 +480,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '11.x'
       - name: Layering rules (0 violations)
         # Only the architecture test project; the coverage gate belongs to job 1.
         run: dotnet test --configuration Release --project tests/StoreIt.Architecture.Tests/StoreIt.Architecture.Tests.csproj --filter "Category=ArchitectureTests"
@@ -500,7 +500,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6
         with:
-          dotnet-version: '10.x'
+          dotnet-version: '11.x'
       # CSharpier owns formatting; Roslyn analyzers are enforced at build time (job 1)
       - name: Restore tools
         run: dotnet tool restore
