@@ -408,7 +408,7 @@ jobs:
       - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6
         with:
           distribution: 'temurin'
-          java-version: '25.0.5+8.0.LTS' # required by the Sonar scanner for .NET
+          java-version: '25.0.5+100000002.0.LTS' # required by the Sonar scanner for .NET
       - name: Install scanner
         run: dotnet tool install --global dotnet-sonarscanner
       - name: Analyze
