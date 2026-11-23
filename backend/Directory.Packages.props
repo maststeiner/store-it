@@ -32,7 +32,7 @@
         />
         <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.15" />
         <PackageVersion Include="Microsoft.OpenApi" Version="2.13.1" />
-        <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+        <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.4" />
     </ItemGroup>
 
     <ItemGroup>
